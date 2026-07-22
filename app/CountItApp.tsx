@@ -544,7 +544,7 @@ export default function CountItApp() {
           <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>
         </div>
         <p>Standard American counting · 4/4 · Quarter, eighth, and sixteenth-note cells</p>
-        <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC.</p>
+        <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
       </footer>
     </div>
   );
