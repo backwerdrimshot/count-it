@@ -1108,6 +1108,14 @@ a:focus-visible,
   text-transform: uppercase;
 }
 
+.site-footer .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.site-footer .foot-btn {
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+  background: rgba(255, 255, 255, 0.08); color: #eaf2fb; border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px; padding: 7px 14px; font-size: 0.75rem; font-weight: 700; transition: 0.15s;
+}
+.site-footer .foot-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: #fff; }
+
 .site-footer p {
   margin: 0;
 }
