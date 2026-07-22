@@ -353,6 +353,37 @@ function ChallengeMode({
   );
 }
 
+// Build stamp + self-documenting support/feedback emails (progressive enhancement).
+function BuildStamp() {
+  const [buildId, setBuildId] = useState("");
+  useEffect(() => {
+    const two = (n: number) => String(n).padStart(2, "0");
+    const modified = new Date(document.lastModified);
+    const build = (window as unknown as { __BUILD__?: string }).__BUILD__
+      || (Number.isNaN(modified.getTime()) ? "" : `${modified.getFullYear()}-${two(modified.getMonth() + 1)}-${two(modified.getDate())}`);
+    setBuildId(build);
+    document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      if (/[?&]body=/.test(href)) return;
+      const match = href.match(/[?&]subject=([^&]*)/);
+      const subject = match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
+      const appName = (subject.split(/\s[—-]\s/)[0] || document.title || "this app").trim();
+      const body = (/support@/.test(href)
+          ? "Describe what went wrong — what you did, what you expected, and what actually happened:"
+          : "Describe your idea or request:")
+        + "\n\n\n\n─── details below help with troubleshooting ───\n"
+        + `App: ${appName}\nBuild: ${build || "unknown"}\nPage: ${location.href}\nBrowser: ${navigator.userAgent}`;
+      a.setAttribute("href", `${href}&body=${encodeURIComponent(body)}`);
+    });
+  }, []);
+  if (!buildId) return null;
+  return (
+    <p className="build-stamp" style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.55, fontSize: "11px", margin: "4px 0 0" }}>
+      Build {buildId}
+    </p>
+  );
+}
+
 export default function CountItApp() {
   const [mode, setMode] = useState<AppMode>("practice");
   const [level, setLevel] = useState<LevelId>("level-2");
@@ -545,6 +576,7 @@ export default function CountItApp() {
         </div>
         <p>Standard American counting · 4/4 · Quarter, eighth, and sixteenth-note cells</p>
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
+        <BuildStamp />
       </footer>
     </div>
   );
