@@ -357,10 +357,9 @@ function ChallengeMode({
 function BuildStamp() {
   const [buildId, setBuildId] = useState("");
   useEffect(() => {
-    const two = (n: number) => String(n).padStart(2, "0");
-    const modified = new Date(document.lastModified);
+    // Update this ISO date whenever the shipped app changes.
     const build = (window as unknown as { __BUILD__?: string }).__BUILD__
-      || (Number.isNaN(modified.getTime()) ? "" : `${modified.getFullYear()}-${two(modified.getMonth() + 1)}-${two(modified.getDate())}`);
+      || "2026-07-22";
     setBuildId(build);
     document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
       const href = a.getAttribute("href") || "";
