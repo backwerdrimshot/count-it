@@ -9,9 +9,12 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 - **Build:** `2026-07-22`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
+- **Public app guide:** <https://www.backwerdrhythmshop.com/app-guides/count-it>
 - **Repository:** <https://github.com/backwerdrimshot/count-it>
 
-Build identifiers use ISO `YYYY-MM-DD`, based on the date the shipped app was updated.
+Build identifiers use ISO `YYYY-MM-DD`, based on the date the shipped app update
+began. The value stays fixed while that release pass is completed across code and
+documentation.
 
 ## What is included
 

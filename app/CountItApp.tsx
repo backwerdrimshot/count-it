@@ -31,6 +31,7 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
+const BUILD_ID = "2026-07-22";
 
 function makeSession(level: LevelId, scope: QuestionScope, seed: number): ChallengeSession {
   return createSession(generateQuestions({ level, scope, count: SESSION_LENGTH, seed }));
@@ -355,12 +356,7 @@ function ChallengeMode({
 
 // Build stamp + self-documenting support/feedback emails (progressive enhancement).
 function BuildStamp() {
-  const [buildId, setBuildId] = useState("");
   useEffect(() => {
-    // Update this ISO date whenever the shipped app changes.
-    const build = (window as unknown as { __BUILD__?: string }).__BUILD__
-      || "2026-07-22";
-    setBuildId(build);
     document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
       const href = a.getAttribute("href") || "";
       if (/[?&]body=/.test(href)) return;
@@ -371,14 +367,13 @@ function BuildStamp() {
           ? "Describe what went wrong — what you did, what you expected, and what actually happened:"
           : "Describe your idea or request:")
         + "\n\n\n\n─── details below help with troubleshooting ───\n"
-        + `App: ${appName}\nBuild: ${build || "unknown"}\nPage: ${location.href}\nBrowser: ${navigator.userAgent}`;
+        + `App: ${appName}\nBuild: ${BUILD_ID}\nPage: ${location.href}\nBrowser: ${navigator.userAgent}`;
       a.setAttribute("href", `${href}&body=${encodeURIComponent(body)}`);
     });
   }, []);
-  if (!buildId) return null;
   return (
     <p className="build-stamp" style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.55, fontSize: "11px", margin: "4px 0 0" }}>
-      Build {buildId}
+      Build {BUILD_ID}
     </p>
   );
 }
@@ -570,6 +565,7 @@ export default function CountItApp() {
       <footer className="site-footer">
         <div><strong>Count It.</strong><span>by Backwerd Rhythm Shop</span></div>
         <div className="foot-links">
+          <a className="foot-btn" href="https://www.backwerdrhythmshop.com/app-guides/count-it">App guide</a>
           <a className="foot-btn" href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Support%20request">Report a problem</a>
           <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>
         </div>
