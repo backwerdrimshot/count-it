@@ -4,6 +4,8 @@ Count It is a local-first rhythm-reading MVP for Backwerd Rhythm Shop. It helps 
 
 The app deliberately begins with a small, verified straight-subdivision catalog. Rhythm notation, timing, accepted answers, distractors, and explanations all come from the same structured data model; no answer is inferred from an SVG.
 
+**Public app:** <https://count-it.backwerdrhythmshop.com/>
+
 ## What is included
 
 - **Practice:** move through one-beat or four-beat prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
@@ -57,8 +59,19 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, accounts, cloud sync, analytics, or backend.
 - Standard counting is the only user-selectable system in this release.
 - Progress is device-local and intentionally lightweight.
-- This is a local prototype; it has not been deployed or connected to a remote repository.
+- The repository is hosted at <https://github.com/backwerdrimshot/count-it>, and
+  deployment uses the custom domain recorded above.
+
+## Planned for v1.1 — support and feedback
+
+The next release will add separate **Support** and **Feedback / Feature Request**
+controls. They must be easy to find, keyboard accessible, usable on mobile, and include
+the app name and version where possible. Final destinations will be documented after the
+intake channels are confirmed and tested. These controls are planned and are not
+represented here as shipped in the current release.
 
 ## Design and provenance
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
+
+© 2026 Backwerd Rimshot, LLC. All rights reserved.
