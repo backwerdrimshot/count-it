@@ -4,7 +4,14 @@ Count It is a local-first rhythm-reading MVP for Backwerd Rhythm Shop. It helps 
 
 The app deliberately begins with a small, verified straight-subdivision catalog. Rhythm notation, timing, accepted answers, distractors, and explanations all come from the same structured data model; no answer is inferred from an SVG.
 
-**Public app:** <https://count-it.backwerdrhythmshop.com/>
+## Release information
+
+- **Build:** `2026.07.22`
+- **Status:** MVP built and publicly available
+- **Live app:** <https://count-it.backwerdrhythmshop.com/>
+- **Repository:** <https://github.com/backwerdrimshot/count-it>
+
+Build identifiers use `YYYY.MM.DD`, based on the date the documented build was updated.
 
 ## What is included
 
@@ -14,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 
-## Run locally
+## Local development
 
 Requirements: Node.js 22.13 or newer and pnpm 11.
 
@@ -25,7 +32,7 @@ pnpm dev
 
 Open the local URL printed by Vite (normally `http://localhost:3000`).
 
-Useful checks:
+## Testing
 
 ```bash
 pnpm test
@@ -59,19 +66,35 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, accounts, cloud sync, analytics, or backend.
 - Standard counting is the only user-selectable system in this release.
 - Progress is device-local and intentionally lightweight.
-- The repository is hosted at <https://github.com/backwerdrimshot/count-it>, and
-  deployment uses the custom domain recorded above.
 
-## Planned for v1.1 — support and feedback
+## Privacy and accessibility
 
-The next release will add separate **Support** and **Feedback / Feature Request**
+Count It requires no account or backend and does not send practice progress or scores
+off-device. Lightweight preferences and the personal best stay in `localStorage`.
+Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
+layouts support phone, tablet, and desktop use.
+
+## Deployment
+
+The public build is available at `count-it.backwerdrhythmshop.com`, and the repository
+includes the matching `CNAME`. No production deployment workflow is committed, so
+publishing is configured outside repository Actions.
+
+## Support and feedback
+
+Support and feedback controls are planned for the next build. They are not shipped in
+build `2026.07.22`.
+
+A future build will add separate **Support** and **Feedback / Feature Request**
 controls. They must be easy to find, keyboard accessible, usable on mobile, and include
-the app name and version where possible. Final destinations will be documented after the
+the app name and build identifier where possible. Final destinations will be documented after the
 intake channels are confirmed and tested. These controls are planned and are not
 represented here as shipped in the current release.
 
 ## Design and provenance
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
+
+## Ownership
 
 © 2026 Backwerd Rimshot, LLC. All rights reserved.
