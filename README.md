@@ -94,6 +94,17 @@ publishing is configured outside repository Actions.
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
 
+## Visit counter
+
+The footer shows a running visit count next to the build stamp. It comes from our own
+Cloudflare Worker at `counter.backwerdrhythmshop.com`, which stores exactly one thing:
+an integer per app. No IP, no user agent, no cookie, no timestamp — nothing tied to a
+visitor. Counted once per browser session; localhost and file:// only read the number
+so development never inflates it.
+
+It is progressive enhancement. If the endpoint is offline, blocked, or not yet
+deployed, the footer renders exactly as it did before and the app is unaffected.
+
 ## Follow
 
 Backwerd Rhythm Shop posts practice ideas, new app releases, and classroom tips:

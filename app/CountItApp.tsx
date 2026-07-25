@@ -354,8 +354,36 @@ function ChallengeMode({
   );
 }
 
+// Visit counter (progressive enhancement). Counts once per browser session via the
+// shared Backwerd counter Worker; dev machines only read, so local work never
+// inflates the number. Returns null until a real count arrives, so nothing renders
+// if the endpoint is offline, blocked, or not deployed yet.
+function useVisitCount(app: string) {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    const API = "https://counter.backwerdrhythmshop.com";
+    const dev = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)
+      || location.protocol === "file:";
+    let counted = false;
+    try { counted = sessionStorage.getItem("brs-counted") === "1"; } catch { /* private mode */ }
+
+    let live = true;
+    fetch(`${API}${dev || counted ? "/count" : "/hit"}?app=${app}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { count?: number } | null) => {
+        if (!live || !d || typeof d.count !== "number" || d.count < 1) return;
+        if (!dev) { try { sessionStorage.setItem("brs-counted", "1"); } catch { /* private mode */ } }
+        setCount(d.count);
+      })
+      .catch(() => { /* leave the footer exactly as it was */ });
+    return () => { live = false; };
+  }, [app]);
+  return count;
+}
+
 // Build stamp + self-documenting support/feedback emails (progressive enhancement).
 function BuildStamp() {
+  const visits = useVisitCount("count-it");
   useEffect(() => {
     document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
       const href = a.getAttribute("href") || "";
@@ -374,6 +402,7 @@ function BuildStamp() {
   return (
     <p className="build-stamp" style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.55, fontSize: "11px", margin: "4px 0 0" }}>
       Build {BUILD_ID}
+      {visits !== null && ` · ${visits.toLocaleString()} visit${visits === 1 ? "" : "s"}`}
     </p>
   );
 }
