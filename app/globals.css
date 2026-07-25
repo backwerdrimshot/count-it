@@ -1115,6 +1115,8 @@ a:focus-visible,
   border-radius: 8px; padding: 7px 14px; font-size: 0.75rem; font-weight: 700; transition: 0.15s;
 }
 .site-footer .foot-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: #fff; }
+.site-footer .foot-btn.foot-ico{padding:8px;border-radius:50%;gap:0;line-height:0}
+.site-footer .foot-btn.foot-ico svg{width:16px;height:16px;display:block}
 
 .site-footer p {
   margin: 0;

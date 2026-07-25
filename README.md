@@ -94,6 +94,16 @@ publishing is configured outside repository Actions.
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
 
+## Follow
+
+Backwerd Rhythm Shop posts practice ideas, new app releases, and classroom tips:
+
+- Facebook — <https://www.facebook.com/backwerdrhythmshop/>
+- Instagram — <https://www.instagram.com/backwerdrhythmshop/>
+- YouTube — <https://www.youtube.com/@backwerdrhythmshop>
+
+These three links also appear as icon buttons in the app footer.
+
 ## Ownership
 
 © 2026 Backwerd Rimshot, LLC. All rights reserved.
