@@ -1118,6 +1118,95 @@ a:focus-visible,
 .site-footer .foot-btn.foot-ico{padding:8px;border-radius:50%;gap:0;line-height:0}
 .site-footer .foot-btn.foot-ico svg{width:16px;height:16px;display:block}
 
+/* Support fallback panel. A bare mailto: fails silently on machines without a
+   registered email app, so support links open this native dialog when available. */
+.support-dialog {
+  width: min(560px, calc(100vw - 32px));
+  border: 2px solid var(--navy);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.support-dialog::backdrop {
+  background: rgba(0, 38, 77, 0.56);
+}
+
+.support-dialog h2 {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font: 800 1.15rem Georgia, serif;
+}
+
+.support-dialog .support-dialog-lede,
+.support-dialog .support-dialog-hint {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.support-dialog .support-dialog-hint {
+  margin: 12px 0 0;
+}
+
+.support-dialog .support-dialog-label {
+  display: block;
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.support-dialog textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--cream);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.support-dialog textarea:focus-visible {
+  outline: 3px solid #1f8fda;
+  outline-offset: 3px;
+  border-color: var(--orange);
+}
+
+.support-dialog .support-dialog-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.support-dialog .foot-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: var(--navy-deep);
+  color: #eaf2fb;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.support-dialog .foot-btn:hover {
+  background: var(--navy);
+  border-color: var(--orange);
+}
+
 .site-footer p {
   margin: 0;
 }
