@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CountReference from "./CountReference";
 import RhythmNotation from "./RhythmNotation";
+import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
   LEVELS,
   getCompleteReference,
@@ -31,7 +32,7 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
-const BUILD_ID = "2026-07-22";
+const BUILD_ID = "2026-07-27";
 
 function makeSession(level: LevelId, scope: QuestionScope, seed: number): ChallengeSession {
   return createSession(generateQuestions({ level, scope, count: SESSION_LENGTH, seed }));
@@ -605,6 +606,7 @@ export default function CountItApp() {
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
         <BuildStamp />
       </footer>
+      <SupportFallbackDialog />
     </div>
   );
 }
