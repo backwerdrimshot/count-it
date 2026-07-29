@@ -83,6 +83,11 @@ The public build is available at `count-it.backwerdrhythmshop.com`, and the repo
 includes the matching `CNAME`. No production deployment workflow is committed, so
 publishing is configured outside repository Actions.
 
+Production currently lags the release on `main`: the public origin still serves the
+earlier build and does not include the support fallback dialog from PR #3. Publish
+the current `main` revision through the owner-managed host, then verify the footer
+build and support dialog before marking this release live.
+
 ## Support and feedback
 
 - **Report a problem** emails `support@backwerdrhythmshop.com`.
