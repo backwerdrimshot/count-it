@@ -3,12 +3,19 @@
   --navy-deep: #00264d;
   --navy-soft: #e8f0f7;
   --orange: #f26522;
-  --orange-deep: #c7470b;
+  /* Orange as TEXT on paper: Brand Orange is 3.1:1 there. One notch deeper
+     than #c7470b so it also clears 4.5:1 on --cream (4.75:1), and white on
+     its fills rises from 4.84:1 to 5.25:1. */
+  --orange-deep: #bf420a;
+  /* Orange as TEXT on the navy sections, where the deep value is too dark:
+     Brand Orange is 4.0:1 there and this is 5.45:1. */
+  --orange-light: #f7913f;
   --orange-soft: #fff0e6;
   --cream: #f7f3ec;
   --paper: #fffdf9;
   --ink: #13243a;
-  --muted: #5e6d7e;
+  /* 4.19:1 on the mode-tab rail; 4.58:1 here. */
+  --muted: #586777;
   --line: #d9e0e6;
   --green: #117a55;
   --green-soft: #e6f6ef;
@@ -124,7 +131,7 @@ a:focus-visible,
 }
 
 .brand-lockup em {
-  color: var(--orange);
+  color: var(--orange-deep);
   font-style: normal;
 }
 
@@ -207,7 +214,7 @@ a:focus-visible,
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--orange);
+  color: var(--orange-deep);
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -1724,4 +1731,12 @@ a:focus-visible,
     grid-template-columns: 1fr;
     gap: 3px;
   }
+}
+
+/* The eyebrow is the one accent that has to work on both grounds. On the navy
+   hero and quick-lesson panels the deep orange would be too dark, so it goes
+   light instead of dark. */
+.hero .eyebrow,
+.quick-lesson .eyebrow {
+  color: var(--orange-light);
 }
