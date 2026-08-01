@@ -686,7 +686,7 @@ a:focus-visible,
 
 .reference-counts span.sounds {
   border-color: var(--orange);
-  background: var(--orange);
+  background: var(--orange-deep);
   color: white;
 }
 
@@ -744,7 +744,7 @@ a:focus-visible,
 
 .primary-button {
   border: 1px solid var(--orange);
-  background: var(--orange);
+  background: var(--orange-deep);
   color: white;
   box-shadow: 0 5px 0 var(--orange-deep);
 }
@@ -995,7 +995,7 @@ a:focus-visible,
   place-items: center;
   border: 10px solid var(--orange-soft);
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--orange-deep);
   color: white;
   box-shadow: 0 0 0 2px var(--orange);
 }
