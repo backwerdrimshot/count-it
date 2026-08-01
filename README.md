@@ -79,14 +79,29 @@ layouts support phone, tablet, and desktop use.
 
 ## Deployment
 
-The public build is available at `count-it.backwerdrhythmshop.com`, and the repository
-includes the matching `CNAME`. No production deployment workflow is committed, so
-publishing is configured outside repository Actions.
+The public build is available at `count-it.backwerdrhythmshop.com`.
 
-Production currently lags the release on `main`: the public origin still serves the
-earlier build and does not include the support fallback dialog from PR #3. Publish
-the current `main` revision through the owner-managed host, then verify the footer
-build and support dialog before marking this release live.
+**Publishing happens outside this repository, and outside GitHub and Cloudflare.**
+This app was scaffolded as an OpenAI Sites project: `.openai/hosting.json` carries
+its project id, `build/sites-vite-plugin.ts` packages the Sites metadata after Vite
+compiles, and `worker/index.ts` is a Cloudflare Worker that the Sites platform
+deploys on the app's behalf. Publishing means pushing a new build through the
+account that owns that project id. Merging to `main` does nothing on its own.
+
+Two things in the repo look like deployment paths and are not:
+
+- **`CNAME`** is left over from GitHub Pages. The `pages-build-deployment`
+  workflow has not run since 2026-07-21 and no longer publishes this app.
+- **`vite.config.ts`** builds a Wrangler config inline, but it is
+  `localBindingConfig` — dev bindings only. There is no committed
+  `wrangler.jsonc`, no account id, and no `deploy` script, so `wrangler deploy`
+  is not available here the way it is in the site repo.
+
+Production currently lags `main` by two releases: the support fallback dialog from
+PR #3, and the WCAG AA contrast fix for the orange-filled controls from PR #6.
+Publish the current `main` revision through the Sites project, then verify the
+footer build stamp, the support dialog, and the primary button's contrast on the
+live origin before marking the release published.
 
 ## Support and feedback
 
