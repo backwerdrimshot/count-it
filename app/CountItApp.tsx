@@ -32,7 +32,7 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
-const BUILD_ID = "2026-08-01.8";
+const BUILD_ID = "2026-08-01.9";
 
 function makeSession(level: LevelId, scope: QuestionScope, seed: number): ChallengeSession {
   return createSession(generateQuestions({ level, scope, count: SESSION_LENGTH, seed }));
@@ -40,9 +40,8 @@ function makeSession(level: LevelId, scope: QuestionScope, seed: number): Challe
 
 function BrandMark() {
   return (
-    <span className="brand-mark" aria-hidden="true">
-      <span>1</span><i /><i /><i />
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="brand-mark" src="/icon-192.png" alt="" aria-hidden="true" />
   );
 }
 
