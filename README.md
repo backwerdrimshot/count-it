@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-01.7`
+- **Build:** `2026-08-01.8`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://backwerdrhythmshop.com/app-guides/count-it>
@@ -79,60 +79,52 @@ layouts support phone, tablet, and desktop use.
 
 ## Deployment
 
-The public build is available at `count-it.backwerdrhythmshop.com`.
+The public build is at `count-it.backwerdrhythmshop.com`, and as of
+**2026-08-01 it serves a current build** — verified by the shop site's Link
+audit, which runs on GitHub Actions where that domain is reachable and reported
+`now shipped` for this app.
 
-**Publishing happens outside this repository, and outside GitHub and Cloudflare.**
-This app was scaffolded as an OpenAI Sites project: `.openai/hosting.json` carries
-its project id, `build/sites-vite-plugin.ts` packages the Sites metadata after Vite
-compiles, and `worker/index.ts` is a Cloudflare Worker that the Sites platform
-deploys on the app's behalf. Publishing means pushing a new build through the
-account that owns that project id. Merging to `main` does nothing on its own.
+**Publishing is configured in Cloudflare, outside this repository.** There is no
+deploy workflow here and none is wanted: the Workers Git integration is
+configured dashboard-side and is not visible from git. That has one consequence
+worth internalising — **you cannot tell from this repo whether a merge
+published.** Check the Cloudflare dashboard, or run the site repo's **Link
+audit** workflow, which fetches the live origin and reports what it finds.
 
-Two things in the repo look like deployment paths and are not:
+This app spent roughly 2026-07-27 to 2026-08-01 with four merged releases that
+never reached users, because nothing in the repo published and nothing said so.
+That is the failure mode this section exists to prevent.
 
-- **`CNAME`** is left over from GitHub Pages. The `pages-build-deployment`
-  workflow has not run since 2026-07-21 and no longer publishes this app.
-- **`vite.config.ts`** builds a Wrangler config inline, but it is
-  `localBindingConfig` — dev bindings only. There is no committed
-  `wrangler.jsonc`, no account id, and no `deploy` script, so `wrangler deploy`
-  is not available here the way it is in the site repo.
+### History, so the dead ends stay dead
 
-Production currently lags `main` by two releases: the support fallback dialog from
-PR #3, and the WCAG AA contrast fix for the orange-filled controls from PR #6.
-Publish the current `main` revision through the Sites project, then verify the
-footer build stamp, the support dialog, and the primary button's contrast on the
-live origin before marking the release published.
+- This app was scaffolded as an **OpenAI Sites** project. `.openai/hosting.json`
+  still carries its project id and `build/sites-vite-plugin.ts` still packages
+  the metadata, but Sites is no longer the live origin. The site repo settled
+  the question by fingerprinting four origins against known-good examples: this
+  one answers like a Cloudflare Worker and shows none of the GitHub Pages
+  tells that Stick Lab still leaks through the same proxy.
+- **`CNAME` is gone.** It was a GitHub Pages leftover; `pages-build-deployment`
+  last ran 2026-07-21 and Pages is not the origin.
+- **`.github/workflows/workers.yml` is gone.** It was a manual-only
+  (`workflow_dispatch`) path that required a `cloudflare-workers-production`
+  environment holding `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Those
+  secrets were never added and the workflow **never ran once** in 31 runs of
+  this repo's history, so it published nothing and could not have. It is in git
+  history if the API-token route is ever wanted again.
+- **`vite.config.ts`** builds a Wrangler config inline, but that is
+  `localBindingConfig` — dev bindings only, not a deploy config.
 
-### Moving off Sites onto Cloudflare Workers
+`vinext build` emits a complete deploy config at `dist/server/wrangler.json`:
+worker name, compatibility flags, entry point, assets directory. There is no
+hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
+the whole thing locally without credentials.
 
-A second, self-owned publish path is committed and ready, matching the pattern
-the site repo already uses. It is **not** live and does not fire on merge.
-
-`vinext build` emits a complete deploy config at `dist/server/wrangler.json` —
-worker name, compatibility flags, entry point, and assets directory — so there
-is no hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run`
-runs the whole thing locally without credentials and currently reports a 2655 KiB
-upload, 995 KiB gzipped, with no bindings required. The `IMAGES` binding that
-`worker/index.ts` declares is unreachable: nothing in the app imports
-`next/image`, and no built asset references `/_vinext/image`.
-
-Two steps remain, and both need account access this repo does not have:
-
-1. **Add repository secrets** `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
-   under an environment named `cloudflare-workers-production`, then run the
-   **Deploy to Cloudflare Workers** workflow. It publishes to the `workers.dev`
-   URL and changes nothing about the live origin, so it is safe to try first.
-2. **Repoint the custom domain.** `count-it.backwerdrhythmshop.com` resolves to
-   the Sites project today. Binding it to the Worker in the Cloudflare dashboard
-   is the actual cutover, and is reversible by unbinding it again.
-
-Until step 2, the Sites project remains the live origin and the instructions
-above still apply. After step 2, delete `CNAME` — it will be doubly obsolete.
-
-> **Size headroom is thin.** 995 KiB gzipped sits just under the 1 MiB Workers
-> script limit on the free plan. On a paid plan the limit is 3 MiB and there is
-> room; on free, adding a dependency could push it over. Check the plan before
-> relying on this path.
+> **Size headroom is thin.** The build is 2655 KiB, **995 KiB gzipped**, against
+> the 1 MiB Workers script limit on the free plan — about 5 KiB of room. On a
+> paid plan the limit is 3 MiB. On free, one added dependency breaks the deploy,
+> and the failure reads like an unrelated build error. No bindings are required;
+> the `IMAGES` binding `worker/index.ts` declares is unreachable, since nothing
+> imports `next/image` and no built asset references `/_vinext/image`.
 
 ## Support and feedback
 
