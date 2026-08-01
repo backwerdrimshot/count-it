@@ -1096,6 +1096,9 @@ a:focus-visible,
   display: grid;
 }
 
+.site-footer .shop-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.site-footer .shop-link:hover { color: #fff; }
+
 .site-footer strong {
   color: white;
   font-family: Georgia, serif;
