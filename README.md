@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-01.4`
+- **Build:** `2026-08-01.5`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://backwerdrhythmshop.com/app-guides/count-it>
@@ -102,6 +102,37 @@ PR #3, and the WCAG AA contrast fix for the orange-filled controls from PR #6.
 Publish the current `main` revision through the Sites project, then verify the
 footer build stamp, the support dialog, and the primary button's contrast on the
 live origin before marking the release published.
+
+### Moving off Sites onto Cloudflare Workers
+
+A second, self-owned publish path is committed and ready, matching the pattern
+the site repo already uses. It is **not** live and does not fire on merge.
+
+`vinext build` emits a complete deploy config at `dist/server/wrangler.json` —
+worker name, compatibility flags, entry point, and assets directory — so there
+is no hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run`
+runs the whole thing locally without credentials and currently reports a 2655 KiB
+upload, 995 KiB gzipped, with no bindings required. The `IMAGES` binding that
+`worker/index.ts` declares is unreachable: nothing in the app imports
+`next/image`, and no built asset references `/_vinext/image`.
+
+Two steps remain, and both need account access this repo does not have:
+
+1. **Add repository secrets** `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
+   under an environment named `cloudflare-workers-production`, then run the
+   **Deploy to Cloudflare Workers** workflow. It publishes to the `workers.dev`
+   URL and changes nothing about the live origin, so it is safe to try first.
+2. **Repoint the custom domain.** `count-it.backwerdrhythmshop.com` resolves to
+   the Sites project today. Binding it to the Worker in the Cloudflare dashboard
+   is the actual cutover, and is reversible by unbinding it again.
+
+Until step 2, the Sites project remains the live origin and the instructions
+above still apply. After step 2, delete `CNAME` — it will be doubly obsolete.
+
+> **Size headroom is thin.** 995 KiB gzipped sits just under the 1 MiB Workers
+> script limit on the free plan. On a paid plan the limit is 3 MiB and there is
+> room; on free, adding a dependency could push it over. Check the plan before
+> relying on this path.
 
 ## Support and feedback
 
