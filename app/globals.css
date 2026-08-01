@@ -757,7 +757,9 @@ a:focus-visible,
 }
 
 .primary-button:hover {
-  background: #da510f;
+  /* This brightened to #da510f, which put white at 4.07:1 — the button became
+     harder to read exactly when pointed at. Hover deepens instead: 6.49:1. */
+  background: #a83809;
   transform: translateY(1px);
   box-shadow: 0 4px 0 #9c3609;
 }
