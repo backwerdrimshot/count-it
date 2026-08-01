@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-01`
+- **Build:** `2026-08-01.3`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://backwerdrhythmshop.com/app-guides/count-it>
