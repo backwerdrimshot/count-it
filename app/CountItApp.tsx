@@ -32,7 +32,7 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
-const BUILD_ID = "2026-08-03";
+const BUILD_ID = "2026-08-03.2";
 
 function makeSession(level: LevelId, scope: QuestionScope, seed: number): ChallengeSession {
   return createSession(generateQuestions({ level, scope, count: SESSION_LENGTH, seed }));
