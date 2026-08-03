@@ -1,0 +1,52 @@
+# Runs this repo's own tests on every pull request.
+#
+# They existed and passed long before this file did — 19 tests across 3 vitest files — but nothing
+# invoked them. package.json defined them; no workflow ran them. The only gate
+# on a pull request here was readme-standard.yml, which validates the README and
+# nothing else, so a PR showed a green check while the test suite sat untouched.
+# A gate that reports green without running the tests is worse than no gate.
+#
+# pnpm check here is `pnpm test && pnpm build`.
+#
+# The step is `pnpm check`, which is this repo's own definition of good rather
+# than a sequence invented here. If that definition changes, this workflow
+# follows it without editing.
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Named "check", not "validate": readme-standard.yml already uses the job id
+  # "validate", and a check run takes its name from the job. Two workflows with
+  # the same job id produce two identically-named checks — indistinguishable in
+  # the checks list, and ambiguous for any branch-protection rule naming it.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      # No version pinned: the action reads packageManager from package.json,
+      # so the lockfile and CI cannot drift apart.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check
+        run: pnpm check
