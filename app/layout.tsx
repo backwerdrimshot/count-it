@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const title = "Count It — Backwerd Rhythm Shop";
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Count It",
+  "url": "https://count-it.backwerdrhythmshop.com/",
+  "applicationCategory": "EducationalApplication",
+  "applicationSubCategory": "Music education",
+  "operatingSystem": "Any device with a modern web browser",
+  "isAccessibleForFree": true,
+  "description": "Practice connecting written rhythms to spoken subdivision counts with Count It, a free browser-based rhythm-counting trainer.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Backwerd Rhythm Shop",
+    "url": "https://backwerdrhythmshop.com/"
+  }
+} as const;
+
+const title = "Count It | Free Rhythm-Counting Practice App";
 const description =
-  "Practice reading quarter-note, eighth-note, and sixteenth-note rhythms with clear counting feedback.";
+  "Practice connecting written rhythms to spoken subdivision counts with Count It, a free browser-based rhythm-counting trainer.";
 const url = "https://count-it.backwerdrhythmshop.com/";
 
 export const metadata: Metadata = {
@@ -32,6 +54,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
