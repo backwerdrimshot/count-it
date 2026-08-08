@@ -5,6 +5,7 @@ import {
   describeAssignment,
   isAssigned,
   parseAssignment,
+  retakeSeed,
   serializeAssignment,
   uniqueMeasures,
   verificationCode,
@@ -51,7 +52,7 @@ describe("the assignment link", () => {
   });
 
   it("round-trips losslessly through the URL", () => {
-    const first = ok("?a=Step%205&scope=beat&cells=sixteenths,rest-three&guide=off&n=12&pass=10&seed=cr5");
+    const first = ok("?a=Step%205&scope=beat&cells=sixteenths,rest-three&guide=off&fb=end&retry=reseed&n=12&pass=10&seed=cr5");
     const url = serializeAssignment(first.assignment);
     const second = ok(url);
     expect(second.assignment).toEqual(first.assignment);
@@ -117,6 +118,52 @@ describe("the assignment link", () => {
     ).toHaveLength(16);
     // Beat rounds are unaffected: a beat prompt may repeat once the pool cycles.
     expect(ok("?scope=beat&cells=quarter,eighths&n=20").assignment.count).toBe(20);
+  });
+
+  it("lets the link choose what trying again means", () => {
+    expect(ok("?retry=reseed").assignment.retry).toBe("reseed");
+    expect(ok("?retry=off").assignment.retry).toBe("off");
+    expect(ok("?retry=free").assignment.retry).toBe("free");
+    // Null, not "free": the app's default and an explicit choice of it are
+    // different facts, and the evidence records which one the link made.
+    expect(ok("?a=x").assignment.retry).toBeNull();
+    expect(bad("?retry=sometimes").code).toBe("retry");
+    expect(ok("?retry=off").locked).toContain("retry");
+
+    const described = (search: string) => describeAssignment(ok(search).assignment);
+    expect(described("?retry=reseed&cells=quarter,eighths")).toContain("retry on new questions");
+    expect(described("?retry=off&cells=quarter,eighths")).toContain("one attempt");
+    // The default is not restated — a conditions line that lists every default
+    // stops being read.
+    expect(described("?retry=free&cells=quarter,eighths")).not.toContain("retry");
+  });
+
+  it("gives a retake questions a teacher can regenerate", () => {
+    /* A retake nobody can reconstruct is a number, not evidence. The seed comes
+       from the link's own seed plus the attempt, so a teacher holding the link
+       can rebuild exactly what attempt three asked. */
+    expect(retakeSeed("cr2", 1)).toBe("cr2");
+    expect(retakeSeed("cr2", 2)).toBe("cr2#a2");
+    expect(retakeSeed("cr2", 2)).toBe(retakeSeed("cr2", 2));
+    expect(retakeSeed("cr2", 3)).not.toBe(retakeSeed("cr2", 2));
+    // Derived from the ORIGINAL every time, never chained through the last
+    // attempt — otherwise attempt three depends on having generated two.
+    expect(retakeSeed(retakeSeed("cr2", 2), 3)).not.toBe(retakeSeed("cr2", 3));
+    expect(() => retakeSeed("cr2", 0)).toThrow(RangeError);
+
+    // Same conditions, different questions — which is what a retake means.
+    const round = (attempt: number) =>
+      generateQuestions({
+        level: "level-3", scope: "beat", count: 8, seed: retakeSeed("cr2", attempt),
+      }).map((question) => `${question.prompt.cells.map((cell) => cell.id).join("+")}|${question.correctAnswer}`);
+    expect(round(1)).not.toEqual(round(2));
+    expect(round(2)).toEqual(round(2));
+    // Attempt one is the plain link, so `retry=reseed` does not change the
+    // round a student opens with.
+    expect(round(1)).toEqual(
+      generateQuestions({ level: "level-3", scope: "beat", count: 8, seed: "cr2" })
+        .map((question) => `${question.prompt.cells.map((cell) => cell.id).join("+")}|${question.correctAnswer}`),
+    );
   });
 
   it("lets the link choose when the answer appears", () => {

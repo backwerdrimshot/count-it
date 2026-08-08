@@ -24,7 +24,7 @@ import { LEVELS, RHYTHM_CELLS } from "./rhythm";
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-08.5";
+export const COUNT_IT_BUILD = "2026-08-08.6";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -49,13 +49,14 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
-  configurableSettings: ["a", "level", "scope", "cells", "guide", "fb", "n", "pass", "seed", "sys"],
-  lockableSettings: ["level", "scope", "cells", "guide", "fb", "n", "pass", "seed"],
+  configurableSettings: ["a", "level", "scope", "cells", "guide", "fb", "retry", "n", "pass", "seed", "sys"],
+  lockableSettings: ["level", "scope", "cells", "guide", "fb", "retry", "n", "pass", "seed"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `guide` fixes the " +
     "subdivision-guide policy, `fb` chooses whether the correct answer appears after each " +
-    "question or only at the end, `n` and `pass` set the length and the goal, and `seed` makes " +
+    "question or only at the end, `retry` chooses what trying again means, `n` and `pass` set " +
+    "the length and the goal, and `seed` makes " +
     "every student's questions identical. `level` is a shorthand for a cumulative vocabulary " +
     "and is superseded when `cells` is present. `a` is a display name and `sys` names the " +
     "counting system.",
@@ -64,8 +65,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     `after duplicates collapse, a question count outside ${MIN_QUESTIONS}–${MAX_QUESTIONS}, a ` +
     `pass mark the round cannot reach (measured against the round's real length, ${DEFAULT_QUESTIONS} ` +
     "when the link sets none), a full-measure round longer than the pool can fill without " +
-    "repeating, an unrecognized feedback setting, or a counting system this app does not teach " +
-    "each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
+    "repeating, an unrecognized feedback or retry setting, or a counting system this app does " +
+    "not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
     "assignment nobody set.",
   roundLengthRule:
@@ -115,11 +116,16 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "an identifier, so the questions stay identical and comparable while a posted answer key " +
     "does not transfer. Attempts are counted and reported on the card, in the copied summary " +
     "and in the verification code, because a replay of an already-answered round is a different " +
-    "fact than a first attempt. `fb=end` withholds the correct answer, the running score and " +
-    "the guide's highlighting until the round is over. Practice mode is closed while an " +
-    "assigned round is unfinished, since it reveals counts for the same vocabulary. None of " +
-    "this makes a score proof: the app has no accounts, and the verification code remains a " +
-    "deterrent rather than a signature.",
+    "fact than a first attempt. Attempts are counted per assignment in browser storage, so the " +
+    "count survives a reload rather than resetting with the page. `fb=end` withholds the " +
+    "correct answer, the running score and the guide's highlighting until the round is over. " +
+    "`retry=reseed` gives a retake the same conditions on new questions, seeded from the link's " +
+    "own seed plus the attempt number so a teacher can regenerate any attempt; `retry=off` " +
+    "withdraws the retry control. Practice mode is closed while an assigned round is " +
+    "unfinished, since it reveals counts for the same vocabulary. None of this makes a score " +
+    "proof: the app has no accounts, `retry=off` cannot stop a page reload — it reports the " +
+    "further attempt rather than preventing it, which is the same posture this app takes " +
+    "toward a pass mark — and the verification code remains a deterrent rather than a signature.",
   accessibility: [
     "keyboard-operation",
     "screen-reader-labels",
@@ -129,9 +135,12 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "non-color-status-cues",
   ],
   offlineBehavior:
-    "No account, backend, or network dependency. Preferences and personal bests stay in " +
+    "No account, backend, or network dependency. Preferences, personal bests, a per-assignment " +
+    "attempt tally and an opaque per-browser string used only to vary answer order stay in " +
     "browser storage; the optional assignment identifier is session-only and never persisted. " +
-    "The visit counter is progressive enhancement and its absence changes nothing.",
+    "None of the stored values name a person: the attempt tally is keyed by the assignment's " +
+    "own canonical link, and the ordering string is random and meaningless outside this " +
+    "browser. The visit counter is progressive enhancement and its absence changes nothing.",
   siblingApps: {
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
     "scale-trail": "https://scale-trail.backwerdrhythmshop.com/",

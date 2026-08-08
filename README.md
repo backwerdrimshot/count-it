@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-08.5`
+- **Build:** `2026-08-08.6`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -54,6 +54,7 @@ be a contract nobody signed up to.
 | `cells` | Explicit rhythm vocabulary by catalog id. Levels are cumulative, so this is the only way to assign a subset — "the rest-entry cells and nothing else" is not a level. |
 | `guide` | `on` or `off`. A support policy set by the assignment, not the learner. |
 | `fb` | `each` or `end`. When the correct answer appears. `end` also hides the running score and the guide's highlighting until the round is over. |
+| `retry` | `free`, `reseed` or `off`. What trying again means: the same round back (the default), the same conditions on new questions, or no retry control at all. |
 | `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
 | `seed` | Same questions for every student who opens the link. |
@@ -86,17 +87,27 @@ The app has no accounts, so nothing here is proof. What it does do:
   the *order* of those options follows a typed name, or failing that a
   per-browser string that never leaves the device. A posted answer key does not
   transfer.
-- **Attempts are counted.** A retry replays the same round after its answers
-  have been shown, so the card, the copied summary and the verification code
-  all say which run produced the score.
+- **Attempts are counted, and the count survives a reload.** The card, the
+  copied summary and the verification code all say which run produced the
+  score. The tally lives in browser storage keyed by the assignment's own
+  canonical link, so reloading the page — the same gesture as replaying the
+  round — does not reset it to one.
+- **A retry can be what the assignment needs it to be.** `retry=reseed` gives a
+  retake the same conditions on new questions, seeded from the link's seed plus
+  the attempt number so a teacher can regenerate any attempt; `retry=off`
+  withdraws the control. Attempt one of a `reseed` round is the same round the
+  link would ask without the parameter.
 - **`fb=end` withholds the answer key** for rounds that are being graded, and
   the end-of-round review is where a held round gets learned from.
 - **Practice closes during an assigned round**, because it reveals the counts
   for the same vocabulary the round is testing.
 
 None of this survives a determined student: the verification code's algorithm
-is in this repository, and progress is device-local. It raises the effort from
-"press retry" to "deliberately cheat", which is the honest goal.
+is in this repository, and progress is device-local. **`retry=off` cannot stop a
+page reload** — it removes the control and the attempt tally reports the further
+attempt, which is the same posture this app takes toward a pass mark: state what
+happened and let a human decide what it means. It raises the effort from "press
+retry" to "deliberately cheat", which is the honest goal.
 
 ## Local development
 
@@ -150,7 +161,10 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 ## Privacy and accessibility
 
 Count It requires no account or backend and does not send practice progress or scores
-off-device. Lightweight preferences and the personal best stay in `localStorage`.
+off-device. Lightweight preferences, the personal best, a per-assignment attempt tally
+and an opaque random string used only to vary answer order stay in `localStorage`.
+None of them names a person: the tally is keyed by the assignment's own link, and the
+ordering string is meaningless outside the browser that minted it.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
 layouts support phone, tablet, and desktop use.
 
@@ -197,11 +211,12 @@ hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
 the whole thing locally without credentials.
 
 > **Size headroom is thin, and the number moves.** Measured with
-> `pnpm deploy:dry-run` at `2026-08-08.5`: **2686.46 KiB, 1003.43 KiB gzipped**.
-> The commit before it measured 1000.88 KiB, so this release added 2.55 KiB —
-> and the figures this note carried previously (2655 KiB / 995 KiB) were already
-> stale, which is the failure mode a hand-copied number has. Re-measure here on
-> every release rather than trusting the line above it.
+> `pnpm deploy:dry-run` at `2026-08-08.6`: **2689.78 KiB, 1004.50 KiB gzipped**,
+> up 1.07 KiB from `2026-08-08.5` (1003.43 KiB), which was itself up 2.55 KiB
+> from the release before it. The figure this note carried before that pass
+> (995 KiB) had gone stale unnoticed, which is the failure mode a hand-copied
+> number has. Re-measure here on every release rather than trusting the line
+> above it.
 >
 > Against the 1 MiB (1024 KiB) Workers script limit on the free plan that leaves
 > roughly 20 KiB. **Confirm the plan's real ceiling in the Cloudflare dashboard

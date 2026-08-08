@@ -135,6 +135,18 @@ describe("the result envelope", () => {
     expect(receipt().settings.fb).toBeUndefined();
   });
 
+  it("records what a retry was allowed to be", () => {
+    /* A score from a round that could be replayed on the same questions is
+       different evidence from one that could not be replayed at all, so the
+       policy travels with the result. */
+    const once = receipt({ search: "?scope=beat&cells=quarter,eighths&retry=off&n=3&seed=cr1" });
+    expect(once.settings.retry).toBe("off");
+    expect(once.conditions.stated).toContain("one attempt");
+    expect(receipt({ search: "?scope=beat&cells=quarter,eighths&retry=reseed&n=3&seed=cr1" }).settings.retry)
+      .toBe("reseed");
+    expect(receipt().settings.retry).toBeUndefined();
+  });
+
   it("keeps the verification code distinct from the attempt reference", () => {
     /* The code is teacher-facing, with its own published format and its own
        stated limits. Whether it generalizes across the three apps is an open
