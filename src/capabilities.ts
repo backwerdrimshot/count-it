@@ -18,13 +18,13 @@
  *      test compares them. A manifest that drifts from the app it describes is
  *      worse than none: it is confidently wrong, and consumers act on it.
  */
-import { MAX_QUESTIONS, MIN_POOL, MIN_QUESTIONS } from "./assignment";
+import { DEFAULT_QUESTIONS, MAX_QUESTIONS, MIN_POOL, MIN_QUESTIONS } from "./assignment";
 import { LEVELS, RHYTHM_CELLS } from "./rhythm";
 
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-08.4";
+export const COUNT_IT_BUILD = "2026-08-08.5";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -49,22 +49,30 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
-  configurableSettings: ["a", "level", "scope", "cells", "guide", "n", "pass", "seed", "sys"],
-  lockableSettings: ["level", "scope", "cells", "guide", "n", "pass", "seed"],
+  configurableSettings: ["a", "level", "scope", "cells", "guide", "fb", "n", "pass", "seed", "sys"],
+  lockableSettings: ["level", "scope", "cells", "guide", "fb", "n", "pass", "seed"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `guide` fixes the " +
-    "subdivision-guide policy, `n` and `pass` set the length and the goal, and `seed` makes " +
+    "subdivision-guide policy, `fb` chooses whether the correct answer appears after each " +
+    "question or only at the end, `n` and `pass` set the length and the goal, and `seed` makes " +
     "every student's questions identical. `level` is a shorthand for a cumulative vocabulary " +
     "and is superseded when `cells` is present. `a` is a display name and `sys` names the " +
     "counting system.",
   assignmentValidation:
     `Rejects loudly and never repairs: an unknown rhythm id, fewer than ${MIN_POOL} rhythms ` +
     `after duplicates collapse, a question count outside ${MIN_QUESTIONS}–${MAX_QUESTIONS}, a ` +
-    "pass mark the round cannot reach, or a counting system this app does not teach each " +
-    "invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
+    `pass mark the round cannot reach (measured against the round's real length, ${DEFAULT_QUESTIONS} ` +
+    "when the link sets none), a full-measure round longer than the pool can fill without " +
+    "repeating, an unrecognized feedback setting, or a counting system this app does not teach " +
+    "each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
     "assignment nobody set.",
+  roundLengthRule:
+    "A full-measure round never repeats a measure, so a pool of k rhythms can fill at most k^4 " +
+    "questions: two rhythms make 16. Asking for more is refused at the link rather than while " +
+    "the round is being built — the shape of failure that let a banner state one assignment " +
+    "while the student answered another.",
   /* The ids a link is written against. Published because a link authored by
      hand depends on them, which makes a rename a breaking change to every
      assignment already posted in a classroom. */
@@ -102,6 +110,16 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "counts the assignment's policy rather than the learner's own toggle. Question size (one " +
     "beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. " +
     "There is no timer anywhere in this app, by design.",
+  integrityMeasures:
+    "An assigned round varies the ORDER of the answer choices per student, from the seed plus " +
+    "an identifier, so the questions stay identical and comparable while a posted answer key " +
+    "does not transfer. Attempts are counted and reported on the card, in the copied summary " +
+    "and in the verification code, because a replay of an already-answered round is a different " +
+    "fact than a first attempt. `fb=end` withholds the correct answer, the running score and " +
+    "the guide's highlighting until the round is over. Practice mode is closed while an " +
+    "assigned round is unfinished, since it reveals counts for the same vocabulary. None of " +
+    "this makes a score proof: the app has no accounts, and the verification code remains a " +
+    "deterrent rather than a signature.",
   accessibility: [
     "keyboard-operation",
     "screen-reader-labels",

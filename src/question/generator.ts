@@ -42,6 +42,18 @@ export interface GenerateQuestionsOptions {
    *  no others. Absent, the level's cumulative vocabulary is used exactly as
    *  before, so every existing caller and every existing seed is untouched. */
   readonly cells?: readonly string[];
+  /** Who is sitting the round, as an opaque string.
+   *
+   *  A seed exists so every student gets the SAME questions, which is what
+   *  makes their scores comparable. It also fixed the position of the correct
+   *  answer, so one student could post "4, 4, 2, 3, 4" and the rest of the
+   *  class scored full marks without reading a notehead.
+   *
+   *  This varies the ORDER OF THE CHOICES ONLY. The prompts and the distractor
+   *  set are still drawn from `seed` alone, so two students answer identical
+   *  questions with identical options — the answer key just stops transferring.
+   *  Absent, the round is byte-identical to one generated before this existed. */
+  readonly variant?: string;
 }
 
 function beatPrompts(cells: readonly RhythmCell[], count: number, random: RandomSource): RhythmPrompt[] {
@@ -83,11 +95,16 @@ function measurePrompts(cells: readonly RhythmCell[], count: number, random: Ran
   return prompts;
 }
 
-function buildQuestion(prompt: RhythmPrompt, index: number, random: RandomSource): CountQuestion {
+function buildQuestion(
+  prompt: RhythmPrompt,
+  index: number,
+  random: RandomSource,
+  presentation: RandomSource | null,
+): CountQuestion {
   const correctAnswer = getPromptAnswer(prompt, "standard");
   const correctChoiceId = `q${index + 1}-correct`;
   const distractors = generateDistractors(prompt, random, 3);
-  const choices = shuffle<QuestionChoice>(
+  const ordered = shuffle<QuestionChoice>(
     [
       Object.freeze({ id: correctChoiceId, label: correctAnswer, category: "correct" as const, isCorrect: true }),
       ...distractors.map((distractor, distractorIndex) =>
@@ -101,6 +118,12 @@ function buildQuestion(prompt: RhythmPrompt, index: number, random: RandomSource
     ],
     random,
   );
+  /* Reshuffled from a second source rather than seeding the first one
+     differently, so the draw above consumes exactly the randomness it always
+     did. That is what keeps the QUESTIONS — prompts and distractor sets, which
+     come off the same stream — identical for every student and identical to
+     every round generated before variants existed. */
+  const choices = presentation ? shuffle(ordered, presentation) : ordered;
   if (new Set(choices.map((choice) => choice.label)).size !== choices.length) {
     throw new Error("Question choices must be unique.");
   }
@@ -123,6 +146,7 @@ export function generateQuestions({
   count = 5,
   seed,
   cells: cellIds,
+  variant,
 }: GenerateQuestionsOptions): readonly CountQuestion[] {
   if (!Number.isInteger(count) || count < 1 || count > 20) {
     throw new RangeError("Question count must be between 1 and 20.");
@@ -136,8 +160,13 @@ export function generateQuestions({
   // that existed before it.
   const vocabulary = cellIds ? getCellsByIds(cellIds).map((cell) => cell.id).join(",") : level;
   const random = createSeededRandom(`${seed}:${vocabulary}:${scope}`);
+  const presentation = variant
+    ? createSeededRandom(`${seed}:${vocabulary}:${scope}:${variant}`)
+    : null;
   const prompts = scope === "beat"
     ? beatPrompts(cells, count, random)
     : measurePrompts(cells, count, random);
-  return Object.freeze(prompts.map((prompt, index) => buildQuestion(prompt, index, random)));
+  return Object.freeze(
+    prompts.map((prompt, index) => buildQuestion(prompt, index, random, presentation)),
+  );
 }

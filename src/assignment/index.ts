@@ -16,13 +16,17 @@
  *     they never set.
  *   * The support policy belongs to the LINK, not the learner. The subdivision
  *     guide is Count It's equivalent of bar labels: a gate counts the level's
- *     policy, never the student's own toggle.
+ *     policy, never the student's own toggle. The same is true of when feedback
+ *     arrives: instant feedback teaches and withheld feedback assesses, so `fb`
+ *     is the assignment's call rather than the learner's.
  *   * Nothing here is a timer. Difficulty comes from cell vocabulary, scope,
  *     and the guide — never from speed.
  */
-import { RHYTHM_CELLS, getLevel, type LevelId } from "../rhythm";
+import { RHYTHM_CELLS, getCellsForLevel, getLevel, type LevelId } from "../rhythm";
 
 export type GuidePolicy = "on" | "off";
+/** When the correct answer is shown. `each` teaches, `end` assesses. */
+export type FeedbackPolicy = "each" | "end";
 export type CountingSystemParam = "standard";
 export type AssignmentScope = "beat" | "measure";
 
@@ -32,6 +36,19 @@ export const MIN_POOL = 2;
 export const MIN_QUESTIONS = 1;
 export const MAX_QUESTIONS = 20;
 export const MAX_NAME_LENGTH = 60;
+/** The round length when a link does not set one. Single-sourced here because
+ *  `pass` has to be validated against the length the round will ACTUALLY be —
+ *  checking it against MAX_QUESTIONS accepted `?pass=8` for a five-question
+ *  round and put an unreachable goal on every student's card. */
+export const DEFAULT_QUESTIONS = 5;
+
+/** Distinct 4/4 measures a pool of `size` cells can assemble. Measure rounds
+ *  never repeat a measure, so this is a hard ceiling on the round length —
+ *  the one bound that was never written down, and the only one that could
+ *  fail AFTER the link had been accepted. */
+export function uniqueMeasures(size: number): number {
+  return size ** 4;
+}
 
 export interface AssignmentError {
   readonly code:
@@ -41,7 +58,12 @@ export interface AssignmentError {
     | "pass"
     | "level"
     | "scope"
-    | "system";
+    | "system"
+    | "feedback"
+    | "measure-pool"
+    /** Raised by the app, not the parser: a round that refused to build for a
+     *  reason validation did not anticipate. The link is still rejected whole. */
+    | "round";
   readonly entry?: string;
   /** Written for the person who actually hits it — a student on a phone. */
   readonly message: string;
@@ -55,6 +77,9 @@ export interface Assignment {
   /** Explicit cell pool, or null when the level's own vocabulary is used. */
   readonly cells: readonly string[] | null;
   readonly guide: GuidePolicy | null;
+  /** When the correct answer is shown. Null when the link did not say, which
+   *  means the app's default: after every question. */
+  readonly feedback: FeedbackPolicy | null;
   readonly count: number | null;
   /** Questions needed to pass, as the teacher set it. Never enforced by the
    *  app — it is reported on the card so a human can read the gate. */
@@ -204,6 +229,29 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("guide");
   }
 
+  /* When the correct answer appears. Refused rather than defaulted when the
+     value is unrecognized: a link that meant to withhold feedback and silently
+     got the teaching default would produce a graded round with the answer key
+     shown, which is the failure this parameter exists to prevent. */
+  let feedback: FeedbackPolicy | null = null;
+  const feedbackRaw = params.get("fb");
+  if (feedbackRaw !== null) {
+    if (feedbackRaw !== "each" && feedbackRaw !== "end") {
+      return {
+        ok: false,
+        error: {
+          code: "feedback",
+          entry: feedbackRaw,
+          message:
+            `“${feedbackRaw}” is not a feedback setting. A round can show the answer after ` +
+            "each question, or hold it to the end.",
+        },
+      };
+    }
+    feedback = feedbackRaw;
+    locked.push("fb");
+  }
+
   let count: number | null = null;
   const countRaw = params.get("n");
   if (countRaw !== null) {
@@ -224,11 +272,41 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("n");
   }
 
+  /* A measure round assembles four cells and never repeats a measure, so the
+     pool sets a ceiling the link author cannot see: two rhythms make sixteen
+     measures, and asking for twenty used to be ACCEPTED here and then throw
+     while the round was being built — after the banner, the level, the scope
+     and the pass mark had already applied. The student answered the default
+     round under the assignment's stated conditions. Rejecting the link is the
+     same rule as every other check in this file: a round that cannot be built
+     as written is not repaired into a different one. */
+  if (scope === "measure") {
+    const poolSize = cells ? cells.length : getCellsForLevel(level).length;
+    const available = uniqueMeasures(poolSize);
+    const wanted = count ?? DEFAULT_QUESTIONS;
+    if (available < wanted) {
+      return {
+        ok: false,
+        error: {
+          code: "measure-pool",
+          message:
+            `This practice link asks for ${wanted} full-measure questions, but ${poolSize} ` +
+            `rhythms can only make ${available} different measures. Ask for fewer questions, ` +
+            "or add rhythms to the link.",
+        },
+      };
+    }
+  }
+
   let passing: number | null = null;
   const passRaw = params.get("pass");
   if (passRaw !== null) {
     const parsed = integerParam(passRaw);
-    const ceiling = count ?? MAX_QUESTIONS;
+    /* Against the length the round will ACTUALLY be. A link with no `n` runs
+       five questions, so `pass=8` is unreachable — it used to be measured
+       against MAX_QUESTIONS and accepted, and every student failed a goal
+       nobody could clear. */
+    const ceiling = count ?? DEFAULT_QUESTIONS;
     if (parsed === null || parsed < 1 || parsed > ceiling) {
       return {
         ok: false,
@@ -259,6 +337,7 @@ export function parseAssignment(search: string): AssignmentResult {
       scope,
       cells,
       guide,
+      feedback,
       count,
       passing,
       seed,
@@ -282,6 +361,7 @@ export function serializeAssignment(assignment: Assignment): string {
   parts.push(`scope=${assignment.scope}`);
   if (assignment.cells) parts.push(`cells=${assignment.cells.join(",")}`);
   if (assignment.guide) parts.push(`guide=${assignment.guide}`);
+  if (assignment.feedback) parts.push(`fb=${assignment.feedback}`);
   if (assignment.count !== null) parts.push(`n=${assignment.count}`);
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
@@ -298,6 +378,7 @@ export function describeAssignment(assignment: Assignment): string {
     : getLevel(assignment.level).shortName);
   parts.push(assignment.scope === "beat" ? "one beat" : "one measure");
   if (assignment.guide) parts.push(assignment.guide === "on" ? "guide visible" : "guide hidden");
+  if (assignment.feedback === "end") parts.push("answers at the end");
   if (assignment.count !== null) parts.push(`${assignment.count} questions`);
   if (assignment.passing !== null) parts.push(`pass at ${assignment.passing}`);
   return parts.join(" · ");
@@ -326,6 +407,10 @@ export interface VerificationInput {
   readonly correct: number;
   readonly total: number;
   readonly finishedAt: Date;
+  /** Which run of this round produced the score, counting from 1. A replay is
+   *  a different fact about a student than a first attempt, and a code that
+   *  cannot tell them apart attests to less than it appears to. */
+  readonly attempt?: number;
 }
 
 function twoDigit(value: number): string {
@@ -339,6 +424,7 @@ export function verificationCode({
   correct,
   total,
   finishedAt,
+  attempt = 1,
 }: VerificationInput): string {
   const percent = total === 0 ? 0 : Math.round((correct / total) * 100);
   const stamp =
@@ -346,7 +432,7 @@ export function verificationCode({
     twoDigit(finishedAt.getMonth() + 1) +
     twoDigit(finishedAt.getDate());
   const digest = fnv1a(
-    `count-it|${assignment}|${studentId}|${correct}/${total}|${finishedAt.toISOString()}`,
+    `count-it|${assignment}|${studentId}|${correct}/${total}|#${attempt}|${finishedAt.toISOString()}`,
   )
     .toString(36)
     .toUpperCase()
