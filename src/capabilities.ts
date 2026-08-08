@@ -24,7 +24,7 @@ import { LEVELS, RHYTHM_CELLS } from "./rhythm";
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-08.3";
+export const COUNT_IT_BUILD = "2026-08-08.4";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -33,15 +33,18 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   version: COUNT_IT_BUILD,
   launchUrl: "https://count-it.backwerdrhythmshop.com/",
   launchUrlStatus: "Live. Cloudflare, custom domain.",
-  /* Level 1: it scores objectively and builds a result card a student can
-     submit, but that result is app-local and never transmitted, so it does not
-     claim Level 2. Raising it means adopting the universal result envelope —
-     see doc 23, which lists this app's envelope as unreconciled. */
-  integrationLevel: 1,
+  /* Level 2 as of 2026-08-08.4. The previous comment here said "raising it
+     means adopting the universal result envelope" — a criterion written down in
+     advance, and now met, so the level moves with it. Note what the level does
+     NOT assert: nothing is transmitted, by this app or by its siblings. Scale
+     Trail has claimed Level 2 on exactly these terms since before this. */
+  integrationLevel: 2,
   integrationLevelRationale:
-    "Accepts a configured assignment link and scores objectively, producing a capture-ready " +
-    "result card with a verification code. The result is app-local and never transmitted, so " +
-    "this is Level 1 until the universal result envelope is adopted.",
+    "Accepts a configured assignment link, scores objectively, and emits the universal result " +
+    "envelope (praxis.result.v0_1) — the condition this manifest previously named for Level 2, " +
+    "now met. Transmission is NOT part of the claim and never has been: the envelope is a format, " +
+    "the card renders from it, and nothing leaves the device. Scale Trail claims Level 2 on the " +
+    "same terms.",
   pathway: "rhythm-reading-and-counting",
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
@@ -83,11 +86,17 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Not yet reconciled. Candidate ids exist in the Sequence 2 draft but the vocabulary is an " +
     "owner decision, and an invented id would be a contract no one agreed to. Until it is " +
     "settled this app emits no skill ids.",
-  resultSchemaVersion: "app-local-1",
+  resultSchemaVersion: "praxis.result.v0_1",
   resultSchemaStatus:
-    "The result card is app-local: score, accuracy, the assignment's stated conditions, the " +
-    "teacher's pass mark, and a non-cryptographic verification code. It is not the universal " +
-    "result contract and is never transmitted. Migrating it is separate work.",
+    "Adopted 2026-08-08, last of the three apps, after Scale Trail and Mallet Map. This app had " +
+    "no result object at all — the card was assembled inline — so the envelope was built rather " +
+    "than renamed. `skillReferences` is null and says so: the field is nullable across the family " +
+    "precisely so an app with no reconciled vocabulary can decline rather than invent ids. " +
+    "`activity.contentVersion` is null because questions are generated from the conditions and a " +
+    "seed, which already reproduce the round. In measure scope a miss is attributed to every cell " +
+    "in the measure, because the question is answered as a whole — the finest attribution the " +
+    "format allows, not a claim that all four were misread. Emitting the shape is not " +
+    "transmitting it: nothing leaves the device.",
   supportDimensions:
     "The subdivision guide is a support, not a preference: an assignment pins it, and a gate " +
     "counts the assignment's policy rather than the learner's own toggle. Question size (one " +

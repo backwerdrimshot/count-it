@@ -55,7 +55,15 @@ describe("the published capability manifest", () => {
   });
 
   it("does not claim evidence or abilities this app lacks", () => {
-    expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevel).toBe(1);
+    /* Was 1. The manifest itself named the condition — "Level 1 until the
+       universal result envelope is adopted" — and 2026-08-08.4 adopted it, so
+       the level moves with the criterion that was written down in advance.
+       What Level 2 does NOT assert is transmission: nothing leaves the device
+       here or in either sibling, and Scale Trail has claimed 2 on the same
+       terms throughout. */
+    expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevel).toBe(2);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevelRationale).toMatch(/nothing leaves the device/i);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.resultSchemaVersion).toBe("praxis.result.v0_1");
     const limitations = COUNT_IT_CAPABILITY_MANIFEST.limitations.join(" ");
     expect(limitations).toMatch(/no audio, no microphone, and no tempo engine/i);
     expect(limitations).toMatch(/does not measure live performance/i);

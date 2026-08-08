@@ -34,6 +34,8 @@ import {
   type Assignment,
   type AssignmentError,
 } from "../src/assignment";
+import { createPraxisEvidenceResult } from "../src/result";
+import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 
 type AppMode = "practice" | "challenge";
 
@@ -276,6 +278,7 @@ function ChallengeMode({
   showReference,
   personalBest,
   assignment,
+  sequenceStep,
   studentId,
   finishedAt,
   onStudentIdChange,
@@ -290,6 +293,7 @@ function ChallengeMode({
   showReference: boolean;
   personalBest: number;
   assignment: Assignment | null;
+  sequenceStep: SequenceStep | null;
   studentId: string;
   finishedAt: Date | null;
   onStudentIdChange: (value: string) => void;
@@ -329,6 +333,17 @@ function ChallengeMode({
         ? "Good work. Review the highlighted subdivisions, then try again."
         : "Keep the guide visible and work beat by beat. Accuracy will follow.";
     const stamped = finishedAt ?? new Date(0);
+    /* The evidence, built once and rendered from. Before this the card assembled
+       its own facts inline, which is why this app had no result object to
+       migrate — and why the human record and any machine record could have
+       described different rounds without anything noticing. */
+    const result = createPraxisEvidenceResult({
+      session, assignment, sequenceStep, level, scope, finishedAt: stamped,
+    });
+    /* Separate from result.attemptReference on purpose: this is the
+       teacher-facing code with its own published format and its own stated
+       limits, and whether it generalizes across the three apps is still open.
+       Making the two identical here would answer that by accident. */
     const code = verificationCode({
       assignment: assignment?.name ?? "",
       studentId,
@@ -336,10 +351,8 @@ function ChallengeMode({
       total: session.questions.length,
       finishedAt: stamped,
     });
-    const conditions = assignment
-      ? describeAssignment(assignment)
-      : `${getLevel(level).shortName} · ${scope === "beat" ? "one-beat" : "one-measure"} questions`;
-    const passed = assignment?.passing != null ? session.score >= assignment.passing : null;
+    const conditions = result.conditions.stated;
+    const passed = result.outcome.metGoal;
     const summary = [
       `Count It — Choose the Count`,
       assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
@@ -561,6 +574,11 @@ export default function CountItApp() {
   // applied after mount so the server-rendered shell and the first client
   // render agree; the round it pins takes over immediately afterwards.
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+  /* Which published sequence step a link named. NOT a setting — it records
+     which assignment this was and never reaches the generator. See
+     src/sequence-step.ts on why that separation is enforced rather than
+     assumed. */
+  const [sequenceStep, setSequenceStep] = useState<SequenceStep | null>(null);
   const [linkError, setLinkError] = useState<AssignmentError | null>(null);
   const [studentId, setStudentId] = useState("");
   const [finishedAt, setFinishedAt] = useState<Date | null>(null);
@@ -575,6 +593,10 @@ export default function CountItApp() {
     // an effect is guarding against cascading renders, and an assignment sets
     // several pieces of state at once.
     const applyLink = window.setTimeout(() => {
+      /* Read before the assignment is validated: a link that names a step and
+         then fails validation is still evidence of which step was attempted,
+         and refusing the round does not make the marker untrue. */
+      setSequenceStep(parseSequenceStep(window.location.search));
       const result = parseAssignment(window.location.search);
       if (!result.ok) {
         setLinkError(result.error);
@@ -805,6 +827,7 @@ export default function CountItApp() {
               showReference={showReference}
               personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
               assignment={assignment}
+              sequenceStep={sequenceStep}
               studentId={studentId}
               finishedAt={finishedAt}
               onStudentIdChange={setStudentId}
