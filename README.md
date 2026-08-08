@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-08.2`
+- **Build:** `2026-08-08.3`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -24,6 +24,21 @@ documentation.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, and a verification code beside the score.
+
+### Capability manifest
+
+Count It publishes what it can do at
+[`/praxis-capabilities.json`](https://count-it.backwerdrhythmshop.com/praxis-capabilities.json):
+the URL parameters an assignment link may carry, the rhythm cell ids links are
+written against, the evidence it produces, and the things it deliberately does
+not do. The served file is a serialized copy of `src/capabilities.ts`, and a
+test compares them — a manifest that drifts from the app it describes is worse
+than none, because consumers act on it.
+
+Two rules the tests keep: `configurableSettings` names URL parameters rather
+than internal field names, derived from the parser itself; and no skill
+vocabulary is published, because none has been agreed and an invented id would
+be a contract nobody signed up to.
 
 ### Assignment link parameters
 

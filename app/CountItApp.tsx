@@ -26,6 +26,7 @@ import {
   type QuestionChoice,
   type QuestionScope,
 } from "../src/question";
+import { COUNT_IT_BUILD } from "../src/capabilities";
 import {
   describeAssignment,
   parseAssignment,
@@ -40,7 +41,10 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
-const BUILD_ID = "2026-08-08.2";
+/* Single-sourced from the capability manifest, so the footer stamp, the
+   published manifest and the README release line cannot disagree — the drift
+   the release gate exists to catch, removed rather than re-checked. */
+const BUILD_ID = COUNT_IT_BUILD;
 
 /** Which controls a link pinned, so the setup panel can disable exactly those
  *  and say why. Derived from the assignment rather than passed alongside it —
