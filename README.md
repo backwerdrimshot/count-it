@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-03.2`
+- **Build:** `2026-08-08.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -23,6 +23,34 @@ documentation.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
+- **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, and a verification code beside the score.
+
+### Assignment link parameters
+
+```
+?a=Step 2&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `a` | Assignment name shown to the student. Display text only. |
+| `level` | `1`–`3`. Ignored when `cells` is present. |
+| `scope` | `beat` or `measure`. |
+| `cells` | Explicit rhythm vocabulary by catalog id. Levels are cumulative, so this is the only way to assign a subset — "the rest-entry cells and nothing else" is not a level. |
+| `guide` | `on` or `off`. A support policy set by the assignment, not the learner. |
+| `n` | Questions in the round, 1–20. |
+| `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
+| `seed` | Same questions for every student who opens the link. |
+| `sys` | Counting system. `standard` only today; anything else is refused rather than silently graded against the wrong system. |
+
+An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
+under two, an impossible pass mark or an unsupported counting system each
+invalidate the whole link with a plain-language message, and the app keeps
+working normally underneath it. A rhythm pool with a rhythm missing teaches a
+different step, so silently dropping one would produce evidence for an
+assignment nobody set. Nothing about a student is stored: the optional
+identifier lives in session state only, and the verification code is a
+deterrent rather than proof.
 
 ## Local development
 
@@ -69,6 +97,7 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, accounts, cloud sync, analytics, or backend.
 - Standard counting is the only user-selectable system in this release.
 - Progress is device-local and intentionally lightweight.
+- Assignment results are copied out by the student; there is no download-as-image yet, and no submission to any LMS.
 
 ## Privacy and accessibility
 
