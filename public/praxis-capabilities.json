@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "1.0.0",
+  "appId": "count-it",
+  "title": "Count It",
+  "version": "2026-08-08.3",
+  "launchUrl": "https://count-it.backwerdrhythmshop.com/",
+  "launchUrlStatus": "Live. Cloudflare, custom domain.",
+  "integrationLevel": 1,
+  "integrationLevelRationale": "Accepts a configured assignment link and scores objectively, producing a capture-ready result card with a verification code. The result is app-local and never transmitted, so this is Level 1 until the universal result envelope is adopted.",
+  "pathway": "rhythm-reading-and-counting",
+  "supportedActivityTypes": [
+    "choose-the-count",
+    "practice-reading"
+  ],
+  "configurableSettings": [
+    "a",
+    "level",
+    "scope",
+    "cells",
+    "guide",
+    "n",
+    "pass",
+    "seed",
+    "sys"
+  ],
+  "lockableSettings": [
+    "level",
+    "scope",
+    "cells",
+    "guide",
+    "n",
+    "pass",
+    "seed"
+  ],
+  "assignmentLink": "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm vocabulary by catalog id, `scope` chooses one beat or one measure, `guide` fixes the subdivision-guide policy, `n` and `pass` set the length and the goal, and `seed` makes every student's questions identical. `level` is a shorthand for a cumulative vocabulary and is superseded when `cells` is present. `a` is a display name and `sys` names the counting system.",
+  "assignmentValidation": "Rejects loudly and never repairs: an unknown rhythm id, fewer than 2 rhythms after duplicates collapse, a question count outside 1–20, a pass mark the round cannot reach, or a counting system this app does not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm missing teaches a different step, so dropping one silently would produce evidence for an assignment nobody set.",
+  "rhythmCellIds": [
+    "quarter",
+    "eighths",
+    "eighth-rest",
+    "rest-eighth",
+    "three-rest-note",
+    "rest-sixteenth-rest",
+    "alternating-rests",
+    "rest-two-rest",
+    "dotted-eighth-sixteenth",
+    "eighth-two",
+    "two-eighth",
+    "sixteenth-eighth-sixteenth",
+    "sixteenths",
+    "rest-three",
+    "two-rest",
+    "rest-two"
+  ],
+  "levels": [
+    "level-1",
+    "level-2",
+    "level-3"
+  ],
+  "countingSystems": [
+    "standard"
+  ],
+  "countingSystemStatus": "Standard American counting (1 e & a) is the only system this release teaches. The data model carries Eastman and Takadimi, but a link asking for either is refused rather than graded against a system the app does not present.",
+  "acceptedInputSources": [
+    "touch",
+    "mouse",
+    "computer-keyboard"
+  ],
+  "evidenceTypes": [
+    "A1_ANSWER_CORRECTNESS"
+  ],
+  "compatibleSkillDomains": [],
+  "skillVocabularyStatus": "Not yet reconciled. Candidate ids exist in the Sequence 2 draft but the vocabulary is an owner decision, and an invented id would be a contract no one agreed to. Until it is settled this app emits no skill ids.",
+  "resultSchemaVersion": "app-local-1",
+  "resultSchemaStatus": "The result card is app-local: score, accuracy, the assignment's stated conditions, the teacher's pass mark, and a non-cryptographic verification code. It is not the universal result contract and is never transmitted. Migrating it is separate work.",
+  "supportDimensions": "The subdivision guide is a support, not a preference: an assignment pins it, and a gate counts the assignment's policy rather than the learner's own toggle. Question size (one beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. There is no timer anywhere in this app, by design.",
+  "accessibility": [
+    "keyboard-operation",
+    "screen-reader-labels",
+    "visible-focus",
+    "reduced-motion",
+    "large-touch-targets",
+    "non-color-status-cues"
+  ],
+  "offlineBehavior": "No account, backend, or network dependency. Preferences and personal bests stay in browser storage; the optional assignment identifier is session-only and never persisted. The visit counter is progressive enhancement and its absence changes nothing.",
+  "siblingApps": {
+    "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
+    "scale-trail": "https://scale-trail.backwerdrhythmshop.com/"
+  },
+  "teachingSequence": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+  "limitations": [
+    "Straight quarter-, eighth-, and sixteenth-note subdivisions in 4/4 only.",
+    "No triplets, compound meter, or ties across beats.",
+    "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
+    "Does not measure live performance, tone, sticking, or physical technique.",
+    "Standard American counting only in this release.",
+    "Progress is device-local; no account, roster, or cross-device sync.",
+    "The verification code is a deterrent, not proof — signed verification is future work."
+  ]
+}
