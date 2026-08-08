@@ -31,9 +31,12 @@ import {
   DEFAULT_QUESTIONS,
   describeAssignment,
   parseAssignment,
+  retakeSeed,
+  serializeAssignment,
   verificationCode,
   type Assignment,
   type AssignmentError,
+  type RetryPolicy,
 } from "../src/assignment";
 import { createPraxisEvidenceResult } from "../src/result";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
@@ -52,6 +55,37 @@ const PREFERENCES_KEY = "count-it-preferences-v1";
    particular student's ordering; with neither, the round is ordered as it
    always was. */
 const DEVICE_KEY = "count-it-device-v1";
+/* How many times this browser has finished a given assignment.
+ *
+ * Attempt numbers used to live in React state alone, so a reload restarted the
+ * count at one and the number on the card could be quietly reset by pressing
+ * F5 — which is the same gesture that replays the round. Keyed by the
+ * assignment's own canonical link, so it names a round rather than a person. */
+const ATTEMPTS_KEY = "count-it-attempts-v1";
+
+function readAttempts(fingerprint: string): number {
+  try {
+    const saved = localStorage.getItem(ATTEMPTS_KEY);
+    if (!saved) return 0;
+    const value = (JSON.parse(saved) as Record<string, number>)[fingerprint];
+    return typeof value === "number" && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeAttempts(fingerprint: string, attempt: number): void {
+  try {
+    const saved = localStorage.getItem(ATTEMPTS_KEY);
+    const all = saved ? (JSON.parse(saved) as Record<string, number>) : {};
+    if ((all[fingerprint] ?? 0) >= attempt) return;
+    all[fingerprint] = attempt;
+    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(all));
+  } catch {
+    // Storage denied. The attempt still shows for this sitting; it just will
+    // not survive a reload, which is the old behaviour rather than a new fault.
+  }
+}
 
 function readDeviceVariant(): string {
   try {
@@ -343,6 +377,7 @@ function ChallengeMode({
   finishedAt,
   holdFeedback,
   attempt,
+  retryPolicy,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -363,6 +398,8 @@ function ChallengeMode({
    *  to hand over an answer key while it is still being answered. */
   holdFeedback: boolean;
   attempt: number;
+  /** What the retry control offers, and whether it exists at all. */
+  retryPolicy: RetryPolicy;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
@@ -500,11 +537,25 @@ function ChallengeMode({
           >
             Copy summary
           </button>
-          <button type="button" className="secondary-button" onClick={onRetry}>Retry this set</button>
+          {/* The label has to match what the button does: "Retry this set" is
+              a promise about which questions come back, and under `reseed` it
+              would be a false one. */}
+          {retryPolicy !== "off" && (
+            <button type="button" className="secondary-button" onClick={onRetry}>
+              {retryPolicy === "reseed" ? "Try again on new questions" : "Retry this set"}
+            </button>
+          )}
           {!assignment && (
             <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {assignment && retryPolicy === "off" && (
+          // Said, rather than left as an absence a student has to notice. The
+          // claim is deliberately about what the assignment asks for, not about
+          // what the app can enforce — reloading still works, and the attempt
+          // tally is what reports it.
+          <p className="result-retry-note">This assignment asks for one attempt, so there is no retry here.</p>
+        )}
         {assignment && (
           <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
         )}
@@ -741,6 +792,8 @@ export default function CountItApp() {
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
   const [deviceVariant, setDeviceVariant] = useState("");
+  /** The assignment's canonical link, used to key its attempt tally. */
+  const [attemptKey, setAttemptKey] = useState("");
 
   const locked = useMemo(
     () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
@@ -749,6 +802,8 @@ export default function CountItApp() {
   const sessionLength = assignment?.count ?? SESSION_LENGTH;
   const assignedCells = assignment?.cells ?? undefined;
   const holdFeedback = assignment?.feedback === "end";
+  /* `free` is what this app has always done, so an existing link keeps it. */
+  const retryPolicy = assignment?.retry ?? "free";
   /* A typed name wins over the per-browser string, so a teacher can reproduce a
      particular student's ordering; either way two students differ. */
   const variant = studentId.trim() || deviceVariant;
@@ -807,6 +862,13 @@ export default function CountItApp() {
         });
         return;
       }
+
+      /* Where this browser had got to with this assignment. A reload is the
+         same gesture as a replay, so an attempt counter that resets with the
+         page counts sittings rather than attempts. */
+      const fingerprint = serializeAssignment(pinned);
+      setAttemptKey(fingerprint);
+      setAttempt(readAttempts(fingerprint) + 1);
 
       setDeviceVariant(device);
       setAssignment(pinned);
@@ -867,6 +929,7 @@ export default function CountItApp() {
       // verification code describe the moment the work finished rather than
       // the moment someone happened to look at it.
       setFinishedAt((current) => current ?? new Date());
+      if (attemptKey) writeAttempts(attemptKey, attempt);
       setPersonalBests((current) => {
         const nextScore = Math.max(current[bestKey] ?? 0, session.score);
         if (nextScore === current[bestKey]) return current;
@@ -877,7 +940,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [bestKey, session.score, session.status]);
+  }, [attempt, attemptKey, bestKey, session.score, session.status]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -931,16 +994,36 @@ export default function CountItApp() {
     }));
   }
 
-  /* A retry is the SAME round again, after its answers have been shown. It is
-     therefore not a new attempt at an unseen task, and everything downstream
-     has to be able to tell: the finish time is re-stamped (it used to keep the
-     first run's, so two attempts could produce an identical verification code)
-     and the attempt number goes up. */
+  /* Trying again, as the assignment defines it.
+   *
+   * `free` replays the SAME round after its answers have been shown, which is
+   * right for practice and is what this app has always done. `reseed` keeps
+   * every condition and asks new questions, seeded from the link's own seed
+   * plus the attempt so the teacher can regenerate it. `off` never reaches
+   * here, because the control is not rendered.
+   *
+   * Either way the finish time is re-stamped — it used to keep the first run's,
+   * so two attempts could produce an identical verification code — and the
+   * attempt number goes up. */
   function retryChallenge() {
-    setSession((current) => resetSession(current));
+    if (retryPolicy === "off") return;
+    const nextAttempt = attempt + 1;
     setFinishedAt(null);
-    setAttempt((current) => current + 1);
+    setAttempt(nextAttempt);
     setMode("challenge");
+    if (retryPolicy === "reseed") {
+      setSession(makeSession({
+        level,
+        scope,
+        // Derived from the ORIGINAL seed, so attempts never chain.
+        seed: retakeSeed(challengeSeed, nextAttempt),
+        count: sessionLength,
+        ...(assignedCells ? { cells: assignedCells } : {}),
+        ...(assignment && variant ? { variant } : {}),
+      }));
+      return;
+    }
+    setSession((current) => resetSession(current));
   }
 
   /* Rebuilds the round when the student names themselves before starting, so
@@ -1078,6 +1161,7 @@ export default function CountItApp() {
               finishedAt={finishedAt}
               holdFeedback={holdFeedback}
               attempt={attempt}
+              retryPolicy={retryPolicy}
               onStudentIdChange={changeStudentId}
               onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
               onAdvance={advanceChallenge}

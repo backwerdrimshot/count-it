@@ -27,6 +27,14 @@ import { RHYTHM_CELLS, getCellsForLevel, getLevel, type LevelId } from "../rhyth
 export type GuidePolicy = "on" | "off";
 /** When the correct answer is shown. `each` teaches, `end` assesses. */
 export type FeedbackPolicy = "each" | "end";
+/** What "try again" means.
+ *
+ *  `free` is the app's own behaviour and the default: the same round again.
+ *  That is right for practice and wrong for a graded round, where it means a
+ *  student can loop questions whose answers they have already been shown.
+ *  `reseed` is the pedagogically honest retake — same conditions, new
+ *  questions — and `off` withdraws the button. */
+export type RetryPolicy = "free" | "reseed" | "off";
 export type CountingSystemParam = "standard";
 export type AssignmentScope = "beat" | "measure";
 
@@ -60,6 +68,7 @@ export interface AssignmentError {
     | "scope"
     | "system"
     | "feedback"
+    | "retry"
     | "measure-pool"
     /** Raised by the app, not the parser: a round that refused to build for a
      *  reason validation did not anticipate. The link is still rejected whole. */
@@ -80,6 +89,8 @@ export interface Assignment {
   /** When the correct answer is shown. Null when the link did not say, which
    *  means the app's default: after every question. */
   readonly feedback: FeedbackPolicy | null;
+  /** What a retry does. Null when the link did not say, which means `free`. */
+  readonly retry: RetryPolicy | null;
   readonly count: number | null;
   /** Questions needed to pass, as the teacher set it. Never enforced by the
    *  app — it is reported on the card so a human can read the gate. */
@@ -252,6 +263,29 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("fb");
   }
 
+  /* What a retry means. Refused rather than defaulted for the same reason `fb`
+     is: a link that meant to withdraw the retry and silently got the default
+     would let a student loop a round whose answers they had already seen,
+     which is the thing the parameter exists to stop. */
+  let retry: RetryPolicy | null = null;
+  const retryRaw = params.get("retry");
+  if (retryRaw !== null) {
+    if (retryRaw !== "free" && retryRaw !== "reseed" && retryRaw !== "off") {
+      return {
+        ok: false,
+        error: {
+          code: "retry",
+          entry: retryRaw,
+          message:
+            `“${retryRaw}” is not a retry setting. A round can be tried again as it was, ` +
+            "tried again on new questions, or not tried again at all.",
+        },
+      };
+    }
+    retry = retryRaw;
+    locked.push("retry");
+  }
+
   let count: number | null = null;
   const countRaw = params.get("n");
   if (countRaw !== null) {
@@ -338,6 +372,7 @@ export function parseAssignment(search: string): AssignmentResult {
       cells,
       guide,
       feedback,
+      retry,
       count,
       passing,
       seed,
@@ -346,6 +381,24 @@ export function parseAssignment(search: string): AssignmentResult {
     }),
     locked: Object.freeze(locked),
   };
+}
+
+/* The seed a `reseed` retake runs on.
+ *
+ * Derived from the link's own seed and the attempt number rather than picked
+ * at random, so a teacher holding the link can regenerate exactly what attempt
+ * three asked — a retake nobody can reconstruct is not evidence, it is a
+ * number. Always derived from the ORIGINAL seed, never from the previous
+ * attempt's derived one, so attempts do not chain into `seed#a2#a3` and a
+ * teacher can jump straight to any attempt.
+ *
+ * Attempt one is the link's seed untouched, so a `retry=reseed` round opens
+ * with exactly the questions the same link without the parameter would ask. */
+export function retakeSeed(seed: string | number, attempt: number): string | number {
+  if (!Number.isInteger(attempt) || attempt < 1) {
+    throw new RangeError("An attempt number counts from 1.");
+  }
+  return attempt === 1 ? seed : `${seed}#a${attempt}`;
 }
 
 /** True when the link pinned anything at all — the app is in assignment mode. */
@@ -362,6 +415,7 @@ export function serializeAssignment(assignment: Assignment): string {
   if (assignment.cells) parts.push(`cells=${assignment.cells.join(",")}`);
   if (assignment.guide) parts.push(`guide=${assignment.guide}`);
   if (assignment.feedback) parts.push(`fb=${assignment.feedback}`);
+  if (assignment.retry) parts.push(`retry=${assignment.retry}`);
   if (assignment.count !== null) parts.push(`n=${assignment.count}`);
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
@@ -379,6 +433,10 @@ export function describeAssignment(assignment: Assignment): string {
   parts.push(assignment.scope === "beat" ? "one beat" : "one measure");
   if (assignment.guide) parts.push(assignment.guide === "on" ? "guide visible" : "guide hidden");
   if (assignment.feedback === "end") parts.push("answers at the end");
+  /* Only when it deviates from what the app does anyway, the same rule `fb`
+     follows — a conditions line that restates every default stops being read. */
+  if (assignment.retry === "reseed") parts.push("retry on new questions");
+  if (assignment.retry === "off") parts.push("one attempt");
   if (assignment.count !== null) parts.push(`${assignment.count} questions`);
   if (assignment.passing !== null) parts.push(`pass at ${assignment.passing}`);
   return parts.join(" · ");

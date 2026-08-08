@@ -183,6 +183,7 @@ export function createPraxisEvidenceResult(options: {
     if (assignment.cells) settings.cells = assignment.cells.join(",");
     if (assignment.guide) settings.guide = assignment.guide;
     if (assignment.feedback) settings.fb = assignment.feedback;
+    if (assignment.retry) settings.retry = assignment.retry;
     if (assignment.count !== null) settings.n = String(assignment.count);
     if (assignment.passing !== null) settings.pass = String(assignment.passing);
     if (assignment.seed) settings.seed = assignment.seed;
