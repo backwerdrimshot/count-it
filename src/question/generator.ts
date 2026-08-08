@@ -2,6 +2,7 @@ import {
   createBeatPrompt,
   createMeasurePrompt,
   explainPrompt,
+  getCellsByIds,
   getCellsForLevel,
   getPromptAnswer,
   getPromptId,
@@ -36,6 +37,11 @@ export interface GenerateQuestionsOptions {
   readonly scope: QuestionScope;
   readonly count?: number;
   readonly seed: string | number;
+  /** An explicit cell vocabulary, by id. When present it SUPERSEDES the level
+   *  entirely — an assignment that names its rhythms means those rhythms and
+   *  no others. Absent, the level's cumulative vocabulary is used exactly as
+   *  before, so every existing caller and every existing seed is untouched. */
+  readonly cells?: readonly string[];
 }
 
 function beatPrompts(cells: readonly RhythmCell[], count: number, random: RandomSource): RhythmPrompt[] {
@@ -116,13 +122,20 @@ export function generateQuestions({
   scope,
   count = 5,
   seed,
+  cells: cellIds,
 }: GenerateQuestionsOptions): readonly CountQuestion[] {
   if (!Number.isInteger(count) || count < 1 || count > 20) {
     throw new RangeError("Question count must be between 1 and 20.");
   }
   if (scope !== "beat" && scope !== "measure") throw new RangeError(`Unsupported question scope: ${scope}`);
-  const cells = getCellsForLevel(level);
-  const random = createSeededRandom(`${seed}:${level}:${scope}`);
+  const cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level);
+  if (cells.length === 0) throw new RangeError("A round needs at least one rhythm cell.");
+  // The seed string carries the vocabulary, so two rounds that share a seed but
+  // name different rhythms are different rounds. A pooled round mixes the pool
+  // in rather than the level, so adding this parameter cannot move any seed
+  // that existed before it.
+  const vocabulary = cellIds ? getCellsByIds(cellIds).map((cell) => cell.id).join(",") : level;
+  const random = createSeededRandom(`${seed}:${vocabulary}:${scope}`);
   const prompts = scope === "beat"
     ? beatPrompts(cells, count, random)
     : measurePrompts(cells, count, random);

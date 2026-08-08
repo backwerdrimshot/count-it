@@ -6,6 +6,7 @@ import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
   LEVELS,
+  getCellsByIds,
   getCompleteReference,
   getLevel,
   getPromptAnswer,
@@ -25,6 +26,13 @@ import {
   type QuestionChoice,
   type QuestionScope,
 } from "../src/question";
+import {
+  describeAssignment,
+  parseAssignment,
+  verificationCode,
+  type Assignment,
+  type AssignmentError,
+} from "../src/assignment";
 
 type AppMode = "practice" | "challenge";
 
@@ -32,10 +40,28 @@ const SESSION_LENGTH = 5;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
-const BUILD_ID = "2026-08-03.2";
+const BUILD_ID = "2026-08-08.1";
 
-function makeSession(level: LevelId, scope: QuestionScope, seed: number): ChallengeSession {
-  return createSession(generateQuestions({ level, scope, count: SESSION_LENGTH, seed }));
+/** Which controls a link pinned, so the setup panel can disable exactly those
+ *  and say why. Derived from the assignment rather than passed alongside it —
+ *  a second hand-kept list would drift from the one that matters. */
+function assignmentLocks(assignment: Assignment): string[] {
+  const locks: string[] = ["level", "scope"];
+  if (assignment.cells) locks.push("cells");
+  if (assignment.guide) locks.push("guide");
+  return locks;
+}
+
+interface RoundSpec {
+  readonly level: LevelId;
+  readonly scope: QuestionScope;
+  readonly seed: string | number;
+  readonly count: number;
+  readonly cells?: readonly string[];
+}
+
+function makeSession(spec: RoundSpec): ChallengeSession {
+  return createSession(generateQuestions(spec));
 }
 
 function BrandMark() {
@@ -74,6 +100,8 @@ function SetupControls({
   level,
   scope,
   showReference,
+  assignment,
+  locked,
   onLevelChange,
   onScopeChange,
   onReferenceChange,
@@ -81,6 +109,8 @@ function SetupControls({
   level: LevelId;
   scope: QuestionScope;
   showReference: boolean;
+  assignment: Assignment | null;
+  locked: ReadonlySet<string>;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onReferenceChange: (value: boolean) => void;
@@ -88,18 +118,40 @@ function SetupControls({
   return (
     <section className="setup-panel" aria-labelledby="setup-title">
       <div className="setup-heading">
-        <p className="eyebrow">Set your focus</p>
-        <h2 id="setup-title">What do you want to read?</h2>
+        <p className="eyebrow">{assignment ? "Assigned practice" : "Set your focus"}</p>
+        <h2 id="setup-title">{assignment ? "Your teacher set this up." : "What do you want to read?"}</h2>
       </div>
-      <label className="level-control">
-        <span>Beginner level</span>
-        <select value={level} onChange={(event) => onLevelChange(event.target.value as LevelId)}>
-          {LEVELS.map((option) => (
-            <option key={option.id} value={option.id}>{option.name}</option>
-          ))}
-        </select>
-        <small>{getLevel(level).description}</small>
-      </label>
+      {assignment && (
+        // The conditions, stated where the student can see them. A locked
+        // control that just refuses to move is a bug from the outside; one
+        // that says who locked it and what to is an instruction.
+        <p className="assignment-banner" role="status">
+          <strong>{assignment.name ?? "Assigned round"}</strong>
+          <span>{describeAssignment(assignment)}</span>
+          <small>These settings are part of the assignment, so they stay put.</small>
+        </p>
+      )}
+      {assignment?.cells ? (
+        <p className="level-control" aria-label="Rhythms in this assignment">
+          <span>Rhythms</span>
+          <strong>{assignment.cells.length} chosen by your teacher</strong>
+          <small>{getCellsByIds(assignment.cells).map((cell) => cell.shortLabel).join(" · ")}</small>
+        </p>
+      ) : (
+        <label className="level-control">
+          <span>Beginner level</span>
+          <select
+            value={level}
+            disabled={locked.has("level")}
+            onChange={(event) => onLevelChange(event.target.value as LevelId)}
+          >
+            {LEVELS.map((option) => (
+              <option key={option.id} value={option.id}>{option.name}</option>
+            ))}
+          </select>
+          <small>{getLevel(level).description}</small>
+        </label>
+      )}
       <fieldset className="scope-control">
         <legend>Question size</legend>
         <div className="scope-options">
@@ -110,6 +162,7 @@ function SetupControls({
                 name="question-scope"
                 value={option}
                 checked={scope === option}
+                disabled={locked.has("scope")}
                 onChange={() => onScopeChange(option)}
               />
               <ScopeIcon scope={option} />
@@ -122,11 +175,18 @@ function SetupControls({
         <input
           type="checkbox"
           checked={showReference}
+          disabled={locked.has("guide")}
           onChange={(event) => onReferenceChange(event.target.checked)}
         />
         <span aria-hidden="true" />
         <strong>Subdivision guide</strong>
-        <small>Show the complete {scope === "beat" ? "1 e & a" : "measure grid"}.</small>
+        <small>
+          {locked.has("guide")
+            // The guide is a support, not a preference: the gate counts the
+            // assignment's policy, never the learner's own toggle.
+            ? `The assignment keeps the guide ${showReference ? "visible" : "hidden"}.`
+            : `Show the complete ${scope === "beat" ? "1 e & a" : "measure grid"}.`}
+        </small>
       </label>
       <div className="system-note" aria-label="Counting system">
         <span>System</span>
@@ -211,6 +271,10 @@ function ChallengeMode({
   scope,
   showReference,
   personalBest,
+  assignment,
+  studentId,
+  finishedAt,
+  onStudentIdChange,
   onAnswer,
   onAdvance,
   onRetry,
@@ -221,6 +285,10 @@ function ChallengeMode({
   scope: QuestionScope;
   showReference: boolean;
   personalBest: number;
+  assignment: Assignment | null;
+  studentId: string;
+  finishedAt: Date | null;
+  onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
@@ -256,22 +324,86 @@ function ChallengeMode({
       : accuracy >= 60
         ? "Good work. Review the highlighted subdivisions, then try again."
         : "Keep the guide visible and work beat by beat. Accuracy will follow.";
+    const stamped = finishedAt ?? new Date(0);
+    const code = verificationCode({
+      assignment: assignment?.name ?? "",
+      studentId,
+      correct: session.score,
+      total: session.questions.length,
+      finishedAt: stamped,
+    });
+    const conditions = assignment
+      ? describeAssignment(assignment)
+      : `${getLevel(level).shortName} · ${scope === "beat" ? "one-beat" : "one-measure"} questions`;
+    const passed = assignment?.passing != null ? session.score >= assignment.passing : null;
+    const summary = [
+      `Count It — Choose the Count`,
+      assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
+      studentId ? `Student: ${studentId}` : null,
+      `Score: ${session.score}/${session.questions.length} (${accuracy}%)`,
+      `Conditions: ${conditions}`,
+      passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
+      finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
+      `Code: ${code}`,
+    ].filter(Boolean).join("\n");
     return (
       <section className="trainer-card result-card" aria-labelledby="result-title">
         <div className="result-badge" aria-hidden="true"><span>{accuracy}%</span></div>
-        <p className="eyebrow">Session complete</p>
+        <p className="eyebrow">{assignment ? "Assignment complete" : "Session complete"}</p>
         <h2 id="result-title" tabIndex={-1} ref={resultHeading}>You counted {session.score} of {session.questions.length} correctly.</h2>
         <p className="result-message">{resultMessage}</p>
+        {assignment?.name && <p className="result-assignment"><strong>{assignment.name}</strong></p>}
         <dl className="result-stats">
           <div><dt>Score</dt><dd>{session.score}/{session.questions.length}</dd></div>
           <div><dt>Accuracy</dt><dd>{accuracy}%</dd></div>
-          <div><dt>Personal best</dt><dd>{personalBest}/{session.questions.length}</dd></div>
+          {assignment?.passing != null ? (
+            // The gate the teacher set, reported rather than enforced: the app
+            // states what happened, and the human decides what it means.
+            <div><dt>Goal</dt><dd>{assignment.passing}/{session.questions.length}{passed ? " ✓" : ""}</dd></div>
+          ) : (
+            <div><dt>Personal best</dt><dd>{personalBest}/{session.questions.length}</dd></div>
+          )}
         </dl>
+        {assignment && (
+          <label className="student-id-field">
+            <span>Your name or class ID (optional)</span>
+            <input
+              type="text"
+              value={studentId}
+              maxLength={40}
+              autoComplete="off"
+              placeholder="Added to the summary you submit"
+              onChange={(event) => onStudentIdChange(event.target.value)}
+            />
+          </label>
+        )}
         <div className="result-actions">
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              // Clipboard first, selectable text as the fallback — a student on
+              // a locked-down device must still be able to submit something.
+              navigator.clipboard?.writeText(summary).catch(() => {
+                window.prompt("Copy your result summary:", summary);
+              });
+            }}
+          >
+            Copy summary
+          </button>
           <button type="button" className="secondary-button" onClick={onRetry}>Retry this set</button>
-          <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
+          {!assignment && (
+            <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
+          )}
         </div>
-        <p className="result-footnote">{getLevel(level).shortName} · {scope === "beat" ? "one-beat" : "one-measure"} questions</p>
+        {assignment && (
+          <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
+        )}
+        <p className="result-footnote">{conditions}</p>
+        <p className="result-code">
+          <span>Verification</span> <code>{code}</code>
+          <small>Nothing is saved or sent. The code only shows this result was not retyped by hand.</small>
+        </p>
       </section>
     );
   }
@@ -415,16 +547,74 @@ export default function CountItApp() {
   const [practiceSeed, setPracticeSeed] = useState(INITIAL_SEED);
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [challengeSeed, setChallengeSeed] = useState(INITIAL_SEED + 100);
-  const [session, setSession] = useState(() => makeSession("level-2", "beat", INITIAL_SEED + 100));
+  const [challengeSeed, setChallengeSeed] = useState<string | number>(INITIAL_SEED + 100);
+  const [session, setSession] = useState(() =>
+    makeSession({ level: "level-2", scope: "beat", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
+  );
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
+  // An assignment comes from the LINK only, never from stored preferences — it
+  // is something a teacher set, not something this browser remembers. It is
+  // applied after mount so the server-rendered shell and the first client
+  // render agree; the round it pins takes over immediately afterwards.
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [linkError, setLinkError] = useState<AssignmentError | null>(null);
+  const [studentId, setStudentId] = useState("");
+  const [finishedAt, setFinishedAt] = useState<Date | null>(null);
+
+  const locked = useMemo(() => new Set<string>(assignment ? assignmentLocks(assignment) : []), [assignment]);
+  const sessionLength = assignment?.count ?? SESSION_LENGTH;
+  const assignedCells = assignment?.cells ?? undefined;
+
+  useEffect(() => {
+    // Deferred rather than applied inline, matching how this file already
+    // loads stored bests: the lint rule that forbids a synchronous setState in
+    // an effect is guarding against cascading renders, and an assignment sets
+    // several pieces of state at once.
+    const applyLink = window.setTimeout(() => {
+      const result = parseAssignment(window.location.search);
+      if (!result.ok) {
+        setLinkError(result.error);
+        return;
+      }
+      if (result.locked.length === 0 && result.assignment.name === null) return;
+      const pinned = result.assignment;
+      setAssignment(pinned);
+      setLevel(pinned.level);
+      setScope(pinned.scope);
+      if (pinned.guide) setShowReference(pinned.guide === "on");
+      // An assignment is a scored round by definition, so it opens in the
+      // challenge rather than making a student find the tab.
+      setMode("challenge");
+      const seed = pinned.seed ?? INITIAL_SEED + 100;
+      setChallengeSeed(seed);
+      setSession(
+        makeSession({
+          level: pinned.level,
+          scope: pinned.scope,
+          seed,
+          count: pinned.count ?? SESSION_LENGTH,
+          ...(pinned.cells ? { cells: pinned.cells } : {}),
+        }),
+      );
+    }, 0);
+
+    return () => window.clearTimeout(applyLink);
+  }, []);
 
   const practiceQuestions = useMemo(
-    () => generateQuestions({ level, scope, count: 12, seed: practiceSeed }),
-    [level, practiceSeed, scope],
+    () => generateQuestions({ level, scope, count: 12, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
+    [assignedCells, level, practiceSeed, scope],
   );
   const practiceQuestion = practiceQuestions[practiceIndex % practiceQuestions.length];
-  const bestKey = `${level}:${scope}`;
+  // A pooled round is its own achievement: "the rest-entry cells" is not
+  // "level 2", and a best set on two rhythms must never be compared against one
+  // set on the whole level. Keys written before assignments existed still match,
+  // because the pool and guide parts are appended only when a link pinned them.
+  const bestKey = [
+    assignment?.cells ? `cells:${assignment.cells.join(",")}` : level,
+    scope,
+    assignment?.guide ? `guide:${assignment.guide}` : "",
+  ].filter(Boolean).join(":");
 
   useEffect(() => {
     const loadSavedBests = window.setTimeout(() => {
@@ -449,8 +639,11 @@ export default function CountItApp() {
 
   useEffect(() => {
     if (session.status !== "complete") return;
-
     const saveBest = window.setTimeout(() => {
+      // Stamped once, when the round actually ends, so the card and its
+      // verification code describe the moment the work finished rather than
+      // the moment someone happened to look at it.
+      setFinishedAt((current) => current ?? new Date());
       setPersonalBests((current) => {
         const nextScore = Math.max(current[bestKey] ?? 0, session.score);
         if (nextScore === current[bestKey]) return current;
@@ -463,13 +656,24 @@ export default function CountItApp() {
     return () => window.clearTimeout(saveBest);
   }, [bestKey, session.score, session.status]);
 
+  function nextSeedFrom(seed: string | number): string | number {
+    return typeof seed === "number" ? seed + 1 : `${seed}-again`;
+  }
+
   function resetForSettings(nextLevel: LevelId, nextScope: QuestionScope) {
-    const nextSeed = challengeSeed + 1;
+    const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setPracticeSeed((seed) => seed + 1);
     setPracticeIndex(0);
     setRevealed(false);
-    setSession(makeSession(nextLevel, nextScope, nextSeed));
+    setFinishedAt(null);
+    setSession(makeSession({
+      level: nextLevel,
+      scope: nextScope,
+      seed: nextSeed,
+      count: sessionLength,
+      ...(assignedCells ? { cells: assignedCells } : {}),
+    }));
   }
 
   function changeLevel(nextLevel: LevelId) {
@@ -488,9 +692,16 @@ export default function CountItApp() {
   }
 
   function newChallenge() {
-    const nextSeed = challengeSeed + 1;
+    const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
-    setSession(makeSession(level, scope, nextSeed));
+    setFinishedAt(null);
+    setSession(makeSession({
+      level,
+      scope,
+      seed: nextSeed,
+      count: sessionLength,
+      ...(assignedCells ? { cells: assignedCells } : {}),
+    }));
   }
 
   function advanceChallenge() {
@@ -544,10 +755,22 @@ export default function CountItApp() {
             </button>
           </div>
 
+          {linkError && (
+            // An invalid link fails loudly and stays failed: the app does not
+            // guess what the teacher meant and quietly run something else.
+            <p className="link-error" role="alert">
+              <strong>This practice link cannot be used as written.</strong>
+              <span>{linkError.message}</span>
+              <small>Ask your teacher for an updated link. Everything below still works normally.</small>
+            </p>
+          )}
+
           <SetupControls
             level={level}
             scope={scope}
             showReference={showReference}
+            assignment={assignment}
+            locked={locked}
             onLevelChange={changeLevel}
             onScopeChange={changeScope}
             onReferenceChange={setShowReference}
@@ -577,6 +800,10 @@ export default function CountItApp() {
               scope={scope}
               showReference={showReference}
               personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
+              assignment={assignment}
+              studentId={studentId}
+              finishedAt={finishedAt}
+              onStudentIdChange={setStudentId}
               onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
               onAdvance={advanceChallenge}
               onRetry={() => setSession((current) => resetSession(current))}
