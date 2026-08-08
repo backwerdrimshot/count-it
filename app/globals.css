@@ -1715,3 +1715,91 @@ a:focus-visible,
 .quick-lesson .eyebrow {
   color: var(--orange-light);
 }
+
+/* ---------------------------------------------------------------------------
+   Assignment mode.
+
+   A link from a teacher pins the round, so the app has to say three things it
+   never had to say before: what was assigned, which controls are therefore not
+   the student's to move, and — at the end — the conditions the score was
+   earned under. Every one of these is stated in text rather than implied by a
+   disabled control, because a control that simply refuses to move reads as a
+   bug from the outside. */
+.assignment-banner {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--orange);
+  border-left-width: 5px;
+  border-radius: var(--radius-sm);
+  background: var(--orange-soft);
+  color: var(--ink);
+}
+.assignment-banner strong { font-size: 1rem; }
+.assignment-banner span { font-size: 0.86rem; color: var(--ink); }
+.assignment-banner small { font-size: 0.76rem; color: var(--muted); }
+
+/* An invalid link fails loudly and stays failed — the app never guesses what
+   the teacher meant and quietly runs something else. */
+.link-error {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--red);
+  border-left-width: 5px;
+  border-radius: var(--radius-sm);
+  background: var(--red-soft);
+  color: var(--ink);
+}
+.link-error strong { font-size: 0.95rem; color: var(--red); }
+.link-error span { font-size: 0.88rem; }
+.link-error small { font-size: 0.76rem; color: var(--muted); }
+
+/* Session-only, never persisted: the app's promise is that it stores nothing
+   about a student, and a remembered name would quietly break it. */
+.student-id-field {
+  display: grid;
+  gap: 6px;
+  margin: 18px auto 0;
+  max-width: 340px;
+  text-align: left;
+}
+.student-id-field span { font-size: 0.78rem; font-weight: 700; color: var(--muted); }
+.student-id-field input {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.92rem;
+}
+.student-id-field input:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+.result-assignment { margin: 6px 0 0; color: var(--ink); font-size: 0.95rem; }
+.result-submit { margin: 14px 0 0; color: var(--muted); font-size: 0.82rem; }
+
+.result-code {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.result-code code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.result-code small { font-size: 0.72rem; }
+
+/* A locked control still has to look deliberate rather than broken. */
+.setup-panel select:disabled,
+.setup-panel input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.scope-control label:has(input:disabled) { opacity: 0.65; cursor: not-allowed; }

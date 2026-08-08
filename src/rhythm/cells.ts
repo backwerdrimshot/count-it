@@ -140,3 +140,22 @@ export function getCellsForLevel(levelId: LevelId): readonly RhythmCell[] {
   const level = getLevel(levelId);
   return Object.freeze(RHYTHM_CELLS.filter((cell) => cell.difficulty <= level.order));
 }
+
+/* An EXPLICIT cell vocabulary, named by id.
+ *
+ * Levels are cumulative — level 2 contains level 1 — so a step that teaches
+ * only the rest-entry cells ("beat then rest", "rest then &") cannot be
+ * expressed as a level. This is how an assignment names its own vocabulary,
+ * and it is the Count It counterpart of Mallet Map's note pool.
+ *
+ * Order follows the catalog rather than the caller, so two links naming the
+ * same cells in different orders are the same round. An unknown id throws:
+ * the assignment layer validates and reports before this is ever reached, and
+ * a silent drop here would teach a different step than the one assigned. */
+export function getCellsByIds(ids: readonly string[]): readonly RhythmCell[] {
+  const wanted = new Set(ids);
+  for (const id of wanted) {
+    if (!CELL_BY_ID.has(id)) throw new RangeError(`Unsupported rhythm cell: ${id}`);
+  }
+  return Object.freeze(RHYTHM_CELLS.filter((cell) => wanted.has(cell.id)));
+}
