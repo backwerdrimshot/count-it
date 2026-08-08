@@ -196,12 +196,22 @@ worker name, compatibility flags, entry point, assets directory. There is no
 hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
 the whole thing locally without credentials.
 
-> **Size headroom is thin.** The build is 2655 KiB, **995 KiB gzipped**, against
-> the 1 MiB Workers script limit on the free plan — about 5 KiB of room. On a
-> paid plan the limit is 3 MiB. On free, one added dependency breaks the deploy,
-> and the failure reads like an unrelated build error. No bindings are required;
-> the `IMAGES` binding `worker/index.ts` declares is unreachable, since nothing
-> imports `next/image` and no built asset references `/_vinext/image`.
+> **Size headroom is thin, and the number moves.** Measured with
+> `pnpm deploy:dry-run` at `2026-08-08.5`: **2686.46 KiB, 1003.43 KiB gzipped**.
+> The commit before it measured 1000.88 KiB, so this release added 2.55 KiB —
+> and the figures this note carried previously (2655 KiB / 995 KiB) were already
+> stale, which is the failure mode a hand-copied number has. Re-measure here on
+> every release rather than trusting the line above it.
+>
+> Against the 1 MiB (1024 KiB) Workers script limit on the free plan that leaves
+> roughly 20 KiB. **Confirm the plan's real ceiling in the Cloudflare dashboard
+> before adding a dependency** — this note has previously implied a limit near
+> 1000 KiB, and which of the two is right decides whether there is headroom or
+> none. On a paid plan the limit is higher. One added dependency can break the
+> deploy, and the failure reads like an unrelated build error. No bindings are
+> required; the `IMAGES` binding `worker/index.ts` declares is unreachable,
+> since nothing imports `next/image` and no built asset references
+> `/_vinext/image`.
 
 ## Support and feedback
 
