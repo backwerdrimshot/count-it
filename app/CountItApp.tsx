@@ -28,6 +28,7 @@ import {
 } from "../src/question";
 import { COUNT_IT_BUILD } from "../src/capabilities";
 import {
+  DEFAULT_QUESTIONS,
   describeAssignment,
   parseAssignment,
   verificationCode,
@@ -39,10 +40,32 @@ import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 
 type AppMode = "practice" | "challenge";
 
-const SESSION_LENGTH = 5;
+const SESSION_LENGTH = DEFAULT_QUESTIONS;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
 const PREFERENCES_KEY = "count-it-preferences-v1";
+/* A stable per-browser string used to vary the ORDER of the answer choices in
+   an assigned round. It is not an identity and never leaves the device: it
+   exists so that two students opening the same link do not see the correct
+   answer in the same position, which is what made one student's answers usable
+   by the whole class. A typed name supersedes it, so a teacher can reproduce a
+   particular student's ordering; with neither, the round is ordered as it
+   always was. */
+const DEVICE_KEY = "count-it-device-v1";
+
+function readDeviceVariant(): string {
+  try {
+    const saved = localStorage.getItem(DEVICE_KEY);
+    if (saved) return saved;
+    const minted = crypto.randomUUID?.() ?? `d${Math.random().toString(36).slice(2, 12)}`;
+    localStorage.setItem(DEVICE_KEY, minted);
+    return minted;
+  } catch {
+    // Private mode, or storage denied. A shared order is the old behaviour, not
+    // a broken one, so the round still runs.
+    return "";
+  }
+}
 /* Single-sourced from the capability manifest, so the footer stamp, the
    published manifest and the README release line cannot disagree — the drift
    the release gate exists to catch, removed rather than re-checked. */
@@ -51,11 +74,17 @@ const BUILD_ID = COUNT_IT_BUILD;
 /** Which controls a link pinned, so the setup panel can disable exactly those
  *  and say why. Derived from the assignment rather than passed alongside it —
  *  a second hand-kept list would drift from the one that matters. */
-function assignmentLocks(assignment: Assignment): string[] {
-  const locks: string[] = ["level", "scope"];
-  if (assignment.cells) locks.push("cells");
-  if (assignment.guide) locks.push("guide");
-  return locks;
+function assignmentLocks(assignment: Assignment, pinned: readonly string[]): string[] {
+  /* What the LINK pinned, not what an assignment is assumed to imply. The
+     parser already reports this exactly; recomputing it here meant that naming
+     a round — `?a=Homework 1` and nothing else — froze the level and question
+     size at their defaults and told the student their teacher had chosen them.
+     Nobody had. `cells` and `guide` stay derived because they are locked by
+     being present at all. */
+  const locks = new Set<string>(pinned);
+  if (assignment.cells) locks.add("cells");
+  if (assignment.guide) locks.add("guide");
+  return [...locks];
 }
 
 interface RoundSpec {
@@ -64,6 +93,7 @@ interface RoundSpec {
   readonly seed: string | number;
   readonly count: number;
   readonly cells?: readonly string[];
+  readonly variant?: string;
 }
 
 function makeSession(spec: RoundSpec): ChallengeSession {
@@ -108,18 +138,24 @@ function SetupControls({
   showReference,
   assignment,
   locked,
+  studentId,
+  identityLocked,
   onLevelChange,
   onScopeChange,
   onReferenceChange,
+  onStudentIdChange,
 }: {
   level: LevelId;
   scope: QuestionScope;
   showReference: boolean;
   assignment: Assignment | null;
   locked: ReadonlySet<string>;
+  studentId: string;
+  identityLocked: boolean;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onReferenceChange: (value: boolean) => void;
+  onStudentIdChange: (value: string) => void;
 }) {
   return (
     <section className="setup-panel" aria-labelledby="setup-title">
@@ -194,6 +230,30 @@ function SetupControls({
             : `Show the complete ${scope === "beat" ? "1 e & a" : "measure grid"}.`}
         </small>
       </label>
+      {assignment && (
+        // Asked BEFORE the round, not after it. The name labels the result a
+        // student submits, and it also sets their personal answer order — which
+        // only works if it is known before the questions are built. Saying so
+        // is deliberate: a student who knows the order is theirs has nothing to
+        // gain from a classmate's answers.
+        <label className="student-id-field setup-identity">
+          <span>Your name or class ID</span>
+          <input
+            type="text"
+            value={studentId}
+            maxLength={40}
+            autoComplete="off"
+            disabled={identityLocked}
+            placeholder="Optional"
+            onChange={(event) => onStudentIdChange(event.target.value)}
+          />
+          <small>
+            {identityLocked
+              ? "Locked while the round is running."
+              : "Goes on the result you submit, and sets your own answer order."}
+          </small>
+        </label>
+      )}
       <div className="system-note" aria-label="Counting system">
         <span>System</span>
         <strong>Standard</strong>
@@ -281,6 +341,8 @@ function ChallengeMode({
   sequenceStep,
   studentId,
   finishedAt,
+  holdFeedback,
+  attempt,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -296,7 +358,11 @@ function ChallengeMode({
   sequenceStep: SequenceStep | null;
   studentId: string;
   finishedAt: Date | null;
-  onStudentIdChange: (value: string) => void;
+  /** `fb=end`: no correct answer, no running score, no highlighted guide until
+   *  the round is over. Instant feedback teaches; a graded round cannot afford
+   *  to hand over an answer key while it is still being answered. */
+  holdFeedback: boolean;
+  attempt: number;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
@@ -338,7 +404,7 @@ function ChallengeMode({
        migrate — and why the human record and any machine record could have
        described different rounds without anything noticing. */
     const result = createPraxisEvidenceResult({
-      session, assignment, sequenceStep, level, scope, finishedAt: stamped,
+      session, assignment, sequenceStep, level, scope, finishedAt: stamped, attempt,
     });
     /* Separate from result.attemptReference on purpose: this is the
        teacher-facing code with its own published format and its own stated
@@ -350,16 +416,27 @@ function ChallengeMode({
       correct: session.score,
       total: session.questions.length,
       finishedAt: stamped,
+      attempt,
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
+    /* The diagnosis the app already worked out. `errorSummary` has been built on
+       every completed round since the envelope was adopted and reached nothing
+       a human could read, so a card said "2 of 5" where it could have said which
+       rhythms went wrong. Labels for the student, catalog ids for the summary a
+       teacher reads — the ids are what a follow-up link is written against. */
+    const missed = result.errorSummary.filter((entry) => entry.wrong > 0);
+    const missedLabels = getCellsByIds(missed.map((entry) => entry.item)).map((cell) => cell.shortLabel);
     const summary = [
       `Count It — Choose the Count`,
       assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
+      sequenceStep ? `Step: ${sequenceStep.seq} #${sequenceStep.step}` : null,
       studentId ? `Student: ${studentId}` : null,
       `Score: ${session.score}/${session.questions.length} (${accuracy}%)`,
+      attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
+      missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
@@ -370,6 +447,9 @@ function ChallengeMode({
         <h2 id="result-title" tabIndex={-1} ref={resultHeading}>You counted {session.score} of {session.questions.length} correctly.</h2>
         <p className="result-message">{resultMessage}</p>
         {assignment?.name && <p className="result-assignment"><strong>{assignment.name}</strong></p>}
+        {sequenceStep && (
+          <p className="result-step">{sequenceStep.seq} · step {sequenceStep.step}</p>
+        )}
         <dl className="result-stats">
           <div><dt>Score</dt><dd>{session.score}/{session.questions.length}</dd></div>
           <div><dt>Accuracy</dt><dd>{accuracy}%</dd></div>
@@ -380,7 +460,19 @@ function ChallengeMode({
           ) : (
             <div><dt>Personal best</dt><dd>{personalBest}/{session.questions.length}</dd></div>
           )}
+          {attempt > 1 && (
+            // Stated rather than left to be assumed. The same round can be
+            // replayed after its answers have been shown, so a score that does
+            // not say which run it came from claims more than it knows.
+            <div><dt>Attempt</dt><dd>{attempt}</dd></div>
+          )}
         </dl>
+        {missedLabels.length > 0 && (
+          <p className="result-missed">
+            <strong>Worth another look</strong>
+            <span>{missedLabels.join(" · ")}</span>
+          </p>
+        )}
         {assignment && (
           <label className="student-id-field">
             <span>Your name or class ID (optional)</span>
@@ -416,6 +508,36 @@ function ChallengeMode({
         {assignment && (
           <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
         )}
+        {/* Every question, what they chose, and what it should have been. When
+            feedback was held to the end this is where the round is learned
+            from, so it opens by itself; otherwise it stays folded, because the
+            student has already seen each answer once. */}
+        <details className="result-review" open={holdFeedback}>
+          <summary>Review all {session.questions.length} questions</summary>
+          <ol className="review-list">
+            {session.questions.map((question, index) => {
+              const answered = session.responses.find((entry) => entry.questionId === question.id);
+              const chosen = question.choices.find((choice) => choice.id === answered?.choiceId);
+              return (
+                <li key={question.id} className={answered?.correct ? "is-correct" : "is-incorrect"}>
+                  <div className="review-head">
+                    <span className="review-index">{index + 1}</span>
+                    <span className="review-mark" aria-hidden="true">{answered?.correct ? "✓" : "!"}</span>
+                    <span className="review-verdict">{answered?.correct ? "Correct" : "Not this time"}</span>
+                  </div>
+                  <div className="notation-panel">
+                    <RhythmNotation prompt={question.prompt} label={`Rhythm from question ${index + 1}.`} />
+                  </div>
+                  <dl className="review-answers">
+                    <div><dt>You chose</dt><dd>{chosen?.label ?? "—"}</dd></div>
+                    <div><dt>Correct count</dt><dd>{question.correctAnswer}</dd></div>
+                  </dl>
+                  <p className="review-why">{question.explanation}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
         <p className="result-footnote">{conditions}</p>
         <p className="result-code">
           <span>Verification</span> <code>{code}</code>
@@ -434,7 +556,12 @@ function ChallengeMode({
       <div className="challenge-progress">
         <div className="progress-copy">
           <span>Question {session.currentIndex + 1} of {session.questions.length}</span>
-          <span>Score <strong>{session.score}</strong> · Accuracy <strong>{accuracy}%</strong></span>
+          {/* A running score is feedback too: watching it stall after question
+              three tells a student they were wrong just as plainly as a red
+              answer would. Held rounds hide it with everything else. */}
+          {holdFeedback
+            ? <span>Answers at the end</span>
+            : <span>Score <strong>{session.score}</strong> · Accuracy <strong>{accuracy}%</strong></span>}
         </div>
         <progress value={session.currentIndex + (response ? 1 : 0)} max={session.questions.length}>
           {session.currentIndex + 1} of {session.questions.length}
@@ -453,9 +580,15 @@ function ChallengeMode({
         <div className="reference-panel compact">
           <div className="mini-heading">
             <span>Complete subdivision</span>
-            <small>{response ? "Sounding positions are highlighted." : getCompleteReference(scope)}</small>
+            <small>
+              {response && !holdFeedback
+                ? "Sounding positions are highlighted."
+                : getCompleteReference(scope)}
+            </small>
           </div>
-          <CountReference prompt={question.prompt} revealSounding={Boolean(response)} />
+          {/* Highlighting the sounding positions IS the answer, so a held round
+              leaves the grid unmarked. */}
+          <CountReference prompt={question.prompt} revealSounding={!holdFeedback && Boolean(response)} />
         </div>
       )}
       <div className="answer-grid" aria-label="Answer choices">
@@ -463,8 +596,9 @@ function ChallengeMode({
           const isSelected = response?.choiceId === choice.id;
           const classNames = [
             "answer-choice",
-            response && choice.isCorrect ? "is-correct" : "",
-            response && isSelected && !choice.isCorrect ? "is-incorrect" : "",
+            response && !holdFeedback && choice.isCorrect ? "is-correct" : "",
+            response && !holdFeedback && isSelected && !choice.isCorrect ? "is-incorrect" : "",
+            response && holdFeedback && isSelected ? "is-chosen" : "",
           ].filter(Boolean).join(" ");
           return (
             <button
@@ -477,15 +611,34 @@ function ChallengeMode({
             >
               <span className="choice-key" aria-hidden="true">{index + 1}</span>
               <strong>{choice.label}</strong>
-              {response && choice.isCorrect && <span className="choice-result">Correct</span>}
-              {response && isSelected && !choice.isCorrect && <span className="choice-result">Your choice</span>}
+              {response && !holdFeedback && choice.isCorrect && <span className="choice-result">Correct</span>}
+              {response && (holdFeedback || !choice.isCorrect) && isSelected && (
+                <span className="choice-result">Your choice</span>
+              )}
             </button>
           );
         })}
       </div>
-      <div className={`feedback-panel ${!response ? "is-waiting" : response.correct ? "is-correct" : "is-incorrect"}`} role="status" aria-live="polite">
+      <div
+        className={`feedback-panel ${
+          !response ? "is-waiting" : holdFeedback ? "is-held" : response.correct ? "is-correct" : "is-incorrect"
+        }`}
+        role="status"
+        aria-live="polite"
+      >
         {!response ? (
           <p><strong>Choose one answer.</strong>You can also press 1, 2, 3, or 4.</p>
+        ) : holdFeedback ? (
+          <>
+            <span className="feedback-icon" aria-hidden="true">•</span>
+            <p>
+              <strong>Answer recorded.</strong>
+              This round shows every answer once you reach the end.
+            </p>
+            <button type="button" className="primary-button" onClick={onAdvance}>
+              {session.currentIndex === session.questions.length - 1 ? "See results" : "Next question"} <span aria-hidden="true">→</span>
+            </button>
+          </>
         ) : (
           <>
             <span className="feedback-icon" aria-hidden="true">{response.correct ? "✓" : "!"}</span>
@@ -574,6 +727,8 @@ export default function CountItApp() {
   // applied after mount so the server-rendered shell and the first client
   // render agree; the round it pins takes over immediately afterwards.
   const [assignment, setAssignment] = useState<Assignment | null>(null);
+  /** Exactly which controls the LINK pinned, as the parser reported them. */
+  const [pinnedLocks, setPinnedLocks] = useState<readonly string[]>([]);
   /* Which published sequence step a link named. NOT a setting — it records
      which assignment this was and never reaches the generator. See
      src/sequence-step.ts on why that separation is enforced rather than
@@ -582,10 +737,29 @@ export default function CountItApp() {
   const [linkError, setLinkError] = useState<AssignmentError | null>(null);
   const [studentId, setStudentId] = useState("");
   const [finishedAt, setFinishedAt] = useState<Date | null>(null);
+  /** Which run of this round the student is on. Reset by anything that builds a
+   *  genuinely new round; incremented by a retry, which does not. */
+  const [attempt, setAttempt] = useState(1);
+  const [deviceVariant, setDeviceVariant] = useState("");
 
-  const locked = useMemo(() => new Set<string>(assignment ? assignmentLocks(assignment) : []), [assignment]);
+  const locked = useMemo(
+    () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
+    [assignment, pinnedLocks],
+  );
   const sessionLength = assignment?.count ?? SESSION_LENGTH;
   const assignedCells = assignment?.cells ?? undefined;
+  const holdFeedback = assignment?.feedback === "end";
+  /* A typed name wins over the per-browser string, so a teacher can reproduce a
+     particular student's ordering; either way two students differ. */
+  const variant = studentId.trim() || deviceVariant;
+  /* Practice reveals the count for the same vocabulary the assignment is
+     testing, and the challenge keeps its place while the tab is away — so it
+     was an answer key a student could open mid-round. Closed until the round is
+     done; free practice is untouched. */
+  const practiceLocked = Boolean(assignment) && session.status !== "complete";
+  /* The order is fixed once the first answer lands: changing it later would
+     rebuild the round underneath a student who had already started it. */
+  const identityLocked = Boolean(assignment) && session.responses.length > 0;
 
   useEffect(() => {
     // Deferred rather than applied inline, matching how this file already
@@ -604,24 +778,47 @@ export default function CountItApp() {
       }
       if (result.locked.length === 0 && result.assignment.name === null) return;
       const pinned = result.assignment;
+      const seed = pinned.seed ?? INITIAL_SEED + 100;
+      const device = readDeviceVariant();
+
+      /* BUILT FIRST, applied second. This used to run the other way round: the
+         banner, level, scope and pass mark were set, and then the round threw
+         while being assembled — leaving the student answering the default round
+         under the assignment's stated conditions, and the card reporting a goal
+         for questions nobody asked. Validation now rejects the links that could
+         do it, but the ordering is what makes the failure impossible rather
+         than merely unlikely. */
+      let round: ChallengeSession;
+      try {
+        round = makeSession({
+          level: pinned.level,
+          scope: pinned.scope,
+          seed,
+          count: pinned.count ?? SESSION_LENGTH,
+          ...(pinned.cells ? { cells: pinned.cells } : {}),
+          ...(device ? { variant: device } : {}),
+        });
+      } catch {
+        setLinkError({
+          code: "round",
+          message:
+            "This practice link describes a round Count It cannot put together. " +
+            "Nothing about it has been applied.",
+        });
+        return;
+      }
+
+      setDeviceVariant(device);
       setAssignment(pinned);
+      setPinnedLocks(result.locked);
       setLevel(pinned.level);
       setScope(pinned.scope);
       if (pinned.guide) setShowReference(pinned.guide === "on");
       // An assignment is a scored round by definition, so it opens in the
       // challenge rather than making a student find the tab.
       setMode("challenge");
-      const seed = pinned.seed ?? INITIAL_SEED + 100;
       setChallengeSeed(seed);
-      setSession(
-        makeSession({
-          level: pinned.level,
-          scope: pinned.scope,
-          seed,
-          count: pinned.count ?? SESSION_LENGTH,
-          ...(pinned.cells ? { cells: pinned.cells } : {}),
-        }),
-      );
+      setSession(round);
     }, 0);
 
     return () => window.clearTimeout(applyLink);
@@ -693,12 +890,14 @@ export default function CountItApp() {
     setPracticeIndex(0);
     setRevealed(false);
     setFinishedAt(null);
+    setAttempt(1);
     setSession(makeSession({
       level: nextLevel,
       scope: nextScope,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
+      ...(assignment && variant ? { variant } : {}),
     }));
   }
 
@@ -721,12 +920,44 @@ export default function CountItApp() {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setFinishedAt(null);
+    setAttempt(1);
     setSession(makeSession({
       level,
       scope,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
+      ...(assignment && variant ? { variant } : {}),
+    }));
+  }
+
+  /* A retry is the SAME round again, after its answers have been shown. It is
+     therefore not a new attempt at an unseen task, and everything downstream
+     has to be able to tell: the finish time is re-stamped (it used to keep the
+     first run's, so two attempts could produce an identical verification code)
+     and the attempt number goes up. */
+  function retryChallenge() {
+    setSession((current) => resetSession(current));
+    setFinishedAt(null);
+    setAttempt((current) => current + 1);
+    setMode("challenge");
+  }
+
+  /* Rebuilds the round when the student names themselves before starting, so
+     their answer order follows their name rather than the browser. Refused once
+     an answer exists — the round cannot change underneath a started attempt. */
+  function changeStudentId(value: string) {
+    setStudentId(value);
+    if (!assignment || session.responses.length > 0) return;
+    const nextVariant = value.trim() || deviceVariant;
+    if (!nextVariant) return;
+    setSession(makeSession({
+      level,
+      scope,
+      seed: challengeSeed,
+      count: sessionLength,
+      ...(assignedCells ? { cells: assignedCells } : {}),
+      variant: nextVariant,
     }));
   }
 
@@ -765,10 +996,13 @@ export default function CountItApp() {
               type="button"
               role="tab"
               aria-selected={mode === "practice"}
-              className={mode === "practice" ? "is-active" : ""}
+              className={`${mode === "practice" ? "is-active" : ""}${practiceLocked ? " is-locked" : ""}`}
+              disabled={practiceLocked}
               onClick={() => setMode("practice")}
             >
-              <span aria-hidden="true">◎</span><strong>Practice</strong><small>Explore without a score</small>
+              <span aria-hidden="true">◎</span>
+              <strong>Practice</strong>
+              <small>{practiceLocked ? "Opens when the round ends" : "Explore without a score"}</small>
             </button>
             <button
               type="button"
@@ -791,15 +1025,27 @@ export default function CountItApp() {
             </p>
           )}
 
+          {practiceLocked && (
+            // Said out loud rather than left as a control that simply refuses
+            // to move — the same courtesy the locked setup controls get.
+            <p className="practice-locked-note" role="status">
+              Practice reveals the counts for these rhythms, so it stays shut until this
+              assigned round is finished.
+            </p>
+          )}
+
           <SetupControls
             level={level}
             scope={scope}
             showReference={showReference}
             assignment={assignment}
             locked={locked}
+            studentId={studentId}
+            identityLocked={identityLocked}
             onLevelChange={changeLevel}
             onScopeChange={changeScope}
             onReferenceChange={setShowReference}
+            onStudentIdChange={changeStudentId}
           />
 
           {mode === "practice" ? (
@@ -830,10 +1076,12 @@ export default function CountItApp() {
               sequenceStep={sequenceStep}
               studentId={studentId}
               finishedAt={finishedAt}
-              onStudentIdChange={setStudentId}
+              holdFeedback={holdFeedback}
+              attempt={attempt}
+              onStudentIdChange={changeStudentId}
               onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
               onAdvance={advanceChallenge}
-              onRetry={() => setSession((current) => resetSession(current))}
+              onRetry={retryChallenge}
               onNewSession={newChallenge}
             />
           )}

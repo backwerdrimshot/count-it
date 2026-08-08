@@ -87,13 +87,24 @@ export interface PraxisEvidenceResult {
  * for a retake, so an attempt identified by it stops being a record of the step
  * that was assigned. What goes in is what was assigned, what happened and when.
  *
+ * The attempt number is part of that. A retry replays the same round, so two
+ * runs that scored the same used to differ only by their timestamp — and the
+ * card did not re-stamp one, which made them the same string. A reference that
+ * cannot distinguish two attempts is not naming an attempt.
+ *
  * Deliberately NOT the same string as the user-visible verification code. That
  * code is a teacher-facing artifact with its own published format and its own
  * stated limits ("a deterrent, not proof"); whether it generalizes across the
  * three apps is an open decision, and quietly making the two identical here
  * would answer it by accident. */
-function attemptReference(assigned: string, score: number, possible: number, timestamp: string): string {
-  const input = `count-it|${assigned}|${score}/${possible}|${timestamp}`;
+function attemptReference(
+  assigned: string,
+  score: number,
+  possible: number,
+  attempt: number,
+  timestamp: string,
+): string {
+  const input = `count-it|${assigned}|${score}/${possible}|#${attempt}|${timestamp}`;
   let hash = 2166136261;
   for (let index = 0; index < input.length; index += 1) {
     hash ^= input.charCodeAt(index);
@@ -142,8 +153,16 @@ export function createPraxisEvidenceResult(options: {
   level: string;
   scope: "beat" | "measure";
   finishedAt: Date;
+  /** Which run of this round this is, counting from 1.
+   *
+   *  NOT added to the envelope's own fields. `praxis.result.v0_1` is shared
+   *  with two sibling apps, and adding a field here would make this app emit a
+   *  shape the others do not — a contract change dressed as a bug fix. It
+   *  belongs in the schema, and that is a decision for the family rather than
+   *  for this file; until then it identifies the attempt and nothing more. */
+  attempt?: number;
 }): PraxisEvidenceResult {
-  const { session, assignment, sequenceStep, finishedAt } = options;
+  const { session, assignment, sequenceStep, finishedAt, attempt = 1 } = options;
   const possible = session.questions.length;
   const score = session.score;
   const timestamp = finishedAt.toISOString();
@@ -163,6 +182,7 @@ export function createPraxisEvidenceResult(options: {
     settings.scope = assignment.scope;
     if (assignment.cells) settings.cells = assignment.cells.join(",");
     if (assignment.guide) settings.guide = assignment.guide;
+    if (assignment.feedback) settings.fb = assignment.feedback;
     if (assignment.count !== null) settings.n = String(assignment.count);
     if (assignment.passing !== null) settings.pass = String(assignment.passing);
     if (assignment.seed) settings.seed = assignment.seed;
@@ -204,7 +224,7 @@ export function createPraxisEvidenceResult(options: {
     skillReferences: null,
     assignmentReference: assignment?.name ?? null,
     sequenceStep,
-    attemptReference: attemptReference(assigned, score, possible, timestamp),
+    attemptReference: attemptReference(assigned, score, possible, attempt, timestamp),
     evidenceType: "A1_ANSWER_CORRECTNESS" as const,
     outcome: {
       score,

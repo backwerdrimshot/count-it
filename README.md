@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-08.4`
+- **Build:** `2026-08-08.5`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -19,11 +19,11 @@ documentation.
 ## What is included
 
 - **Practice:** move through one-beat or four-beat prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
-- **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best.
+- **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
-- **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, and a verification code beside the score.
+- **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
 
 ### Capability manifest
 
@@ -53,19 +53,50 @@ be a contract nobody signed up to.
 | `scope` | `beat` or `measure`. |
 | `cells` | Explicit rhythm vocabulary by catalog id. Levels are cumulative, so this is the only way to assign a subset — "the rest-entry cells and nothing else" is not a level. |
 | `guide` | `on` or `off`. A support policy set by the assignment, not the learner. |
-| `n` | Questions in the round, 1–20. |
+| `fb` | `each` or `end`. When the correct answer appears. `end` also hides the running score and the guide's highlighting until the round is over. |
+| `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
 | `seed` | Same questions for every student who opens the link. |
 | `sys` | Counting system. `standard` only today; anything else is refused rather than silently graded against the wrong system. |
 
 An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
-under two, an impossible pass mark or an unsupported counting system each
-invalidate the whole link with a plain-language message, and the app keeps
+under two, an impossible pass mark, a full-measure round longer than the pool
+can fill, an unrecognized feedback setting or an unsupported counting system
+each invalidate the whole link with a plain-language message, and the app keeps
 working normally underneath it. A rhythm pool with a rhythm missing teaches a
 different step, so silently dropping one would produce evidence for an
 assignment nobody set. Nothing about a student is stored: the optional
 identifier lives in session state only, and the verification code is a
 deterrent rather than proof.
+
+Two bounds are worth stating because a link author cannot see them. `pass` is
+checked against the length the round will **actually** be, which is 5 when the
+link sets no `n` — `?pass=8` alone is refused rather than printing an
+unreachable goal on every card. And a full-measure round never repeats a
+measure, so a pool of *k* rhythms can fill at most *k*⁴ questions: two rhythms
+make 16, and asking for 20 is refused at the link rather than throwing midway
+through building the round.
+
+### What an assigned score can and cannot claim
+
+The app has no accounts, so nothing here is proof. What it does do:
+
+- **The answer order is per student.** Every student who opens a link gets the
+  same questions with the same four options — that is what `seed` is for — but
+  the *order* of those options follows a typed name, or failing that a
+  per-browser string that never leaves the device. A posted answer key does not
+  transfer.
+- **Attempts are counted.** A retry replays the same round after its answers
+  have been shown, so the card, the copied summary and the verification code
+  all say which run produced the score.
+- **`fb=end` withholds the answer key** for rounds that are being graded, and
+  the end-of-round review is where a held round gets learned from.
+- **Practice closes during an assigned round**, because it reveals the counts
+  for the same vocabulary the round is testing.
+
+None of this survives a determined student: the verification code's algorithm
+is in this repository, and progress is device-local. It raises the effort from
+"press retry" to "deliberately cheat", which is the honest goal.
 
 ## Local development
 
@@ -89,7 +120,7 @@ pnpm build
 ## Architecture
 
 - `src/rhythm/` owns the catalog, counting-system maps, prompt assembly, validation, and rhythm types.
-- `src/question/` owns seeded randomness, distractor construction, question generation, and pure challenge-session state transitions.
+- `src/question/` owns seeded randomness, distractor construction, question generation, and pure challenge-session state transitions. Question content comes from the seed alone; an optional `variant` reshuffles the choices afterwards, so a round with no variant is byte-identical to one generated before variants existed.
 - `app/RhythmNotation.tsx` renders the structured notation recipes with VexFlow.
 - `app/CountItApp.tsx` contains the responsive Practice and Challenge experience and persists only lightweight preferences/best score in `localStorage`.
 - `tests/` verifies catalog validity, count mappings, supported levels, distractor correctness, seeded generation, non-repetition, scoring, reset behavior, and invalid-input failures.
@@ -113,6 +144,8 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - Standard counting is the only user-selectable system in this release.
 - Progress is device-local and intentionally lightweight.
 - Assignment results are copied out by the student; there is no download-as-image yet, and no submission to any LMS.
+- Nothing is timed and no duration is recorded, so a score says what was answered but not how long it took.
+- Level, question size and guide preferences are written to `localStorage` and never read back, so a returning visitor always starts at Level 2 / one beat. Whether they should resume or start fresh is an open product decision, not an oversight to route around.
 
 ## Privacy and accessibility
 

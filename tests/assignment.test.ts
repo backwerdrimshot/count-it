@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_QUESTIONS,
   MAX_NAME_LENGTH,
   describeAssignment,
   isAssigned,
   parseAssignment,
   serializeAssignment,
+  uniqueMeasures,
   verificationCode,
 } from "../src/assignment";
 import { RHYTHM_CELLS, getCellsByIds, getCellsForLevel } from "../src/rhythm";
@@ -77,8 +79,54 @@ describe("the assignment link", () => {
     expect(bad("?level=9").code).toBe("level");
     expect(bad("?scope=phrase").code).toBe("scope");
     expect(bad("?sys=takadimi").code).toBe("system");
+    expect(bad("?fb=sometimes").code).toBe("feedback");
     // A gate nobody can clear is a broken assignment, not a hard one.
     expect(bad("?n=12&pass=13").code).toBe("pass");
+  });
+
+  it("measures the pass mark against the round's real length, not the maximum", () => {
+    /* `?pass=8` with no `n` used to be checked against MAX_QUESTIONS and
+       accepted, so a five-question round carried a goal of 8/5 and every
+       student failed something nobody could clear. */
+    const unreachable = bad("?a=Goal&pass=8");
+    expect(unreachable.code).toBe("pass");
+    expect(unreachable.message).toContain(`round of ${DEFAULT_QUESTIONS}`);
+    expect(ok(`?a=Goal&pass=${DEFAULT_QUESTIONS}`).assignment.passing).toBe(DEFAULT_QUESTIONS);
+    expect(ok("?a=Goal&n=12&pass=8").assignment.passing).toBe(8);
+  });
+
+  it("refuses a measure round longer than the pool can fill", () => {
+    /* Four cells per measure and no repeats, so k rhythms make k^4 measures.
+       This was the one bound nobody wrote down, and the only one that failed
+       AFTER the link had been accepted: the banner, level, scope and pass mark
+       applied, the round threw while being built, and the student answered the
+       default round under the assignment's stated conditions. */
+    expect(uniqueMeasures(2)).toBe(16);
+    const tooLong = bad("?scope=measure&cells=quarter,eighths&n=20");
+    expect(tooLong.code).toBe("measure-pool");
+    expect(tooLong.message).toContain("16 different measures");
+    expect(bad("?scope=measure&level=1&n=17").code).toBe("measure-pool");
+
+    // At the ceiling and below it, the link is fine — and it really builds.
+    const atCeiling = ok("?scope=measure&cells=quarter,eighths&n=16").assignment;
+    expect(atCeiling.count).toBe(16);
+    expect(
+      generateQuestions({
+        level: atCeiling.level, scope: "measure", count: 16, seed: "ceiling", cells: atCeiling.cells!,
+      }),
+    ).toHaveLength(16);
+    // Beat rounds are unaffected: a beat prompt may repeat once the pool cycles.
+    expect(ok("?scope=beat&cells=quarter,eighths&n=20").assignment.count).toBe(20);
+  });
+
+  it("lets the link choose when the answer appears", () => {
+    /* Instant feedback teaches and withheld feedback assesses, so this is the
+       assignment's call in exactly the way the guide policy already is. */
+    expect(ok("?fb=end").assignment.feedback).toBe("end");
+    expect(ok("?fb=each").assignment.feedback).toBe("each");
+    expect(ok("?a=x").assignment.feedback).toBeNull();
+    expect(ok("?fb=end").locked).toContain("fb");
+    expect(describeAssignment(ok("?fb=end&cells=quarter,eighths").assignment)).toContain("answers at the end");
   });
 
   it("names the counting system in the link, because the graded answer depends on it", () => {
@@ -230,5 +278,14 @@ describe("the verification code", () => {
   it("still produces a valid code with no identifier and no assignment", () => {
     const code = verificationCode({ assignment: "", studentId: "", correct: 0, total: 5, finishedAt: at });
     expect(code).toMatch(/^BRS-CI-\d{6}-0-[0-9A-Z]{4}$/);
+  });
+
+  it("tells a replay apart from a first attempt", () => {
+    /* A retry is the same round again, after its answers have been shown. Two
+       attempts that scored the same used to be indistinguishable — the card
+       never re-stamped the finish time, so both carried one code. */
+    const base = { assignment: "Step 1", studentId: "ab12", correct: 10, total: 12, finishedAt: at };
+    expect(verificationCode({ ...base, attempt: 2 })).not.toBe(verificationCode(base));
+    expect(verificationCode({ ...base, attempt: 1 })).toBe(verificationCode(base));
   });
 });

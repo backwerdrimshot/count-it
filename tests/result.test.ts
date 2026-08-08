@@ -32,6 +32,7 @@ function receipt(over: {
   correct?: boolean[];
   search?: string;
   finishedAt?: Date;
+  attempt?: number;
 } = {}) {
   const session = playedSession({ correct: over.correct ?? [true, true, false] });
   const search = over.search ?? "";
@@ -44,6 +45,7 @@ function receipt(over: {
     level: assignment?.level ?? "level-1",
     scope: assignment?.scope ?? "beat",
     finishedAt: over.finishedAt ?? new Date("2026-08-08T00:00:00.000Z"),
+    ...(over.attempt === undefined ? {} : { attempt: over.attempt }),
   });
 }
 
@@ -110,6 +112,27 @@ describe("the result envelope", () => {
     const search = "?seq=counting-rhythms&step=1&scope=beat&cells=quarter,eighths&n=3&seed=cr1";
     expect(receipt({ search, finishedAt: new Date("2026-08-08T00:00:00.000Z") }).attemptReference)
       .not.toBe(receipt({ search, finishedAt: new Date("2026-08-09T00:00:00.000Z") }).attemptReference);
+  });
+
+  it("separates a replay of the same round from the first run of it", () => {
+    /* Retry replays the identical questions after showing every answer, so two
+       runs can land on the same score at the same stamped moment. A reference
+       that cannot tell them apart is not naming an attempt. */
+    const search = "?scope=beat&cells=quarter,eighths&n=3&seed=cr1";
+    const first = receipt({ search });
+    const replay = receipt({ search, attempt: 2 });
+    expect(replay.attemptReference).not.toBe(first.attemptReference);
+    expect(receipt({ search, attempt: 1 }).attemptReference).toBe(first.attemptReference);
+  });
+
+  it("records the feedback policy the round actually ran under", () => {
+    /* A score earned with the answer shown after every question is not the
+       same evidence as one earned with it held to the end, so the conditions
+       have to carry which it was. */
+    const held = receipt({ search: "?scope=beat&cells=quarter,eighths&fb=end&n=3&seed=cr1" });
+    expect(held.settings.fb).toBe("end");
+    expect(held.conditions.stated).toContain("answers at the end");
+    expect(receipt().settings.fb).toBeUndefined();
   });
 
   it("keeps the verification code distinct from the attempt reference", () => {

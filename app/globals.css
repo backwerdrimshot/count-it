@@ -1803,3 +1803,157 @@ a:focus-visible,
   cursor: not-allowed;
 }
 .scope-control label:has(input:disabled) { opacity: 0.65; cursor: not-allowed; }
+
+/* Asked before the round, because it sets the answer order as well as the
+   label on the result. */
+.student-id-field.setup-identity { margin: 4px 0 0; max-width: none; }
+.student-id-field small { font-size: 0.76rem; color: var(--muted); }
+
+/* Practice is an answer key for the rhythms an assignment is testing, so it
+   closes while a scored round is unfinished — and says why. */
+.mode-tabs button.is-locked { opacity: 0.55; cursor: not-allowed; }
+.mode-tabs button.is-locked small { color: var(--orange-deep); }
+
+.practice-locked-note {
+  margin: 0 0 4px;
+  padding: 12px 16px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--orange-soft);
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+/* A held round records the choice without grading it: the same neutral weight
+   as an unanswered question, so nothing about the mark reads as a verdict. */
+.answer-choice.is-chosen {
+  border-color: var(--navy);
+  background: var(--navy-soft);
+  color: var(--navy);
+}
+.answer-choice.is-chosen .choice-key { background: var(--navy); color: white; }
+
+.feedback-panel.is-held {
+  border: 1px solid #b4c6d8;
+  background: var(--navy-soft);
+}
+.feedback-panel.is-held .feedback-icon { background: var(--navy); }
+
+.result-step {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* The diagnosis, not just the score. */
+.result-missed {
+  display: grid;
+  gap: 2px;
+  margin: 16px auto 0;
+  max-width: 420px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--orange);
+  border-radius: var(--radius-sm);
+  background: var(--orange-soft);
+  text-align: left;
+}
+.result-missed strong { font-size: 0.78rem; color: var(--orange-deep); text-transform: uppercase; letter-spacing: 0.04em; }
+.result-missed span { font-size: 0.9rem; color: var(--ink); font-weight: 700; }
+
+/* Every question again, with what was chosen beside what it should have been.
+   Folded by default, because a student who saw each answer as they went does
+   not need it reopened; a held round opens it, because that round is learned
+   from here or nowhere. */
+.result-review {
+  margin: 20px 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  text-align: left;
+}
+.result-review > summary {
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--navy);
+}
+.result-review > summary:focus-visible { outline: 3px solid #1f8fda; outline-offset: -3px; }
+.result-review[open] > summary { border-bottom: 1px solid var(--line); }
+
+.review-list {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+}
+.review-list > li {
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--green);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: var(--paper);
+}
+.review-list > li.is-incorrect { border-left-color: var(--red); }
+
+.review-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.review-index {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy-soft);
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+.review-mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green);
+  color: white;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+.review-list > li.is-incorrect .review-mark { background: var(--red); }
+.review-verdict {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.review-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 10px 0 0;
+}
+.review-answers dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.review-answers dd {
+  margin: 2px 0 0;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+.review-why { margin: 10px 0 0; font-size: 0.8rem; color: var(--muted); }

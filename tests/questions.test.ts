@@ -61,6 +61,39 @@ describe("seeded question generation", () => {
     expect(new Set(questions.map((question) => question.prompt.cells[0].id)).size).toBe(4);
   });
 
+  it("varies the answer order per student without changing the questions", () => {
+    /* The seed exists so every student gets the SAME questions, which is what
+       makes the scores comparable — and it also fixed where the correct answer
+       sat, so one student could post "4, 4, 2, 3, 4" and the class scored full
+       marks without reading a notehead. The variant moves the choices only. */
+    const options = { level: "level-3" as const, scope: "beat" as const, count: 8, seed: "class-a" };
+    const sam = generateQuestions({ ...options, variant: "sam" });
+    const alex = generateQuestions({ ...options, variant: "alex" });
+
+    const asked = (questions: typeof sam) =>
+      questions.map((question) => `${question.prompt.cells.map((cell) => cell.id).join("+")}|${question.correctAnswer}`);
+    const options_of = (questions: typeof sam) =>
+      questions.map((question) => [...question.choices.map((choice) => choice.label)].sort().join(","));
+    const key = (questions: typeof sam) =>
+      questions.map((question) => question.choices.findIndex((choice) => choice.isCorrect)).join(",");
+
+    // Same rhythms, same four options on every question...
+    expect(asked(sam)).toEqual(asked(alex));
+    expect(options_of(sam)).toEqual(options_of(alex));
+    // ...and an answer key that does not transfer between them.
+    expect(key(sam)).not.toBe(key(alex));
+    // Still repeatable: the same student sitting the same link twice matches.
+    expect(key(generateQuestions({ ...options, variant: "sam" }))).toBe(key(sam));
+  });
+
+  it("leaves a round with no variant exactly as it was", () => {
+    /* The guarantee the parameter rests on: every link posted before variants
+       existed must still produce the round it produced then. */
+    const options = { level: "level-2" as const, scope: "beat" as const, count: 6, seed: 20260815 };
+    expect(generateQuestions({ ...options, variant: undefined })).toEqual(generateQuestions(options));
+    expect(generateQuestions({ ...options, variant: "" })).toEqual(generateQuestions(options));
+  });
+
   it("rejects unsupported generation requests", () => {
     expect(() => generateQuestions({ level: "level-1", scope: "beat", count: 0, seed: 1 })).toThrow(
       /between 1 and 20/,
