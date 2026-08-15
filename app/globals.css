@@ -1,27 +1,28 @@
+/* Count It was wearing Praxis Percussion's exact palette (navy #003366,
+   orange #f26522) — a separate sibling product line, not Backwerd Rhythm
+   Shop's own identity. Corrected to the real base identity + the Read &
+   Build Rhythm category accent (Forest). --green/--red/--green-soft/--red-soft
+   are semantic (correct/incorrect feedback), not brand identity, and are
+   left untouched. Color only — Trebuchet/Georgia fonts are left as-is,
+   matching the documented tradeoff for this app. */
 :root {
-  --navy: #003366;
-  --navy-deep: #00264d;
-  --navy-soft: #e8f0f7;
-  --orange: #f26522;
-  /* Orange as TEXT on paper: Brand Orange is 3.1:1 there. One notch deeper
-     than #c7470b so it also clears 4.5:1 on --cream (4.75:1), and white on
-     its fills rises from 4.84:1 to 5.25:1. */
-  --orange-deep: #bf420a;
-  /* Orange as TEXT on the navy sections, where the deep value is too dark:
-     Brand Orange is 4.0:1 there and this is 5.45:1. */
-  --orange-light: #f7913f;
-  --orange-soft: #fff0e6;
-  --cream: #f7f3ec;
+  --navy: #232320;
+  --navy-deep: #171717;
+  --navy-soft: #e8dbc8;
+  --orange: #567d46;
+  --orange-deep: #416034;
+  --orange-light: #7ca368;
+  --orange-soft: #cfe1d4;
+  --cream: #fafaf9;
   --paper: #fffdf9;
-  --ink: #13243a;
-  /* 4.19:1 on the mode-tab rail; 4.58:1 here. */
-  --muted: #586777;
-  --line: #d9e0e6;
+  --ink: #171717;
+  --muted: #4f4a47;
+  --line: #e2ded6;
   --green: #117a55;
   --green-soft: #e6f6ef;
   --red: #b72e2e;
   --red-soft: #fff0ef;
-  --shadow: 0 18px 48px rgba(0, 42, 82, 0.1);
+  --shadow: 0 18px 48px rgba(23, 23, 23, 0.1);
   --radius-lg: 24px;
   --radius-md: 16px;
   --radius-sm: 10px;
@@ -65,7 +66,7 @@ select:focus-visible,
 input:focus-visible,
 a:focus-visible,
 [tabindex="-1"]:focus-visible {
-  outline: 3px solid #1f8fda;
+  outline: 3px solid #567d46;
   outline-offset: 3px;
 }
 
@@ -204,13 +205,13 @@ a:focus-visible,
 }
 
 .hero h1 span {
-  color: #ff8a4c;
+  color: #7ca368;
 }
 
 .hero-copy > p:last-child {
   max-width: 590px;
   margin: 24px 0 0;
-  color: #d9e7f5;
+  color: #bdb6ad;
   font-size: clamp(1rem, 2vw, 1.16rem);
 }
 
@@ -246,7 +247,7 @@ a:focus-visible,
 .hero-lesson p {
   display: grid;
   margin: 0;
-  color: #d9e7f5;
+  color: #bdb6ad;
   font-size: 0.85rem;
 }
 
@@ -266,7 +267,7 @@ a:focus-visible,
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 18px 18px 0 0;
-  background: #e9e4dc;
+  background: #e8dbc8;
 }
 
 .mode-tabs button {
@@ -285,7 +286,7 @@ a:focus-visible,
 }
 
 .mode-tabs button + button {
-  border-left: 1px solid rgba(0, 51, 102, 0.12);
+  border-left: 1px solid rgba(23, 23, 23, 0.12);
 }
 
 .mode-tabs button > span {
@@ -332,7 +333,7 @@ a:focus-visible,
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   background: var(--paper);
   padding: 22px;
-  box-shadow: 0 10px 26px rgba(0, 42, 82, 0.06);
+  box-shadow: 0 10px 26px rgba(23, 23, 23, 0.06);
 }
 
 .setup-heading h2,
@@ -373,7 +374,7 @@ a:focus-visible,
 .level-control select {
   min-height: 48px;
   width: 100%;
-  border: 1px solid #b8c7d4;
+  border: 1px solid #bfa073;
   border-radius: 10px;
   background: white;
   color: var(--ink);
@@ -407,7 +408,7 @@ a:focus-visible,
   justify-content: center;
   gap: 8px;
   min-height: 48px;
-  border: 1px solid #b8c7d4;
+  border: 1px solid #bfa073;
   border-radius: 10px;
   background: white;
   color: var(--navy);
@@ -429,7 +430,7 @@ a:focus-visible,
 }
 
 .scope-options label:has(input:focus-visible) {
-  outline: 3px solid #1f8fda;
+  outline: 3px solid #567d46;
   outline-offset: 3px;
 }
 
@@ -474,7 +475,7 @@ a:focus-visible,
   width: 42px;
   height: 24px;
   border-radius: 20px;
-  background: #aab5c0;
+  background: #bfa073;
   transition: background 120ms ease;
 }
 
@@ -500,7 +501,7 @@ a:focus-visible,
 }
 
 .reference-toggle:has(input:focus-visible) > span {
-  outline: 3px solid #1f8fda;
+  outline: 3px solid #567d46;
   outline-offset: 3px;
 }
 
@@ -571,7 +572,7 @@ a:focus-visible,
 .notation-panel {
   margin-top: 20px;
   overflow: hidden;
-  border: 1px solid #cad4dd;
+  border: 1px solid #bfa073;
   border-radius: var(--radius-md);
   background: white;
 }
@@ -583,7 +584,7 @@ a:focus-visible,
 
 .notation-canvas {
   min-height: 172px;
-  color: #0b1724;
+  color: #171717;
 }
 
 .notation-canvas svg {
@@ -592,9 +593,9 @@ a:focus-visible,
 
 .reference-panel {
   margin-top: 14px;
-  border: 1px solid #d7dfe5;
+  border: 1px solid #bfa073;
   border-radius: var(--radius-md);
-  background: #f7fafc;
+  background: #fafaf9;
   padding: 14px;
 }
 
@@ -671,7 +672,7 @@ a:focus-visible,
 }
 
 .reference-counts span.silent {
-  color: #8794a1;
+  color: #4f4a47;
 }
 
 .reveal-panel {
@@ -680,15 +681,15 @@ a:focus-visible,
   align-items: center;
   gap: 6px 12px;
   margin-top: 16px;
-  border: 1px dashed #aebdca;
+  border: 1px dashed #bfa073;
   border-radius: var(--radius-md);
-  background: #f7fafc;
+  background: #fafaf9;
   padding: 16px;
 }
 
 .reveal-panel.is-revealed {
   border-style: solid;
-  border-color: #f3b38e;
+  border-color: #7ca368;
   background: var(--orange-soft);
 }
 
@@ -732,9 +733,9 @@ a:focus-visible,
 .primary-button:hover {
   /* This brightened to #da510f, which put white at 4.07:1 — the button became
      harder to read exactly when pointed at. Hover deepens instead: 6.49:1. */
-  background: #a83809;
+  background: #344d29;
   transform: translateY(1px);
-  box-shadow: 0 4px 0 #9c3609;
+  box-shadow: 0 4px 0 #2d4423;
 }
 
 .secondary-button {
@@ -749,7 +750,7 @@ a:focus-visible,
 }
 
 .quiet-button {
-  border: 1px solid #bcc9d4;
+  border: 1px solid #bfa073;
   background: transparent;
   color: var(--navy);
 }
@@ -845,7 +846,7 @@ a:focus-visible,
   align-items: center;
   gap: 10px;
   min-height: 64px;
-  border: 2px solid #c4d0d9;
+  border: 2px solid #bfa073;
   border-radius: 13px;
   background: white;
   padding: 10px 12px;
@@ -922,8 +923,8 @@ a:focus-visible,
 
 .feedback-panel.is-waiting {
   display: block;
-  border: 1px dashed #b7c4cf;
-  background: #f7fafc;
+  border: 1px dashed #bfa073;
+  background: #fafaf9;
 }
 
 .feedback-panel.is-correct {
@@ -1011,7 +1012,7 @@ a:focus-visible,
 .result-stats div {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #f7fafc;
+  background: #fafaf9;
   padding: 12px 8px;
 }
 
@@ -1062,14 +1063,14 @@ a:focus-visible,
 
 .quick-lesson > p {
   margin: 0;
-  color: #d8e6f3;
+  color: #bdb6ad;
 }
 
 .site-footer {
   display: grid;
   gap: 18px;
   background: var(--navy-deep);
-  color: #d8e6f3;
+  color: #bdb6ad;
   padding: 30px max(20px, calc((100% - 1180px) / 2));
   font-size: 0.78rem;
 }
@@ -1088,7 +1089,7 @@ a:focus-visible,
 }
 
 .site-footer span {
-  color: #9eb4c8;
+  color: #bdb6ad;
   font-size: 0.68rem;
   text-transform: uppercase;
 }
@@ -1096,7 +1097,7 @@ a:focus-visible,
 .site-footer .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
 .site-footer .foot-btn {
   display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-  background: rgba(255, 255, 255, 0.08); color: #eaf2fb; border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08); color: #fafaf9; border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px; padding: 7px 14px; font-size: 0.75rem; font-weight: 700; transition: 0.15s;
 }
 .site-footer .foot-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: #fff; }
@@ -1116,7 +1117,7 @@ a:focus-visible,
 }
 
 .support-dialog::backdrop {
-  background: rgba(0, 38, 77, 0.56);
+  background: rgba(23, 23, 23, 0.56);
 }
 
 .support-dialog h2 {
@@ -1158,7 +1159,7 @@ a:focus-visible,
 }
 
 .support-dialog textarea:focus-visible {
-  outline: 3px solid #1f8fda;
+  outline: 3px solid #567d46;
   outline-offset: 3px;
   border-color: var(--orange);
 }
@@ -1178,7 +1179,7 @@ a:focus-visible,
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 8px;
   background: var(--navy-deep);
-  color: #eaf2fb;
+  color: #fafaf9;
   padding: 8px 14px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1415,7 +1416,7 @@ a:focus-visible,
 .audit-header p:last-child {
   max-width: 720px;
   margin: 0;
-  color: #d9e8f6;
+  color: #bdb6ad;
 }
 
 .audit-header a {
@@ -1506,7 +1507,7 @@ a:focus-visible,
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--paper);
-  box-shadow: 0 10px 26px rgba(0, 42, 82, 0.06);
+  box-shadow: 0 10px 26px rgba(23, 23, 23, 0.06);
 }
 
 .audit-card-heading {
@@ -1589,7 +1590,7 @@ a:focus-visible,
   gap: 16px;
   margin: 12px 18px;
   padding: 12px 14px;
-  border: 1px solid #f6c3a8;
+  border: 1px solid #7ca368;
   border-radius: var(--radius-sm);
   background: var(--orange-soft);
 }
@@ -1615,7 +1616,7 @@ a:focus-visible,
   grid-template-columns: 122px 1fr;
   gap: 14px;
   padding: 10px 18px;
-  border-bottom: 1px solid #edf0f2;
+  border-bottom: 1px solid #e2ded6;
 }
 
 .audit-details div:last-child {
@@ -1834,7 +1835,7 @@ a:focus-visible,
 .answer-choice.is-chosen .choice-key { background: var(--navy); color: white; }
 
 .feedback-panel.is-held {
-  border: 1px solid #b4c6d8;
+  border: 1px solid #bfa073;
   background: var(--navy-soft);
 }
 .feedback-panel.is-held .feedback-icon { background: var(--navy); }
@@ -1886,7 +1887,7 @@ a:focus-visible,
   font-weight: 900;
   color: var(--navy);
 }
-.result-review > summary:focus-visible { outline: 3px solid #1f8fda; outline-offset: -3px; }
+.result-review > summary:focus-visible { outline: 3px solid #567d46; outline-offset: -3px; }
 .result-review[open] > summary { border-bottom: 1px solid var(--line); }
 
 .review-list {
