@@ -186,6 +186,12 @@ This app spent roughly 2026-07-27 to 2026-08-01 with four merged releases that
 never reached users, because nothing in the repo published and nothing said so.
 That is the failure mode this section exists to prevent.
 
+`package.json` carried `deploy` and `deploy:dry-run` scripts that ran `wrangler
+deploy` directly — unused, and in direct contradiction of "none is wanted"
+above. Removed rather than documented: a second, working deploy path is exactly
+what created the confusion this section describes, whether or not anyone ever
+ran it.
+
 ### History, so the dead ends stay dead
 
 - This app was scaffolded as an **OpenAI Sites** project. `.openai/hosting.json`

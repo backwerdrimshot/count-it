@@ -11,8 +11,6 @@
     "start": "vinext start",
     "test": "vitest run --config vitest.config.ts --configLoader runner",
     "check": "pnpm test && pnpm build",
-    "deploy": "pnpm build && wrangler deploy -c dist/server/wrangler.json",
-    "deploy:dry-run": "pnpm build && wrangler deploy --dry-run -c dist/server/wrangler.json",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {
