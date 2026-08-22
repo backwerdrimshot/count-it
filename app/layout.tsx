@@ -62,7 +62,27 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Cloudflare Web Analytics.
+
+            The shop site's Worker injects this on every page it serves, but it
+            does not serve this host — count-it.backwerdrhythmshop.com is its
+            own deployment, so the tag has to live here. Same site token as the
+            rest of backwerdrhythmshop.com, so the app's numbers land beside the
+            page that describes it rather than in a second dashboard.
+
+            It counts page views. It sets no cookies, does not fingerprint, and
+            cannot follow anyone to another site. Nothing a student answers,
+            plays or stores is involved: the result envelope still never leaves
+            the device, which is what `integrationLevelRationale` in
+            src/capabilities.ts claims and continues to mean. */}
+        <script
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "4c76fa6f3023401899bbeb30fa4eebd3"}'
+        />
+      </body>
     </html>
   );
 }

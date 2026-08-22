@@ -165,6 +165,14 @@ off-device. Lightweight preferences, the personal best, a per-assignment attempt
 and an opaque random string used only to vary answer order stay in `localStorage`.
 None of them names a person: the tally is keyed by the assignment's own link, and the
 ordering string is meaningless outside the browser that minted it.
+
+One script does load: a Cloudflare Web Analytics beacon, in `app/layout.tsx`. It counts
+page views and nothing else — no cookies, no fingerprinting, no following anyone to
+another site. It carries the same site token as the rest of backwerdrhythmshop.com so
+this app's numbers land beside the page that describes it. It is not a route out for
+anything above: what a student answers still never leaves the device, which is exactly
+what `integrationLevelRationale` in `src/capabilities.ts` claims. The shop site's
+`/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
 layouts support phone, tablet, and desktop use.
 
