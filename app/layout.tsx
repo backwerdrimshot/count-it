@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 const structuredData = {
@@ -77,8 +78,9 @@ export default function RootLayout({
             plays or stores is involved: the result envelope still never leaves
             the device, which is what `integrationLevelRationale` in
             src/capabilities.ts claims and continues to mean. */}
-        <script
-          type="module"
+        <Script
+          id="cf-web-analytics"
+          strategy="afterInteractive"
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon='{"token": "4c76fa6f3023401899bbeb30fa4eebd3"}'
         />

@@ -23,6 +23,8 @@ describe("the analytics beacon", () => {
   it("stays in the body, after the app's own children", () => {
     // Analytics is the last thing that should compete for the main thread. If a
     // refactor hoists this into <head>, it starts fetching ahead of the app.
+    // next/script's `afterInteractive` says the same thing, but the strategy is
+    // a prop someone can change; the position is structural.
     const beacon = layout.indexOf("cloudflareinsights");
     expect(beacon).toBeGreaterThan(layout.indexOf("{children}"));
     expect(beacon).toBeGreaterThan(layout.indexOf("</head>"));
@@ -34,7 +36,13 @@ describe("the analytics beacon", () => {
    site's /privacy/. This fails if anyone wires app state into the tag. */
 describe("the beacon carries no app data", () => {
   it("passes nothing but the token", () => {
-    const tag = layout.slice(layout.indexOf("<script"), layout.indexOf("/>", layout.indexOf("cloudflareinsights")) + 2);
+    // Slice the <Script> element itself. Searching the whole file would find
+    // this attribute wherever it sat, including inside the JSON-LD block in
+    // <head>, and pass without ever reading the beacon.
+    const start = layout.indexOf("<Script");
+    expect(start).toBeGreaterThan(-1);
+    const tag = layout.slice(start, layout.indexOf("/>", start) + 2);
+    expect(tag).toContain("cloudflareinsights");
     const config = tag.match(/data-cf-beacon='([^']*)'/)?.[1];
     expect(config).toBeDefined();
     expect(JSON.parse(config!)).toEqual({ token: SITE_TOKEN });
