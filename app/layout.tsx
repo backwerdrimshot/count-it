@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 
 const structuredData = {
@@ -77,10 +76,23 @@ export default function RootLayout({
             cannot follow anyone to another site. Nothing a student answers,
             plays or stores is involved: the result envelope still never leaves
             the device, which is what `integrationLevelRationale` in
-            src/capabilities.ts claims and continues to mean. */}
-        <Script
-          id="cf-web-analytics"
-          strategy="afterInteractive"
+            src/capabilities.ts claims and continues to mean.
+
+            A raw <script>, not next/script. next/script with `afterInteractive`
+            renders no tag server-side at all: the beacon arrives as a lazy client
+            reference in the RSC flight payload and only becomes a script once
+            React hydrates. That works, but it makes page counting depend on
+            hydration succeeding, and it is not what Cloudflare's edge injection
+            did on this domain for four months. A plain module script is in the
+            HTML the moment it is served.
+
+            eslint's no-sync-scripts rule fires on it because the rule reads only
+            for async/defer. type="module" is deferred by spec — that is the whole
+            reason Cloudflare publishes the snippet this way — so the rule is
+            wrong here, and only here. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          type="module"
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon='{"token": "4c76fa6f3023401899bbeb30fa4eebd3"}'
         />
