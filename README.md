@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-08.6`
+- **Build:** `2026-08-22`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -165,6 +165,14 @@ off-device. Lightweight preferences, the personal best, a per-assignment attempt
 and an opaque random string used only to vary answer order stay in `localStorage`.
 None of them names a person: the tally is keyed by the assignment's own link, and the
 ordering string is meaningless outside the browser that minted it.
+
+One script does load: a Cloudflare Web Analytics beacon, in `app/layout.tsx`. It counts
+page views and nothing else — no cookies, no fingerprinting, no following anyone to
+another site. It carries the same site token as the rest of backwerdrhythmshop.com so
+this app's numbers land beside the page that describes it. It is not a route out for
+anything above: what a student answers still never leaves the device, which is exactly
+what `integrationLevelRationale` in `src/capabilities.ts` claims. The shop site's
+`/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
 layouts support phone, tablet, and desktop use.
 
@@ -217,12 +225,14 @@ hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
 the whole thing locally without credentials.
 
 > **Size headroom is thin, and the number moves.** Measured with
-> `pnpm deploy:dry-run` at `2026-08-08.6`: **2689.78 KiB, 1004.50 KiB gzipped**,
-> up 1.07 KiB from `2026-08-08.5` (1003.43 KiB), which was itself up 2.55 KiB
-> from the release before it. The figure this note carried before that pass
-> (995 KiB) had gone stale unnoticed, which is the failure mode a hand-copied
-> number has. Re-measure here on every release rather than trusting the line
-> above it.
+> `wrangler deploy --dry-run --config dist/server/wrangler.json` at `2026-08-22`:
+> **2690.02 KiB, 1004.59 KiB gzipped**, up 0.09 KiB from `2026-08-08.6`
+> (1004.50 KiB) — the analytics beacon is one script tag and costs about what
+> that sounds like. Before it, `2026-08-08.6` was up 1.07 KiB from
+> `2026-08-08.5` (1003.43 KiB), itself up 2.55 KiB from the release before. The
+> figure this note carried two passes ago (995 KiB) had gone stale unnoticed,
+> which is the failure mode a hand-copied number has. Re-measure here on every
+> release rather than trusting the line above it.
 >
 > Against the 1 MiB (1024 KiB) Workers script limit on the free plan that leaves
 > roughly 20 KiB. **Confirm the plan's real ceiling in the Cloudflare dashboard
