@@ -1197,6 +1197,28 @@ a:focus-visible,
   margin: 0;
 }
 
+/* Below the two-column breakpoint the hero was 518px of a 664px phone screen —
+   an eyebrow, a two-line headline, a paragraph of description and three tall
+   how-it-works cards — so opening Count It showed no trainer at all: the tabs
+   only grazed the bottom edge at y=619. The app has a "Skip to the trainer"
+   link precisely because someone already noticed, and a skip link is a
+   workaround for a layout, not a fix for one.
+
+   The name and the three steps both stay. The standing description goes, and
+   the steps go from three stacked cards to one compact row, which is enough to
+   put the mode tabs and the practice controls on the first screen. Nothing here
+   applies at 700px and up, where the hero is a two-column panel with room. */
+@media (max-width: 699px) {
+  .hero { padding: 20px 20px 22px; gap: 16px; }
+  .hero h1 { font-size: clamp(2rem, 8.5vw, 2.6rem); }
+  .hero-copy > p:last-child { display: none; }
+  .hero-lesson { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .hero-lesson > div { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 6px; padding: 9px 6px; }
+  .hero-lesson > div > span { width: 28px; height: 28px; font-size: 0.95rem; }
+  .hero-lesson strong { font-size: 0.8rem; }
+  .hero-lesson p { font-size: 0.68rem; }
+}
+
 @media (min-width: 700px) {
   .site-header > p {
     display: block;
