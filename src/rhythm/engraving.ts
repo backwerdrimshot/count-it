@@ -5,12 +5,13 @@ import type { PartialBeamDirection, RhythmCell, RhythmPrompt } from "./types";
    The version is part of the reviewed baseline's identity, so widening what it
    covers is a new version rather than the same name meaning more. The 4/4 and
    3/4 rows below are the 2026-07-20 baseline unchanged; the eighth-beat rows
-   are new and carry their own review state — see the sign-off table in
-   docs/notation-engraving-standard.md, where the eighth-beat family is
-   recorded as awaiting human visual review. */
+   are new and carry their own review date — see the sign-off table in
+   docs/notation-engraving-standard.md. The eighth-beat rendering was reviewed
+   on /notation-audit and approved 2026-08-24; the independent-musician and
+   classroom-display reviews were pending before this work and still are. */
 export const ENGRAVING_STANDARD_VERSION = "count-it-simple-meters-beginner-v2";
 export const ENGRAVING_REVIEW_DATE = "2026-07-20";
-export const EIGHTH_BEAT_REVIEW_DATE: string | null = null;
+export const EIGHTH_BEAT_REVIEW_DATE: string | null = "2026-08-24";
 
 export interface EngravingExpectation {
   readonly beamGroups: readonly (readonly number[])[];
