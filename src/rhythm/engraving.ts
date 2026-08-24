@@ -157,6 +157,52 @@ export function measureBeamRuns(prompt: RhythmPrompt): readonly (readonly BeamMe
   );
 }
 
+/* NOT settable from here: which way a lone note's stub points.
+ *
+ * Once the secondary breaks at the beat, a note can be alone at that level and
+ * draw a stub instead of a beam. Which way it points decides which beat it
+ * READS as, so it matters — and VexFlow 5 consults setPartialBeamSideAt only
+ * for a short note flanked by two LONGER ones (beam.ts, the `S` guard). Every
+ * note in a 3/8 run is a sixteenth, so the hook is never reached and the
+ * library falls back to "last note in the run stubs left".
+ *
+ * That is why the audit sheet now carries a card for the case rather than a
+ * fix: 3/8 — a beat that sounds then rests. Its middle beat opens with a
+ * sixteenth whose partner is a rest, and the stub points back into beat one.
+ * Whether that is acceptable, or whether such a note should carry a flag and
+ * no beam at all, is an engraving decision for the review, not one to make
+ * silently in a renderer. A tried-and-reverted setPartialBeamSideAt call is
+ * recorded here so the next person does not spend the afternoon on it. */
+
+/* Where the SECONDARY beam breaks inside a run.
+ *
+ * The whole-bar rule above is about the PRIMARY beam, and applying it to both
+ * levels is what shipped: a 3/8 bar of six sixteenths drew one unbroken
+ * primary AND one unbroken secondary across all six, so the three beats
+ * vanished into an undifferentiated run. The audit card asked the reviewer
+ * "six sixteenths under ONE beam across the bar, not three beams of two?" —
+ * which the drawing satisfied, because the question offered two options and
+ * the correct engraving is the third: one primary across the bar, secondary
+ * broken into three pairs.
+ *
+ * That is the standard sub-grouping rule, and here it is also the lesson's
+ * own — "the beams tell you where the beats are" — on a page whose figure only
+ * ever showed three PLAIN eighths, the one case with no secondary beam at all
+ * and so the one case that could not reveal this. The poster prints no
+ * sixteenth in 3/8 either. Nothing was contradicted by breaking it; the
+ * unbroken version was an extrapolation nobody wrote down.
+ *
+ * Returned as indexes WITHIN the run, naming the note after which the break
+ * falls, which is what VexFlow's breakSecondaryAt takes. Per-beat meters need
+ * none: their runs never cross a beat, so there is nothing to break. */
+export function secondaryBeamBreaks(run: readonly BeamMember[]): readonly number[] {
+  return Object.freeze(
+    run.flatMap((member, index) =>
+      index < run.length - 1 && run[index + 1].cellIndex !== member.cellIndex ? [index] : [],
+    ),
+  );
+}
+
 function normalizeDirections(
   value: Readonly<Partial<Record<number, PartialBeamDirection>>>,
 ): Record<string, PartialBeamDirection> {

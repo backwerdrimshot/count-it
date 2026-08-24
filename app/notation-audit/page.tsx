@@ -59,7 +59,13 @@ const MEASURE_AUDITS = [
     id: "3-8-whole-bar",
     title: "3/8 — the whole bar beams as one group",
     cells: ["two-sixteenths", "two-sixteenths", "two-sixteenths"] as const,
-    check: "Six sixteenths under ONE beam across the bar, not three beams of two.",
+    /* The old wording was "six sixteenths under ONE beam across the bar, not
+       three beams of two", and the drawing satisfied it — which is how an
+       unbroken SECONDARY beam passed review. The question offered two options
+       and the correct engraving is the third. */
+    check:
+      "One PRIMARY beam across the whole bar, and the SECONDARY beam broken into three " +
+      "pairs — one per beat. Not three separate beams, and not one unbroken pair of beams.",
   },
   {
     id: "3-8-rest-breaks-beam",
@@ -74,6 +80,21 @@ const MEASURE_AUDITS = [
     title: "3/8 — three plain eighth beats",
     cells: ["eighth-beat", "eighth-beat", "eighth-beat"] as const,
     check: "Three eighths beamed together across the bar, and the 3/8 signature on the stave.",
+  },
+  {
+    id: "3-8-note-then-rest",
+    title: "3/8 — a beat that sounds then rests",
+    cells: ["two-sixteenths", "sixteenth-rest", "two-sixteenths"] as const,
+    /* OPEN QUESTION, and the reason this card exists. The middle beat opens
+       with a sixteenth whose partner is a rest, so it ends the beamed run and
+       draws a stub — pointing LEFT, back into beat one, because VexFlow aims a
+       run's last stub backward and will not take an override here. Read it and
+       decide: acceptable, or should a note alone in its beat carry a flag and
+       no beam at all? */
+    check:
+      "OPEN — the middle beat's lone sixteenth stubs LEFT, back into beat one, rather than " +
+      "into its own beat. Decide whether that reads correctly or whether it should be flagged " +
+      "and left out of the bar's beam.",
   },
   {
     id: "3-4-stays-per-beat",

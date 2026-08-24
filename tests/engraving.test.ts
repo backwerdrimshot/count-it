@@ -12,6 +12,7 @@ import {
   createMeasurePrompt,
   getDottedTokenIndexes,
   measureBeamRuns,
+  secondaryBeamBreaks,
   getRhythmCell,
   validateEngravingCatalog,
   validateEngravingExpectationsAreUsed,
@@ -278,5 +279,56 @@ describe("audit scope", () => {
 
   it("keeps eighth-beat cells in 3/8", () => {
     for (const cell of EIGHTH_BEAT_CELLS) expect(fitsIn(cell)).toEqual(["3/8"]);
+  });
+});
+
+/* The secondary beam has to show the beat, even when the primary crosses it.
+ *
+ * The 3/8 whole-bar rule is about the PRIMARY beam. Applying it to both levels
+ * is what shipped: a bar of six sixteenths drew one unbroken primary AND one
+ * unbroken secondary across all six, so the three beats disappeared into an
+ * undifferentiated run. It survived review because the audit card asked "six
+ * sixteenths under ONE beam across the bar, not three beams of two?" — which
+ * the drawing satisfied. The question had two options and the right answer was
+ * the third.
+ *
+ * The lesson's own figure could not have caught it either: it shows three
+ * PLAIN eighths, the one case with no secondary beam to break. */
+describe("secondary beam breaks", () => {
+  it("breaks at every beat inside a 3/8 whole-bar run", () => {
+    const bar = createMeasurePrompt(["two-sixteenths", "two-sixteenths", "two-sixteenths"], "3-8");
+    const runs = measureBeamRuns(bar);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toHaveLength(6);
+    /* After note 1 and after note 3 — the two beat boundaries inside the run.
+       Three pairs, not one run of six. */
+    expect(secondaryBeamBreaks(runs[0])).toEqual([1, 3]);
+  });
+
+  it("breaks where a run crosses a beat after a rest", () => {
+    const bar = createMeasurePrompt(["two-sixteenths", "rest-sixteenth", "two-sixteenths"], "3-8");
+    const runs = measureBeamRuns(bar);
+    /* The rest ends the first run; the entering sixteenth beams forward. */
+    expect(runs.map((run) => run.length)).toEqual([2, 3]);
+    expect(secondaryBeamBreaks(runs[0])).toEqual([]);
+    expect(secondaryBeamBreaks(runs[1])).toEqual([0]);
+  });
+
+  it("never breaks in a per-beat meter, because no run crosses a beat", () => {
+    for (const meter of ["4-4", "3-4"] as const) {
+      const beats = meter === "4-4" ? 4 : 3;
+      const bar = createMeasurePrompt(Array.from({ length: beats }, () => "sixteenths"), meter);
+      for (const run of measureBeamRuns(bar)) expect(secondaryBeamBreaks(run)).toEqual([]);
+    }
+  });
+
+  it("has nothing to break when the 3/8 bar is plain eighths", () => {
+    /* One beam group of three, no secondary beam at all — and so the one case
+       the lesson's figure shows, which is why the figure could not reveal any
+       of this. */
+    const bar = createMeasurePrompt(["eighth-beat", "eighth-beat", "eighth-beat"], "3-8");
+    const runs = measureBeamRuns(bar);
+    expect(runs).toHaveLength(1);
+    expect(secondaryBeamBreaks(runs[0])).toEqual([0, 1]);
   });
 });
