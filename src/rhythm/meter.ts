@@ -51,6 +51,20 @@ export interface Meter {
   readonly beamsWholeMeasure: boolean;
   /** VexFlow voice timing. `beatValue` is the denominator, not the beat unit. */
   readonly vexBeatValue: 4 | 8;
+  /** Whether a one-beat question can be ASKED in this meter.
+   *
+   *  False where a beat is too small a slice of the bar to draw as one: in
+   *  3/8 the beat IS an eighth, so a one-beat prompt is a third of a measure
+   *  and the stave shows a bar with two thirds missing. The app spent a day
+   *  trying to make that read honestly — closing the barline claimed a
+   *  complete bar the arithmetic denied, and leaving it open drew a 3/8
+   *  signature trailing into empty space. Neither is a measure, because the
+   *  prompt is not one.
+   *
+   *  A meter that beams across its whole bar is saying the bar is the unit;
+   *  asking a third of it was always working against that. Stated as data so
+   *  a fourth meter declares its own answer and the refusal has one source. */
+  readonly allowsBeatScope: boolean;
 }
 
 function meter(
@@ -58,6 +72,7 @@ function meter(
   beatsPerMeasure: 3 | 4,
   beatUnit: BeatUnit,
   beamsWholeMeasure: boolean,
+  allowsBeatScope: boolean,
 ): Meter {
   const partialsPerBeat: PartialCount = beatUnit === "4" ? 4 : 2;
   return Object.freeze({
@@ -69,14 +84,16 @@ function meter(
     ticksPerBeat: partialsPerBeat,
     beamsWholeMeasure,
     vexBeatValue: beatUnit === "4" ? (4 as const) : (8 as const),
+    allowsBeatScope,
   });
 }
 
 export const METERS: Readonly<Record<MeterId, Meter>> = Object.freeze({
-  "4-4": meter("4-4", 4, "4", false),
-  "3-4": meter("3-4", 3, "4", false),
-  /* The one meter that beams across its beats. See the header. */
-  "3-8": meter("3-8", 3, "8", true),
+  "4-4": meter("4-4", 4, "4", false, true),
+  "3-4": meter("3-4", 3, "4", false, true),
+  /* The one meter that beams across its beats, and the one that asks whole
+     bars only. Both for the same reason: in 3/8 the bar is the unit. */
+  "3-8": meter("3-8", 3, "8", true, false),
 });
 
 export const DEFAULT_METER: MeterId = "4-4";

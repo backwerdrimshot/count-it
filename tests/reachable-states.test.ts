@@ -47,13 +47,31 @@ function practiceCount(level: LevelId, meter: MeterId, scope: QuestionScope): nu
 
 const SCOPES: readonly QuestionScope[] = ["beat", "measure"];
 
+/* The pairs the setup panel can actually reach.
+ *
+ * This file enumerates CONTROLS rather than cases, which only means anything
+ * while the list matches what the panel offers. 3/8 asks whole bars only — a
+ * one-beat question there is a third of a measure and cannot be drawn as one —
+ * so the panel disables that size, the link parser refuses it, and a test that
+ * went on asserting it builds would be testing a state no student can enter.
+ *
+ * Read from the meter rather than listed here, so a fourth meter is covered
+ * the day it is added and this stays a description of the app instead of a
+ * second opinion about it. */
+const REACHABLE: readonly { meter: MeterId; scope: QuestionScope }[] = METER_IDS.flatMap((meter) =>
+  SCOPES.filter((scope) => scope === "measure" || getMeter(meter).allowsBeatScope).map((scope) => ({
+    meter,
+    scope,
+  })),
+);
+
 describe("every state the setup panel can reach", () => {
   it("builds a practice round, for every meter, level and question size", () => {
     const failures: string[] = [];
     let built = 0;
-    for (const meter of METER_IDS) {
+    for (const { meter, scope } of REACHABLE) {
       for (const level of LEVELS) {
-        for (const scope of SCOPES) {
+        {
           const where = `${meter} · ${level.id} · ${scope}`;
           try {
             const questions = generateQuestions({
@@ -84,7 +102,10 @@ describe("every state the setup panel can reach", () => {
     }
     expect(failures).toEqual([]);
     /* A loop that silently covered nothing would pass. */
-    expect(built).toBe(METER_IDS.length * LEVELS.length * SCOPES.length);
+    expect(built).toBe(REACHABLE.length * LEVELS.length);
+    /* And the list must still contain BOTH sizes somewhere, or the panel's
+       one-beat option has quietly disappeared everywhere. */
+    expect(new Set(REACHABLE.map((entry) => entry.scope))).toEqual(new Set(SCOPES));
   });
 
   it("builds a challenge round, for every meter, level and question size", () => {
@@ -93,9 +114,9 @@ describe("every state the setup panel can reach", () => {
        cheaper half. It is here anyway because "practice works" and "the scored
        round works" are two claims, and the app has two code paths. */
     const failures: string[] = [];
-    for (const meter of METER_IDS) {
+    for (const { meter, scope } of REACHABLE) {
       for (const level of LEVELS) {
-        for (const scope of SCOPES) {
+        {
           const where = `${meter} · ${level.id} · ${scope}`;
           try {
             const questions = generateQuestions({
@@ -122,6 +143,7 @@ describe("every state the setup panel can reach", () => {
     const failures: string[] = [];
     for (const meter of METER_IDS) {
       for (const scope of SCOPES) {
+        if (scope === "beat" && !getMeter(meter).allowsBeatScope) continue;
         const where = `${meter} · ${scope}`;
         try {
           generateQuestions({

@@ -108,6 +108,7 @@ export interface AssignmentError {
     | "scope"
     | "meter"
     | "meter-cells"
+    | "meter-scope"
     | "scope-cells"
     | "system"
     | "feedback"
@@ -388,6 +389,32 @@ export function parseAssignment(search: string): AssignmentResult {
      named, on the same rule as every other check here: a round that cannot be
      built as written is not repaired into a different one. */
   const activeMeter = getMeter(meter ?? DEFAULT_METER);
+
+  /* A meter that asks whole bars only refuses a one-beat link.
+   *
+   * In 3/8 the beat IS an eighth, so a one-beat question is a third of a
+   * measure and no honest way to draw it exists: closing the barline claims a
+   * complete bar the arithmetic denies, and leaving it open draws a 3/8
+   * signature trailing into empty space. The meter beams across its whole bar
+   * because the bar is the unit; asking a third of it worked against that.
+   *
+   * Refused at the link rather than quietly promoted to a measure, on the same
+   * rule as every other check here: a round that cannot be built as written is
+   * not repaired into a different one. */
+  if (scope === "beat" && !activeMeter.allowsBeatScope) {
+    return {
+      ok: false,
+      error: {
+        code: "meter-scope",
+        entry: activeMeter.id,
+        message:
+          `${activeMeter.label} counts ${activeMeter.beatUnit === "8" ? "an eighth" : "a quarter"}-note beat, ` +
+          `so a one-beat question would show a third of a bar. This practice link needs to ask ` +
+          "one measure. The link needs to be fixed before it can be used.",
+      },
+    };
+  }
+
   if (cells) {
     const wrongFamily = cells.filter(
       (id) => getRhythmCell(id).beatUnit !== activeMeter.beatUnit,
