@@ -71,7 +71,22 @@ export default function RhythmNotation({
         cell.notation.tokens.map((notationToken, tokenIndex) => {
           const note = new StaveNote({
             clef: "percussion",
-            keys: [notationToken.rest ? "b/4" : "f/4"],
+            /* Both on the MIDDLE line, and stems up.
+               Rests were already there (b/4); notes were on f/4, which VexFlow's
+               percussion clef maps like treble — the bottom SPACE. On a drum
+               staff that space is the bass drum, so a rhythm trainer was writing
+               every note as a kick, and its own rests sat a third higher than
+               its notes.
+               The site draws the same rhythms at `base - 2 * SPACE` in
+               assets/notation/rhythm-staff.js — the middle line, where it also
+               centres the percussion clef — for notes and rests alike. An app
+               that engraves a figure differently from the poster on the wall of
+               the room using it is the thing the 3/8 beam rule already refused
+               to do; this is the same rule applied to the same staff.
+               Stems are forced up because VexFlow would otherwise flip them down
+               on the middle line, and the lesson figures beam upward. */
+            keys: ["b/4"],
+            stemDirection: 1,
             duration: `${notationToken.duration}${notationToken.dots ? "d" : ""}${notationToken.rest ? "r" : ""}`,
           });
           if (notationToken.dots) Dot.buildAndAttach([note], { all: true });
@@ -113,6 +128,22 @@ export default function RhythmNotation({
         beatValue: meter.vexBeatValue,
       }).addTickables(drawn.map((entry) => entry.note));
       new Formatter().joinVoices([voice]).format([voice], width - (prompt.scope === "measure" ? 135 : 105));
+
+      /* A note that fills the bar on its own is CENTRED, not flush left.
+         Traditional engraving centres a whole note (and a whole-bar rest) when
+         nothing else shares the measure — Gould gives centred, a shade left of
+         centre, as the standard. VexFlow's formatter has nothing to space
+         against with one note, so it left-aligns and the whole note ended up
+         jammed against the time signature with three empty beats after it.
+         Only for a measure whose single note IS the whole bar: a half note
+         alone would be an incomplete measure, and this must not paper over
+         that the way the closed barline used to. */
+      if (prompt.scope === "measure" && drawn.length === 1 && prompt.cells.length === 1) {
+        const only = drawn[0].note;
+        const centre = stave.getNoteStartX() + (stave.getNoteEndX() - stave.getNoteStartX()) / 2;
+        only.setXShift(centre - only.getAbsoluteX() - only.getGlyphWidth() / 2);
+      }
+
       voice.draw(context, stave);
       beams.forEach((beam) => beam.setContext(context).draw());
 
