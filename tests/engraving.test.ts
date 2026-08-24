@@ -6,6 +6,7 @@ import {
   ENGRAVING_STANDARD_VERSION,
   MEASURE_BEAM_POLICY,
   METER_IDS,
+  METERS,
   RHYTHM_CELLS,
   createBeatPrompt,
   createMeasurePrompt,
@@ -243,5 +244,39 @@ describe("the 3/8 whole-measure beam", () => {
       { cellIndex: 0, tokenIndex: 0 },
       { cellIndex: 0, tokenIndex: 1 },
     ]]);
+  });
+});
+
+/* The audit sheet's own scope line.
+ *
+ * The card read `beatUnit === "4" ? "Quarter-note beat · 4/4 and 3/4" : ...`,
+ * which was true for the sixteen one-beat cells and false the moment a cell
+ * could SPAN beats. A whole note is four of them and cannot appear in 3/4 at
+ * all — the app refuses such a link — so the whole-note card was telling a
+ * reviewer they were signing off on engraving that is never generated. An
+ * audit sheet is the one document where overstating scope costs the most,
+ * because a sign-off is taken at its word.
+ *
+ * The rule is a cell's span against the bar, not its beat unit alone. */
+describe("audit scope", () => {
+  const fitsIn = (cell: { beatUnit: string; beats: number }) =>
+    Object.values(METERS)
+      .filter((meter) => meter.beatUnit === cell.beatUnit && cell.beats <= meter.beatsPerMeasure)
+      .map((meter) => meter.label);
+
+  it("keeps a whole note out of the meters it cannot fill", () => {
+    expect(fitsIn(getRhythmCell("whole"))).toEqual(["4/4"]);
+  });
+
+  it("still offers both quarter-beat meters to everything that fits a 3-beat bar", () => {
+    /* A half note IS legitimate in 3/4 — two of its three beats — so this must
+       not over-correct into "spanning cells are 4/4 only". */
+    expect(fitsIn(getRhythmCell("half"))).toEqual(["4/4", "3/4"]);
+    expect(fitsIn(getRhythmCell("half-rest"))).toEqual(["4/4", "3/4"]);
+    expect(fitsIn(getRhythmCell("quarter"))).toEqual(["4/4", "3/4"]);
+  });
+
+  it("keeps eighth-beat cells in 3/8", () => {
+    for (const cell of EIGHTH_BEAT_CELLS) expect(fitsIn(cell)).toEqual(["3/8"]);
   });
 });

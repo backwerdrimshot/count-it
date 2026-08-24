@@ -12,12 +12,37 @@ import {
   createBeatPrompt,
   createMeasurePrompt,
   getPromptAnswer,
+  METERS,
 } from "../../src/rhythm";
 
 export const metadata: Metadata = {
   title: "Notation Audit | Count It",
   description: "Internal engraving review sheet for every supported Count It rhythm cell.",
 };
+
+
+/* Which meters a card's notation is actually reviewed against.
+ *
+ * This read `beatUnit === "4" ? "Quarter-note beat · 4/4 and 3/4" : ...`, which
+ * was true for the sixteen one-beat cells and false the moment a cell could
+ * SPAN beats. A whole note is four of them, so it cannot appear in 3/4 at all —
+ * and the whole-note card told a reviewer they were signing off on 3/4
+ * engraving that the app refuses to generate. An audit sheet that overstates
+ * its own scope is the one document where that costs the most.
+ *
+ * Derived from the meters themselves now: a cell fits a meter when it shares
+ * the beat unit and its span is not longer than the bar. A fourth meter is
+ * described correctly the day it is added. */
+function meterScope(cell: { readonly beatUnit: string; readonly beats: number }): string {
+  const fits = Object.values(METERS).filter(
+    (meter) => meter.beatUnit === cell.beatUnit && cell.beats <= meter.beatsPerMeasure,
+  );
+  const unit = cell.beatUnit === "4" ? "Quarter-note beat" : "Eighth-note beat";
+  const names = fits.map((meter) => meter.label);
+  const list =
+    names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+  return `${unit} · ${list}`;
+}
 
 const partialNames = ["Beat", "e", "&", "a"] as const;
 /* An eighth beat has two positions, and its second one is the "&" — the same
@@ -144,9 +169,7 @@ export default function NotationAuditPage() {
                 <div>
                   <p className="audit-id">{cell.id}</p>
                   <h2>{cell.label}</h2>
-                  <p className="audit-beat-unit">
-                    {cell.beatUnit === "4" ? "Quarter-note beat · 4/4 and 3/4" : "Eighth-note beat · 3/8"}
-                  </p>
+                  <p className="audit-beat-unit">{meterScope(cell)}</p>
                 </div>
                 <strong>Rules checked</strong>
               </div>
