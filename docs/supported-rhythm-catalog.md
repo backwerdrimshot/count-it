@@ -32,6 +32,26 @@ Subdivision positions within a beat are:
 | `two-rest` | 3 | Two sixteenths, eighth rest | beat, e | &, a | `1 e` |
 | `rest-two` | 3 | Eighth rest, two sixteenths | &, a | beat, e | `& a` |
 
+## Notes that last longer than a beat
+
+Every cell above fills exactly one beat, which is what let the model treat a bar as a list of beats. A half note is two beats and a whole note is four, and no amount of subdividing one beat expresses either — so these are the first cells with a **span**.
+
+| ID | Beats | Description | Sounds on | Verified count |
+| --- | --- | --- | --- | --- |
+| `half` | 2 | Half note | its first beat | `1` |
+| `half-rest` | 2 | Half rest | — | *(silent)* |
+| `whole` | 4 | Whole note | its first beat | `1` |
+
+They sound **once**, at the top of the span. The beats underneath are silent because the note is still ringing, not because anything rests there, and the count does not distinguish those: this app counts the notes that sound. A half note on beat one of 4/4 answers `1`, and beat two contributes nothing.
+
+Three rules follow, all enforced:
+
+- **Measure scope only.** "How long does this last?" is not a question one beat can pose. The app drops them when a student picks beat scope; a *link* that names one with `scope=beat` is refused, because a teacher who wrote it meant something the round cannot deliver.
+- **A bar is filled by span, not by cell count.** A half note plus two quarters is three cells and four beats. A whole note needs four beats and so appears in 4/4 alone; a half note needs two and appears in 4/4 and 3/4.
+- **They are in no level.** Levels describe how a beat subdivides, and a note that lasts is not a subdivision. They are opt-in by `cells=` only — which is also what keeps every assignment link already posted in a classroom generating the round it always did.
+
+There is **no whole rest**. It fills the bar, so a measure containing one contains nothing else and has no count to ask for. The half rest is fine because the rest of the bar still sounds, and a bar that is silent throughout is refused.
+
 ## The eighth-beat catalog (3/8)
 
 The sixteen cells above all fill one **quarter-note** beat, which is the beat in 4/4 and in 3/4. In 3/8 the beat is an **eighth note**, so it divides in two rather than four, and it needs its own four cells. A link mixing the two families is refused: three quarter-beat cells in a 3/8 bar is a bar of 3/4 wearing the wrong time signature.
@@ -71,7 +91,7 @@ Levels describe how a **quarter** beat subdivides, so they do not apply in 3/8: 
 
 ## Validation rules
 
-The build fails if a cell has an unsupported resolution, invalid or duplicate positions, timing that does not fill exactly one beat of its own family (four sixteenth-ticks for a quarter beat, two for an eighth), a mismatched rest map, an incorrect verified answer, or a malformed notation recipe. Question generation also fails rather than silently degrading when there are not enough unique, genuinely incorrect distractors.
+The build fails if a cell has an unsupported resolution, invalid or duplicate positions, timing that does not fill exactly the beats it claims to span (four sixteenth-ticks per quarter beat, two per eighth, times the span), a cell that sounds nothing without being written as a rest, a mismatched rest map, an incorrect verified answer, or a malformed notation recipe. Question generation also fails rather than silently degrading when there are not enough unique, genuinely incorrect distractors.
 
 ## Explicit exclusions
 

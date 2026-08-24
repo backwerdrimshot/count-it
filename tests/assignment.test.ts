@@ -102,7 +102,18 @@ describe("the assignment link", () => {
        AFTER the link had been accepted: the banner, level, scope and pass mark
        applied, the round threw while being built, and the student answered the
        default round under the assignment's stated conditions. */
-    expect(uniqueMeasures(2)).toBe(16);
+    expect(uniqueMeasures(getCellsByIds(["quarter", "eighths"]))).toBe(16);
+    /* Two ONE-BEAT rhythms make sixteen bars of 4/4. Two rhythms of which one
+       spans two beats make FIVE — 1+1+1+1, three arrangements of 2+1+1, and
+       2+2 — which is why this counts arrangements rather than raising the pool
+       size to a power. The power form accepted a six-question round on that
+       pool and then threw while building it. */
+    expect(uniqueMeasures(getCellsByIds(["quarter", "half"]))).toBe(5);
+    expect(uniqueMeasures(getCellsByIds(["quarter", "half", "whole"]))).toBe(6);
+    /* An all-rest bar is not a bar the generator will build, so it is not
+       counted: {quarter, half-rest} makes 1+1+1+1 and the three arrangements
+       of 2+1+1, but NOT 2+2, which would be four beats of silence. */
+    expect(uniqueMeasures(getCellsByIds(["quarter", "half-rest"]))).toBe(4);
     const tooLong = bad("?scope=measure&cells=quarter,eighths&n=20");
     expect(tooLong.code).toBe("measure-pool");
     expect(tooLong.message).toContain("16 different 4/4 measures");
@@ -343,5 +354,30 @@ describe("the verification code", () => {
     const base = { assignment: "Step 1", studentId: "ab12", correct: 10, total: 12, finishedAt: at };
     expect(verificationCode({ ...base, attempt: 2 })).not.toBe(verificationCode(base));
     expect(verificationCode({ ...base, attempt: 1 })).toBe(verificationCode(base));
+  });
+});
+
+describe("rhythms that last longer than a beat", () => {
+  it("refuses a one-beat link that names one, rather than dropping it", () => {
+    /* The app's own controls may drop a half note when the student picks beat
+       scope — they chose the scope and the vocabulary follows. A LINK is a
+       teacher's statement of what the class will practise, and quietly handing
+       them a quarter-note-only round is the "pool with a cell missing teaches a
+       different step" failure this whole file exists to refuse. */
+    const refused = bad("?scope=beat&cells=half,quarter&n=5");
+    expect(refused.code).toBe("scope-cells");
+    expect(refused.message).toMatch(/lasts longer than one beat/);
+    expect(refused.entry).toBe("half");
+    expect(ok("?scope=beat&cells=quarter,eighths&n=5").assignment.cells).toEqual(["quarter", "eighths"]);
+  });
+
+  it("measures the round against the bars the pool can actually build", () => {
+    /* {half, quarter} makes five bars of 4/4, not sixteen. The power form
+       accepted six and threw while building the round — the third time that
+       exact shape shipped. */
+    expect(ok("?scope=measure&cells=half,quarter&n=5").assignment.count).toBe(5);
+    const tooLong = bad("?scope=measure&cells=half,quarter&n=6");
+    expect(tooLong.code).toBe("measure-pool");
+    expect(tooLong.message).toContain("5 different 4/4 measures");
   });
 });

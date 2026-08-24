@@ -3,6 +3,7 @@ import {
   RHYTHM_CELLS,
   createBeatPrompt,
   createMeasurePrompt,
+  getCellsByIds,
   getPromptAnswer,
 } from "../src/rhythm";
 import { uniqueMeasures } from "../src/assignment";
@@ -266,7 +267,7 @@ describe("the measure ceiling is a real ceiling", () => {
      could fill. The generator was never the thing at fault; the caller was. */
   it("throws rather than repeating when a three-beat pool cannot fill the round", () => {
     const twoCells = ["eighth-beat", "two-sixteenths"];
-    expect(uniqueMeasures(twoCells.length, 3)).toBe(8);
+    expect(uniqueMeasures(getCellsByIds(twoCells), 3)).toBe(8);
     expect(() =>
       generateQuestions({
         level: "level-1", scope: "measure", meter: "3-8", count: 12,
@@ -292,7 +293,7 @@ describe("the measure ceiling is a real ceiling", () => {
       ["3-8", 3, ["eighth-beat", "two-sixteenths"]],
       ["3-8", 3, ["eighth-beat", "two-sixteenths", "sixteenth-rest"]],
     ] as const) {
-      const ceiling = uniqueMeasures(pool.length, beats);
+      const ceiling = uniqueMeasures(getCellsByIds([...pool]), beats);
       const wanted = Math.min(12, ceiling);
       expect(() =>
         generateQuestions({

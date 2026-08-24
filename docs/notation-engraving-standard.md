@@ -5,11 +5,12 @@ Count It treats engraving as instructional data. Beam grouping, dots, rests, dur
 Current baseline: `count-it-simple-meters-beginner-v2`  
 Rules review date: 2026-07-20 (quarter-beat family)  
 Eighth-beat family review date: 2026-08-24 (owner, on the audit sheet)  
+Spanning-note family review date: **not yet reviewed**  
 Independent musician sign-off: pending
 
 ## House rules for the MVP
 
-- Each catalog cell fills exactly one beat of its own family: four sixteenth-ticks for a quarter-note beat (4/4, 3/4), two for an eighth-note beat (3/8).
+- Each catalog cell fills a whole number of beats of its own family: four sixteenth-ticks per quarter-note beat (4/4, 3/4), two per eighth-note beat (3/8), times the beats it spans. Almost everything spans one; a half note spans two and a whole note four.
 - Beam groups remain inside that beat, **except in 3/8** — see "The one cross-beat beam" below.
 - Eighth notes and shorter may be beamed. Quarter notes may not.
 - The beginner baseline does not beam across rests.
@@ -40,7 +41,17 @@ Independent musician sign-off: pending
 | `two-rest` | `[0, 1]` | none | none |
 | `rest-two` | `[1, 2]` | none | none |
 
-### Eighth-beat family — NEW, not yet reviewed
+### Spanning notes — NEW, not yet reviewed
+
+| Cell | Beats | Beam groups | Dotted tokens | Explicit partial beams |
+| --- | --- | --- | --- | --- |
+| `half` | 2 | none | none | none |
+| `half-rest` | 2 | none | none | none |
+| `whole` | 4 | none | none | none |
+
+Nothing to beam and nothing to dot: a beam joins separate notes, and these **are** one note held across beats. What a reviewer has to check is one level up — that the bar gives them the right number of beats, and that the note sits where its beat starts. The measure cards on the audit sheet are where that shows.
+
+### Eighth-beat family — reviewed 2026-08-24
 
 | Cell | Beam groups | Dotted tokens | Explicit partial beams |
 | --- | --- | --- | --- |
@@ -85,7 +96,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 
 1. Run the app locally with `pnpm dev`.
 2. Open `/notation-audit`.
-3. Review all 20 cell cards **and the four measure cards** at phone, tablet, desktop, and classroom-display widths. The measure cards exist because no single-beat card can show the 3/8 whole-bar beam or prove a rest still breaks it.
+3. Review all 23 cell cards **and the measure cards** at phone, tablet, desktop, and classroom-display widths. The measure cards exist because no single-beat card can show the 3/8 whole-bar beam or prove a rest still breaks it.
 4. Compare the mixed-duration and rest patterns with an independently engraved reference.
 5. Check the dotted eighth–sixteenth and sixteenth–eighth–sixteenth cells at high zoom.
 6. Confirm that the reference highlight and spoken count agree with every note attack.
@@ -97,6 +108,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 | Review | Reviewer | Date | Status | Notes |
 | --- | --- | --- | --- | --- |
 | Rules and implementation | Codex | 2026-07-20 | Complete | Structured expectations, explicit partial beams, tests, and audit route added. |
+| Spanning notes — half, whole, half rest | — | — | **Pending** | Three cells that last longer than a beat, which is new to this catalog. Automated gates pass. Two things need a human: that a whole note alone in a bar is placed acceptably (VexFlow left-aligns it; some engravers centre it), and that the half rest sits on the correct side of the middle line in percussion clef. |
 | Eighth-beat family and the 3/8 whole-bar beam | Owner | 2026-08-24 | Complete | Four new cells and the cross-beat beam exception, reviewed on `/notation-audit` and approved. What this row covers is the rendering as the audit sheet shows it. It does NOT cover the two rows below, which were pending before this work and still are: no comparison against an independently engraved reference, and no check at classroom-display size or on a real device. |
 | Independent musician engraving review | — | — | Pending | Compare against a trusted engraved reference before public release. |
 | Real-device/classroom display review | — | — | Pending | Check phone, tablet, projector, and high zoom. |

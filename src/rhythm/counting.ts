@@ -1,4 +1,4 @@
-import { getMeter } from "./meter";
+import { beatStarts, getMeter } from "./meter";
 import type {
   BeatNumber,
   CountingSystemId,
@@ -104,8 +104,13 @@ export function getPromptAnswer(
   system: CountingSystemId = "standard",
 ): string {
   const { partialsPerBeat } = getMeter(prompt.meter);
+  /* Numbered by where each cell STARTS, not by its position in the list. Those
+     were the same number until a cell could span more than one beat; after a
+     half note the next cell begins on beat three, and calling it beat two
+     would teach the bar wrong rather than merely print it wrong. */
+  const starts = beatStarts(prompt.cells);
   return prompt.cells
-    .map((cell, index) => formatCounts(cell.activePositions, index + 1, system, partialsPerBeat))
+    .map((cell, index) => formatCounts(cell.activePositions, starts[index], system, partialsPerBeat))
     .filter(Boolean)
     .join(" | ");
 }

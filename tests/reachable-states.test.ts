@@ -41,8 +41,8 @@ import {
 function practiceCount(level: LevelId, meter: MeterId, scope: QuestionScope): number {
   if (scope !== "measure") return 12;
   const { beatUnit, beatsPerMeasure } = getMeter(meter);
-  const poolSize = getCellsForLevel(level, beatUnit).length;
-  return Math.max(1, Math.min(12, uniqueMeasures(poolSize, beatsPerMeasure)));
+  const pool = getCellsForLevel(level, beatUnit);
+  return Math.max(1, Math.min(12, uniqueMeasures(pool, beatsPerMeasure)));
 }
 
 const SCOPES: readonly QuestionScope[] = ["beat", "measure"];
