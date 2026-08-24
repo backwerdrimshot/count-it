@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
+import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
 import { getMeter, measureBeamRuns, secondaryBeamBreaks } from "../src/rhythm";
 import type { RhythmPrompt } from "../src/rhythm";
 
@@ -49,6 +49,21 @@ export default function RhythmNotation({
       if (prompt.scope === "measure" || meter.beatUnit !== "4") {
         stave.addTimeSignature(meter.label);
       }
+      /* A single beat is a FRAGMENT, so it does not get a closing barline.
+         Without one it reads as an incipit — here is a beat — which is what it
+         is. With one it reads as a complete measure, and in 3/8 that was a
+         measure the arithmetic contradicted: the beat cards print the 3/8
+         signature (a lone eighth otherwise reads as half a beat to anyone who
+         has only met 4/4), and closing the bar around one eighth claimed a
+         three-eighth measure holding one. The 4/4 beat cards print no
+         signature, so the same closed bar made no claim to be false — which is
+         why this was only ever visible in 3/8, and why it reached a review
+         sheet whose whole job is to catch it.
+
+         This is not an audit-sheet fix. Beat-scope QUESTIONS use this same
+         renderer, so every 3/8 beat a student has been shown sat inside a short
+         bar. */
+      if (prompt.scope === "beat") stave.setEndBarType(Barline.type.NONE);
       stave.setContext(context).draw();
 
       const beams: Beam[] = [];
