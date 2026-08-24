@@ -303,3 +303,54 @@ describe("the measure ceiling is a real ceiling", () => {
     }
   });
 });
+
+describe("a question offers as many choices as the meter can distinguish", () => {
+  /* A beat with P counted positions can be filled 2^P - 1 ways. An eighth beat
+     has two, so a ONE-BEAT question in 3/8 has three possible answers in total
+     and at most two wrong ones. Asking for three threw, and the ask sits under
+     a useMemo — so choosing 3/8 in free practice was a white screen.
+
+     This is the SECOND crash of exactly this shape: a fixed number that was
+     only ever safe because every bar had four beats. The first was the
+     twelve-prompt practice round. Both were reachable from the UI and neither
+     was reachable from a test, because every test named its own vocabulary. */
+  it("builds a 3/8 one-beat round from the whole eighth-beat vocabulary", () => {
+    const questions = generateQuestions({
+      level: "level-3", scope: "beat", meter: "3-8", count: 12, seed: "free-practice",
+    });
+    expect(questions).toHaveLength(12);
+    for (const question of questions) {
+      /* Three choices, not four, and every one distinct. Padding to four would
+         mean repeating an option, which is worse than offering three. */
+      expect(question.choices).toHaveLength(3);
+      expect(new Set(question.choices.map((c) => c.label)).size).toBe(3);
+      expect(question.choices.filter((c) => c.isCorrect)).toHaveLength(1);
+    }
+    /* The cell whose only sound is off the beat is the one that ran out: its
+       answer carries no digit, so the wrong-beat-number distractor cannot be
+       built from it either. */
+    const offBeat = generateQuestions({
+      level: "level-3", scope: "beat", meter: "3-8", count: 4,
+      seed: "off-beat", cells: ["rest-sixteenth", "sixteenth-rest"],
+    });
+    for (const question of offBeat) expect(question.choices.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("still offers four choices everywhere the meter allows it", () => {
+    /* The strictness is unchanged where the ceiling is high: 4/4 and 3/4 in
+       both scopes, and 3/8 across a whole bar, all still carry three wrong
+       answers. If this ever drops, the fix above has leaked. */
+    for (const [meter, scope] of [
+      ["4-4", "beat"], ["4-4", "measure"],
+      ["3-4", "beat"], ["3-4", "measure"],
+      ["3-8", "measure"],
+    ] as const) {
+      const questions = generateQuestions({
+        level: "level-3", scope, meter, count: 6, seed: `wide-${meter}-${scope}`,
+      });
+      for (const question of questions) {
+        expect(question.choices, `${meter} ${scope}`).toHaveLength(4);
+      }
+    }
+  });
+});

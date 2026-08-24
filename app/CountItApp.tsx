@@ -11,6 +11,7 @@ import {
   DEFAULT_METER,
   METERS,
   METER_IDS,
+  countLabelsForBeat,
   getCompleteReference,
   getMeter,
   getLevel,
@@ -301,7 +302,10 @@ function SetupControls({
             // The guide is a support, not a preference: the gate counts the
             // assignment's policy, never the learner's own toggle.
             ? `The assignment keeps the guide ${showReference ? "visible" : "hidden"}.`
-            : `Show the complete ${scope === "beat" ? "1 e & a" : "measure grid"}.`}
+            /* The grid a 3/8 beat shows is "1 &", not "1 e & a" — an eighth
+               beat has two counted positions. Naming the four-position one in
+               every meter described a row the student was not looking at. */
+            : `Show the complete ${scope === "beat" ? countLabelsForBeat(1, "standard", getMeter(meter).partialsPerBeat).join(" ") : "measure grid"}.`}
         </small>
       </label>
       {assignment && (
