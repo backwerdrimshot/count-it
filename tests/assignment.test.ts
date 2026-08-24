@@ -381,3 +381,50 @@ describe("rhythms that last longer than a beat", () => {
     expect(tooLong.message).toContain("5 different 4/4 measures");
   });
 });
+
+/* 3/8 asks whole bars only.
+ *
+ * The beat there IS an eighth, so a one-beat question is a third of a measure
+ * and there is no honest way to draw it: closing the barline claims a complete
+ * bar the arithmetic denies, and leaving it open draws a 3/8 signature
+ * trailing into empty space. The app spent a day trying both before the
+ * simpler answer — do not ask a third of a bar — was the one taken.
+ *
+ * Refused at the link rather than promoted to a measure, on this file's
+ * standing rule: a round that cannot be built as written is not repaired into
+ * a different one. */
+describe("meters that ask whole bars only", () => {
+  it("refuses a one-beat link in 3/8", () => {
+    const result = parseAssignment("?meter=3-8&scope=beat&cells=eighth-beat,two-sixteenths&n=12&pass=10&seed=x");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe("meter-scope");
+    expect(result.error.entry).toBe("3-8");
+    /* The message is read by a student on a phone, so it has to say which
+       meter and what to do, not just that something is wrong. */
+    expect(result.error.message).toMatch(/3\/8/);
+    expect(result.error.message).toMatch(/one measure/);
+  });
+
+  it("accepts the same link asking a measure", () => {
+    const result = parseAssignment("?meter=3-8&scope=measure&cells=eighth-beat,two-sixteenths&n=8&pass=7&seed=x");
+    expect(result.ok).toBe(true);
+  });
+
+  it("still allows one beat in the meters that can draw one", () => {
+    /* Both directions, so a guard that refused every meter would fail here
+       rather than pass by being uniformly strict. */
+    for (const meter of ["4-4", "3-4"] as const) {
+      const result = parseAssignment(`?meter=${meter}&scope=beat&n=12&pass=10&seed=x`);
+      expect(result.ok, meter).toBe(true);
+    }
+  });
+
+  it("refuses 3/8 beat scope even when no cells are named", () => {
+    /* The earlier meter checks all hang off an explicit cells= list. This one
+       is about the meter and the size alone. */
+    const result = parseAssignment("?meter=3-8&scope=beat&level=1&n=8&pass=7&seed=x");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("meter-scope");
+  });
+});

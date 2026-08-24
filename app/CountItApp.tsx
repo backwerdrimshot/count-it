@@ -267,6 +267,11 @@ function SetupControls({
         <small>
           {getMeter(meter).beatsPerMeasure} beats per bar, and the beat is
           {getMeter(meter).beatUnit === "4" ? " a quarter note." : " an eighth note."}
+          {/* And why the one-beat size is unavailable here, said where the
+              greyed-out control is rather than left to be guessed. */}
+          {getMeter(meter).allowsBeatScope
+            ? ""
+            : " A beat that small is a third of the bar, so this meter asks whole measures."}
         </small>
       </label>
       <fieldset className="scope-control">
@@ -279,7 +284,7 @@ function SetupControls({
                 name="question-scope"
                 value={option}
                 checked={scope === option}
-                disabled={locked.has("scope")}
+                disabled={locked.has("scope") || (option === "beat" && !getMeter(meter).allowsBeatScope)}
                 onChange={() => onScopeChange(option)}
               />
               <ScopeIcon scope={option} />
@@ -1056,10 +1061,19 @@ export default function CountItApp() {
   /* Changing the meter changes the beat, and in 3/8 it changes the whole
      rhythm vocabulary with it — an eighth-beat bar cannot be built from
      quarter-beat cells. The round is rebuilt rather than adjusted, the same as
-     for a level or a size change. */
+     for a level or a size change.
+
+     It can also change the QUESTION SIZE, because 3/8 asks whole bars only: a
+     one-beat question there is a third of a measure and cannot be drawn as
+     one. Switching to a meter that refuses beat scope moves the size to
+     measure rather than leaving the panel in a state the link parser would
+     reject — free practice must not be able to reach a round no assignment
+     link could express. */
   function changeMeter(nextMeter: MeterId) {
+    const nextScope: QuestionScope = getMeter(nextMeter).allowsBeatScope ? scope : "measure";
     setMeter(nextMeter);
-    resetForSettings(level, scope, nextMeter);
+    if (nextScope !== scope) setScope(nextScope);
+    resetForSettings(level, nextScope, nextMeter);
   }
 
   function nextPractice(direction: 1 | -1) {
