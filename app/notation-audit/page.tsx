@@ -6,8 +6,11 @@ import {
   ENGRAVING_EXPECTATIONS,
   ENGRAVING_REVIEW_DATE,
   ENGRAVING_STANDARD_VERSION,
+  ALL_RHYTHM_CELLS,
+  EIGHTH_BEAT_CELLS,
   RHYTHM_CELLS,
   createBeatPrompt,
+  createMeasurePrompt,
   getPromptAnswer,
 } from "../../src/rhythm";
 
@@ -17,6 +20,43 @@ export const metadata: Metadata = {
 };
 
 const partialNames = ["Beat", "e", "&", "a"] as const;
+/* An eighth beat has two positions, and its second one is the "&" — the same
+   syllable as a quarter beat's halfway point, which is index 2 there. Naming
+   token 1 of an eighth-beat cell "e" would have described the wrong half. */
+const eighthPartialNames = ["Beat", "&"] as const;
+
+/* The bars a reviewer has to see that no single-beat card can show: 3/8 beams
+   across the whole measure, and whether a rest correctly breaks that beam is
+   only visible in a bar that has one. Everything else on this sheet is one
+   beat, which is exactly why the whole-bar rule went unreviewed. */
+const MEASURE_AUDITS = [
+  {
+    id: "3-8-whole-bar",
+    title: "3/8 — the whole bar beams as one group",
+    cells: ["two-sixteenths", "two-sixteenths", "two-sixteenths"] as const,
+    check: "Six sixteenths under ONE beam across the bar, not three beams of two.",
+  },
+  {
+    id: "3-8-rest-breaks-beam",
+    title: "3/8 — a rest still breaks the beam",
+    cells: ["two-sixteenths", "rest-sixteenth", "two-sixteenths"] as const,
+    check:
+      "Two beam groups. The sixteenth rest ends the first run; the entering sixteenth after it " +
+      "beams forward into the last beat.",
+  },
+  {
+    id: "3-8-eighth-beats",
+    title: "3/8 — three plain eighth beats",
+    cells: ["eighth-beat", "eighth-beat", "eighth-beat"] as const,
+    check: "Three eighths beamed together across the bar, and the 3/8 signature on the stave.",
+  },
+  {
+    id: "3-4-stays-per-beat",
+    title: "3/4 — beams stay inside the beat",
+    cells: ["sixteenths", "sixteenths", "sixteenths"] as const,
+    check: "Three separate four-note beam groups. 3/4 does NOT take the whole-bar exception.",
+  },
+] as const;
 
 function formatBeamGroups(groups: readonly (readonly number[])[]): string {
   if (groups.length === 0) return "None";
@@ -31,10 +71,12 @@ function formatPartialBeams(value: Readonly<Partial<Record<number, "left" | "rig
 
 function formatToken(
   token: (typeof RHYTHM_CELLS)[number]["notation"]["tokens"][number],
+  beatUnit: "4" | "8" = "4",
 ): string {
   const duration = token.duration === "4" ? "quarter" : token.duration === "8" ? "eighth" : "sixteenth";
   const dot = token.dots ? "dotted " : "";
-  return `${dot}${duration} ${token.rest ? "rest" : "note"} at ${partialNames[token.partial]}`;
+  const names = beatUnit === "4" ? partialNames : eighthPartialNames;
+  return `${dot}${duration} ${token.rest ? "rest" : "note"} at ${names[token.partial]}`;
 }
 
 export default function NotationAuditPage() {
@@ -78,8 +120,8 @@ export default function NotationAuditPage() {
       </section>
 
       <section className="audit-grid" aria-label="Rhythm-cell engraving review">
-        {RHYTHM_CELLS.map((cell, index) => {
-          const prompt = createBeatPrompt(cell);
+        {ALL_RHYTHM_CELLS.map((cell, index) => {
+          const prompt = createBeatPrompt(cell, cell.beatUnit === "4" ? "4-4" : "3-8");
           const expectation = ENGRAVING_EXPECTATIONS[cell.id];
           return (
             <article
@@ -95,6 +137,9 @@ export default function NotationAuditPage() {
                 <div>
                   <p className="audit-id">{cell.id}</p>
                   <h2>{cell.label}</h2>
+                  <p className="audit-beat-unit">
+                    {cell.beatUnit === "4" ? "Quarter-note beat · 4/4 and 3/4" : "Eighth-note beat · 3/8"}
+                  </p>
                 </div>
                 <strong>Rules checked</strong>
               </div>
@@ -114,11 +159,46 @@ export default function NotationAuditPage() {
               </div>
 
               <dl className="audit-details">
-                <div><dt>Tokens</dt><dd>{cell.notation.tokens.map(formatToken).join(" · ")}</dd></div>
+                <div><dt>Tokens</dt><dd>{cell.notation.tokens.map((token) => formatToken(token, cell.beatUnit)).join(" · ")}</dd></div>
                 <div><dt>Beam groups</dt><dd>{formatBeamGroups(expectation.beamGroups)}</dd></div>
                 <div><dt>Dotted tokens</dt><dd>{expectation.dottedTokenIndexes.length ? expectation.dottedTokenIndexes.join(", ") : "None"}</dd></div>
                 <div><dt>Partial beams</dt><dd>{formatPartialBeams(expectation.partialBeamDirections)}</dd></div>
                 <div><dt>Review rationale</dt><dd>{expectation.rationale}</dd></div>
+              </dl>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="audit-grid" aria-label="Measure-level engraving review">
+        {MEASURE_AUDITS.map((audit) => {
+          const prompt = createMeasurePrompt(
+            [...audit.cells],
+            audit.id.startsWith("3-8") ? "3-8" : "3-4",
+          );
+          return (
+            <article className="audit-card" data-cell-id={audit.id} key={audit.id}>
+              <div className="audit-card-heading">
+                <span>BAR</span>
+                <div>
+                  <p className="audit-id">{audit.id}</p>
+                  <h2>{audit.title}</h2>
+                </div>
+                <strong>Rules checked</strong>
+              </div>
+              <div className="audit-notation">
+                <RhythmNotation prompt={prompt} label={`${audit.title} engraving audit example.`} />
+              </div>
+              <div className="audit-reference">
+                <span>Complete subdivision</span>
+                <CountReference prompt={prompt} revealSounding />
+              </div>
+              <div className="audit-answer">
+                <span>Verified count</span>
+                <strong>{getPromptAnswer(prompt)}</strong>
+              </div>
+              <dl className="audit-details">
+                <div><dt>What to check</dt><dd>{audit.check}</dd></div>
               </dl>
             </article>
           );
@@ -130,6 +210,10 @@ export default function NotationAuditPage() {
         <p>
           Compare this sheet with a trusted engraved reference at desktop and classroom-display sizes.
           Record musician approval before treating the baseline as release-approved.
+          The {EIGHTH_BEAT_CELLS.length} eighth-beat cells and the measure cards below them are NEW
+          and have had no human visual review — the 3/8 whole-bar beam in particular is this app
+          departing from its own per-beat house rule, and is the one thing on this sheet a reviewer
+          should look at hardest.
         </p>
       </footer>
     </main>

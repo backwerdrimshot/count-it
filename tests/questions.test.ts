@@ -150,3 +150,105 @@ describe("challenge session scoring", () => {
     );
   });
 });
+
+describe("questions in three", () => {
+  /* A distractor has to be a MISCOUNT — something a student could plausibly
+     hear or read wrong. A wrong answer naming a beat the bar does not contain
+     is none of those: it can be eliminated without reading a single notehead,
+     which quietly turns a four-choice question into a three-choice one. */
+  it("never offers a beat number the meter does not have", () => {
+    for (const [meter, cells] of [
+      ["3-4", ["quarter", "eighths", "sixteenths"]],
+      ["3-8", ["eighth-beat", "two-sixteenths", "rest-sixteenth"]],
+    ] as const) {
+      const questions = generateQuestions({
+        level: "level-3",
+        scope: "measure",
+        meter,
+        count: 12,
+        seed: `three-${meter}`,
+        cells: [...cells],
+      });
+      expect(questions).toHaveLength(12);
+      for (const question of questions) {
+        for (const choice of question.choices) {
+          expect(choice.label).not.toMatch(/\b4\b/);
+        }
+      }
+    }
+
+    /* Straight to the case that actually exercises the wrap. The wrong-beat
+       distractor rewrites the FIRST beat number it finds, so a bar whose
+       opening beats sound only off the beat is the one where the wrap can
+       reach the last beat and roll past the end of the bar. With beats one and
+       two silent on the beat, the first digit in "& | & | 3" is a 3 — and a
+       wrap at four turns it into a beat this meter does not have. */
+    const offBeatOpening = createMeasurePrompt(
+      ["rest-sixteenth", "rest-sixteenth", "eighth-beat"],
+      "3-8",
+    );
+    expect(getPromptAnswer(offBeatOpening)).toBe("& | & | 3");
+    for (const distractor of generateDistractors(offBeatOpening, createSeededRandom("wrap"), 3)) {
+      expect(distractor.label).not.toMatch(/\b4\b/);
+    }
+    const threeFourOpening = createMeasurePrompt(
+      ["rest-eighth", "rest-eighth", "quarter"],
+      "3-4",
+    );
+    expect(getPromptAnswer(threeFourOpening)).toBe("& | & | 3");
+    for (const distractor of generateDistractors(threeFourOpening, createSeededRandom("wrap"), 3)) {
+      expect(distractor.label).not.toMatch(/\b4\b/);
+    }
+
+    /* And 4/4 still offers it, so the rule above is bounded by the meter
+       rather than by a blanket ban on the digit. */
+    const fourFour = generateQuestions({
+      level: "level-3",
+      scope: "measure",
+      count: 12,
+      seed: "three-4-4",
+      cells: ["quarter", "eighths", "sixteenths"],
+    });
+    expect(
+      fourFour.some((question) => question.choices.some((choice) => /\b4\b/.test(choice.label))),
+    ).toBe(true);
+  });
+
+  it("builds bars of the right length and counts them from the right beat", () => {
+    for (const [meter, beats] of [["4-4", 4], ["3-4", 3], ["3-8", 3]] as const) {
+      const cells = meter === "3-8"
+        ? ["eighth-beat", "two-sixteenths", "rest-sixteenth"]
+        : ["quarter", "eighths", "sixteenths"];
+      const questions = generateQuestions({
+        level: "level-3", scope: "measure", meter, count: 6, seed: `bars-${meter}`, cells,
+      });
+      for (const question of questions) {
+        expect(question.prompt.cells).toHaveLength(beats);
+        expect(question.prompt.meter).toBe(meter);
+        /* The answer names one group per beat, separated by pipes — and a beat
+           whose only sound is off the beat contributes a syllable, not a
+           number, so the group count is what is checked rather than the digits. */
+        expect(question.correctAnswer.split("|")).toHaveLength(beats);
+      }
+    }
+  });
+
+  it("keeps every 4/4 round byte-identical to one generated before meters existed", () => {
+    /* The meter is mixed into the seed ONLY when it is not 4/4. If that ever
+       changes, every assignment link already posted in a classroom silently
+       becomes a different round — which is the one thing a seed exists to
+       prevent. Passing the default explicitly must equal omitting it. */
+    const omitted = generateQuestions({
+      level: "level-2", scope: "measure", count: 8, seed: "stability",
+    });
+    const explicit = generateQuestions({
+      level: "level-2", scope: "measure", meter: "4-4", count: 8, seed: "stability",
+    });
+    expect(explicit.map((question) => question.correctAnswer)).toEqual(
+      omitted.map((question) => question.correctAnswer),
+    );
+    expect(explicit.map((question) => question.choices.map((choice) => choice.label))).toEqual(
+      omitted.map((question) => question.choices.map((choice) => choice.label)),
+    );
+  });
+});

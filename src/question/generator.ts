@@ -6,8 +6,11 @@ import {
   getCellsForLevel,
   getPromptAnswer,
   getPromptId,
+  DEFAULT_METER,
+  getMeter,
   type DistractorCategory,
   type LevelId,
+  type MeterId,
   type RhythmCell,
   type RhythmPrompt,
 } from "../rhythm";
@@ -35,6 +38,9 @@ export interface CountQuestion {
 export interface GenerateQuestionsOptions {
   readonly level: LevelId;
   readonly scope: QuestionScope;
+  /** The meter the round is read in. Absent, 4/4 — so every link, seed and
+   *  saved round written before meters existed generates the same questions. */
+  readonly meter?: MeterId;
   readonly count?: number;
   readonly seed: string | number;
   /** An explicit cell vocabulary, by id. When present it SUPERSEDES the level
@@ -56,7 +62,12 @@ export interface GenerateQuestionsOptions {
   readonly variant?: string;
 }
 
-function beatPrompts(cells: readonly RhythmCell[], count: number, random: RandomSource): RhythmPrompt[] {
+function beatPrompts(
+  cells: readonly RhythmCell[],
+  count: number,
+  random: RandomSource,
+  meter: MeterId,
+): RhythmPrompt[] {
   const prompts: RhythmPrompt[] = [];
   let previousId = "";
   while (prompts.length < count) {
@@ -65,7 +76,7 @@ function beatPrompts(cells: readonly RhythmCell[], count: number, random: Random
       cycle = [...cycle.slice(1), cycle[0]];
     }
     for (const cell of cycle) {
-      prompts.push(createBeatPrompt(cell));
+      prompts.push(createBeatPrompt(cell, meter));
       previousId = cell.id;
       if (prompts.length === count) break;
     }
@@ -73,19 +84,20 @@ function beatPrompts(cells: readonly RhythmCell[], count: number, random: Random
   return prompts;
 }
 
-function measurePrompts(cells: readonly RhythmCell[], count: number, random: RandomSource): RhythmPrompt[] {
+function measurePrompts(
+  cells: readonly RhythmCell[],
+  count: number,
+  random: RandomSource,
+  meter: MeterId,
+): RhythmPrompt[] {
   const prompts: RhythmPrompt[] = [];
   const used = new Set<string>();
   let attempts = 0;
+  const { beatsPerMeasure } = getMeter(meter);
   while (prompts.length < count && attempts < count * 100) {
     attempts += 1;
-    const selected = Array.from({ length: 4 }, () => pick(cells, random)) as [
-      RhythmCell,
-      RhythmCell,
-      RhythmCell,
-      RhythmCell,
-    ];
-    const prompt = createMeasurePrompt(selected);
+    const selected = Array.from({ length: beatsPerMeasure }, () => pick(cells, random));
+    const prompt = createMeasurePrompt(selected, meter);
     const id = getPromptId(prompt);
     if (used.has(id)) continue;
     used.add(id);
@@ -143,6 +155,7 @@ function buildQuestion(
 export function generateQuestions({
   level,
   scope,
+  meter = DEFAULT_METER,
   count = 5,
   seed,
   cells: cellIds,
@@ -152,20 +165,27 @@ export function generateQuestions({
     throw new RangeError("Question count must be between 1 and 20.");
   }
   if (scope !== "beat" && scope !== "measure") throw new RangeError(`Unsupported question scope: ${scope}`);
-  const cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level);
+  const { beatUnit } = getMeter(meter);
+  const cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level, beatUnit);
   if (cells.length === 0) throw new RangeError("A round needs at least one rhythm cell.");
   // The seed string carries the vocabulary, so two rounds that share a seed but
   // name different rhythms are different rounds. A pooled round mixes the pool
   // in rather than the level, so adding this parameter cannot move any seed
   // that existed before it.
+  //
+  // The meter is mixed in ONLY when it is not 4/4, for the same reason: a
+  // round generated before meters existed must still generate byte-identically
+  // today, and appending ":4-4" to every seed would have silently reshuffled
+  // every assignment already posted in a classroom.
   const vocabulary = cellIds ? getCellsByIds(cellIds).map((cell) => cell.id).join(",") : level;
-  const random = createSeededRandom(`${seed}:${vocabulary}:${scope}`);
+  const meterKey = meter === DEFAULT_METER ? "" : `:${meter}`;
+  const random = createSeededRandom(`${seed}:${vocabulary}:${scope}${meterKey}`);
   const presentation = variant
-    ? createSeededRandom(`${seed}:${vocabulary}:${scope}:${variant}`)
+    ? createSeededRandom(`${seed}:${vocabulary}:${scope}${meterKey}:${variant}`)
     : null;
   const prompts = scope === "beat"
-    ? beatPrompts(cells, count, random)
-    : measurePrompts(cells, count, random);
+    ? beatPrompts(cells, count, random, meter)
+    : measurePrompts(cells, count, random, meter);
   return Object.freeze(
     prompts.map((prompt, index) => buildQuestion(prompt, index, random, presentation)),
   );

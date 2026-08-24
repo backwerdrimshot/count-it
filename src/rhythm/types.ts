@@ -1,5 +1,14 @@
-export const PARTIALS_PER_BEAT = 4 as const;
-export const BEATS_PER_MEASURE = 4 as const;
+/* PARTIALS_PER_BEAT and BEATS_PER_MEASURE used to live here as `4 as const`.
+   Both were exported and imported by nothing: every place that needed the
+   number wrote its own literal 4, which is how "4/4" became eight independent
+   assumptions instead of one setting. They are properties of a Meter now —
+   see ./meter.ts. */
+
+export type MeterId = "4-4" | "3-4" | "3-8";
+/** Which written note gets the beat: a quarter, or an eighth. */
+export type BeatUnit = "4" | "8";
+/** Counted positions inside one beat. A quarter beat holds four, an eighth two. */
+export type PartialCount = 2 | 4;
 
 export type BeatNumber = 1 | 2 | 3 | 4;
 export type PartialPosition = 0 | 1 | 2 | 3;
@@ -27,6 +36,12 @@ export interface RhythmCell {
   readonly id: string;
   readonly label: string;
   readonly shortLabel: string;
+  /* Which beat this cell IS one of. A quarter-beat cell is legal in 4/4 and
+     3/4; an eighth-beat cell is legal in 3/8. A round mixing the two would ask
+     a student to count a bar that does not add up, so the pool is filtered by
+     this rather than by hoping a link author knows the difference. */
+  readonly beatUnit: BeatUnit;
+  /** Equal divisions of the beat this cell uses: 1 whole, 2 halves, 4 quarters. */
   readonly resolution: 1 | 2 | 4;
   readonly activePositions: readonly PartialPosition[];
   readonly restPositions: readonly PartialPosition[];
@@ -52,12 +67,16 @@ export interface LevelDefinition {
 
 export interface BeatPrompt {
   readonly scope: "beat";
+  readonly meter: MeterId;
   readonly cells: readonly [RhythmCell];
 }
 
+/* Was a fixed four-tuple, which is the type system asserting 4/4. The length
+   is the meter's beatsPerMeasure and is checked when the prompt is built. */
 export interface MeasurePrompt {
   readonly scope: "measure";
-  readonly cells: readonly [RhythmCell, RhythmCell, RhythmCell, RhythmCell];
+  readonly meter: MeterId;
+  readonly cells: readonly RhythmCell[];
 }
 
 export type RhythmPrompt = BeatPrompt | MeasurePrompt;

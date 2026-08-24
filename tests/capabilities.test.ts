@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { COUNT_IT_BUILD, COUNT_IT_CAPABILITY_MANIFEST } from "../src/capabilities";
-import { RHYTHM_CELLS } from "../src/rhythm";
+import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, METER_IDS, RHYTHM_CELLS } from "../src/rhythm";
 
 const served = JSON.parse(
   readFileSync(new URL("../public/praxis-capabilities.json", import.meta.url), "utf8"),
@@ -36,7 +36,27 @@ describe("the published capability manifest", () => {
     // A link authored by hand names these, so a rename is a breaking change to
     // every assignment already posted in a classroom. Publishing them is what
     // lets a consumer check a link before a student opens it.
-    expect(COUNT_IT_CAPABILITY_MANIFEST.rhythmCellIds).toEqual(RHYTHM_CELLS.map((cell) => cell.id));
+    expect(COUNT_IT_CAPABILITY_MANIFEST.rhythmCellIds).toEqual(
+      ALL_RHYTHM_CELLS.map((cell) => cell.id),
+    );
+    /* The two beat families are published separately because they are not
+       interchangeable and a link mixing them is refused. `eighths` is a
+       QUARTER beat filled with two eighths; `eighth-beat` is an eighth-note
+       beat. A consumer that could not tell them apart would write a link this
+       app rejects, and the names alone do not settle it. */
+    expect(COUNT_IT_CAPABILITY_MANIFEST.quarterBeatCellIds).toEqual(
+      RHYTHM_CELLS.map((cell) => cell.id),
+    );
+    expect(COUNT_IT_CAPABILITY_MANIFEST.eighthBeatCellIds).toEqual(
+      EIGHTH_BEAT_CELLS.map((cell) => cell.id),
+    );
+    /* Every published id belongs to exactly one family, and the two together
+       are the whole catalog — no id in both, none in neither. */
+    const quarter = new Set<string>(COUNT_IT_CAPABILITY_MANIFEST.quarterBeatCellIds);
+    const eighth = new Set<string>(COUNT_IT_CAPABILITY_MANIFEST.eighthBeatCellIds);
+    expect([...quarter].filter((id) => eighth.has(id))).toEqual([]);
+    expect(quarter.size + eighth.size).toBe(COUNT_IT_CAPABILITY_MANIFEST.rhythmCellIds.length);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meters).toEqual(METER_IDS);
   });
 
   it("keeps the build identifier married to the footer stamp", () => {
