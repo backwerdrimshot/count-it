@@ -5,6 +5,7 @@ import {
   createMeasurePrompt,
   getPromptAnswer,
 } from "../src/rhythm";
+import { uniqueMeasures } from "../src/assignment";
 import {
   advanceSession,
   answerSession,
@@ -250,5 +251,55 @@ describe("questions in three", () => {
     expect(explicit.map((question) => question.choices.map((choice) => choice.label))).toEqual(
       omitted.map((question) => question.choices.map((choice) => choice.label)),
     );
+  });
+});
+
+describe("the measure ceiling is a real ceiling", () => {
+  /* A full-measure round never repeats a measure, so k rhythms fill at most
+     k^(beats per bar) of them. Twelve prompts was safe while every bar had
+     four beats — the smallest legal pool, two rhythms, makes sixteen. In a
+     three-beat bar the same two rhythms make EIGHT, and asking for twelve
+     throws inside the generator.
+
+     This shipped. Seventy-nine tests passed and a valid 3/8 assignment link
+     white-screened the app, because every test here asked for a round the pool
+     could fill. The generator was never the thing at fault; the caller was. */
+  it("throws rather than repeating when a three-beat pool cannot fill the round", () => {
+    const twoCells = ["eighth-beat", "two-sixteenths"];
+    expect(uniqueMeasures(twoCells.length, 3)).toBe(8);
+    expect(() =>
+      generateQuestions({
+        level: "level-1", scope: "measure", meter: "3-8", count: 12,
+        seed: "over", cells: twoCells,
+      }),
+    ).toThrow(/non-repeating/);
+    /* Eight is exactly fillable, and every measure is distinct. */
+    const full = generateQuestions({
+      level: "level-1", scope: "measure", meter: "3-8", count: 8,
+      seed: "exact", cells: twoCells,
+    });
+    expect(new Set(full.map((q) => q.prompt.cells.map((c) => c.id).join("+"))).size).toBe(8);
+  });
+
+  it("agrees with uniqueMeasures across meters and pool sizes", () => {
+    /* The arithmetic the caller has to trust, checked against the generator
+       actually managing it — for every meter and every pool size that fits in
+       a round. If these two ever disagree, something clamps to a number the
+       generator cannot deliver and the app dies in a useMemo. */
+    for (const [meter, beats, pool] of [
+      ["4-4", 4, ["quarter", "eighths"]],
+      ["3-4", 3, ["quarter", "eighths"]],
+      ["3-8", 3, ["eighth-beat", "two-sixteenths"]],
+      ["3-8", 3, ["eighth-beat", "two-sixteenths", "sixteenth-rest"]],
+    ] as const) {
+      const ceiling = uniqueMeasures(pool.length, beats);
+      const wanted = Math.min(12, ceiling);
+      expect(() =>
+        generateQuestions({
+          level: "level-3", scope: "measure", meter, count: wanted,
+          seed: `ceiling-${meter}-${pool.length}`, cells: [...pool],
+        }),
+      ).not.toThrow();
+    }
   });
 });
