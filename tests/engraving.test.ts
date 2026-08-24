@@ -35,6 +35,15 @@ const EXPECTED_BEAMS: Readonly<Record<string, readonly (readonly number[])[]>> =
   "two-rest": [[0, 1]],
   "rest-two": [[1, 2]],
 
+  /* Notes that last longer than a beat, authored here independently. A beam
+     joins separate notes; a half note IS one note held across two beats, so
+     there is nothing to join and nothing to dot. Both rests included: the half
+     rest is a cell that sounds nothing, which is new, and it still has an
+     engraving expectation like everything else. */
+  half: [],
+  "half-rest": [],
+  whole: [],
+
   /* The eighth-beat family, authored here independently of the production
      table. An eighth beat divides into two sixteenths, so the only thing there
      is to beam is that pair; a lone eighth IS the beat and beams to nothing,

@@ -96,7 +96,22 @@ function measurePrompts(
   const { beatsPerMeasure } = getMeter(meter);
   while (prompts.length < count && attempts < count * 100) {
     attempts += 1;
-    const selected = Array.from({ length: beatsPerMeasure }, () => pick(cells, random));
+    /* Fill the bar by SPAN rather than by taking one cell per beat. A pool
+       holding a half note can overshoot — two halves and a quarter is five
+       beats — so a draw that does not land exactly on the bar line is
+       discarded and retried rather than trimmed, which would silently change
+       the vocabulary the round was asked for. */
+    const selected: RhythmCell[] = [];
+    let filled = 0;
+    while (filled < beatsPerMeasure) {
+      const cell = pick(cells, random);
+      if (filled + cell.beats > beatsPerMeasure) break;
+      selected.push(cell);
+      filled += cell.beats;
+    }
+    if (filled !== beatsPerMeasure) continue;
+    /* A bar of nothing but rests has no answer to ask for. */
+    if (!selected.some((cell) => cell.activePositions.length > 0)) continue;
     const prompt = createMeasurePrompt(selected, meter);
     const id = getPromptId(prompt);
     if (used.has(id)) continue;
@@ -125,7 +140,10 @@ function measurePrompts(
 function distractorTarget(prompt: RhythmPrompt): number {
   const { partialsPerBeat } = getMeter(prompt.meter);
   const fillsPerBeat = 2 ** partialsPerBeat - 1;
-  const answers = fillsPerBeat ** prompt.cells.length;
+  /* Rows, not cells: a half note contributes two beats to the grid the
+     distractors are drawn from, so the space is bigger than the cell count. */
+  const rows = prompt.cells.reduce((total, cell) => total + cell.beats, 0);
+  const answers = fillsPerBeat ** rows;
   return Math.max(1, Math.min(3, answers - 1));
 }
 
@@ -188,7 +206,14 @@ export function generateQuestions({
   }
   if (scope !== "beat" && scope !== "measure") throw new RangeError(`Unsupported question scope: ${scope}`);
   const { beatUnit } = getMeter(meter);
-  const cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level, beatUnit);
+  let cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level, beatUnit);
+  /* A one-beat question cannot ask a half note, so a beat-scope round drops
+     them rather than throwing. Dropping is right HERE and wrong in the
+     assignment layer: this is the app's own vocabulary for a scope the student
+     chose, where a link that NAMES a half note and asks for beat scope is
+     refused outright, because a teacher who wrote it meant something the round
+     cannot deliver. */
+  if (scope === "beat") cells = cells.filter((cell) => cell.beats === 1);
   if (cells.length === 0) throw new RangeError("A round needs at least one rhythm cell.");
   // The seed string carries the vocabulary, so two rounds that share a seed but
   // name different rhythms are different rounds. A pooled round mixes the pool

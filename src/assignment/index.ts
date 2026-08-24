@@ -61,17 +61,41 @@ export const MAX_NAME_LENGTH = 60;
  *  round and put an unreachable goal on every student's card. */
 export const DEFAULT_QUESTIONS = 5;
 
-/** Distinct measures a pool of `size` cells can assemble. Measure rounds
- *  never repeat a measure, so this is a hard ceiling on the round length —
- *  the one bound that was never written down, and the only one that could
- *  fail AFTER the link had been accepted.
+/** Distinct measures a pool can assemble. Measure rounds never repeat a
+ *  measure, so this is a hard ceiling on the round length — the one bound that
+ *  was never written down, and the only one that could fail AFTER the link had
+ *  been accepted.
  *
- *  The exponent is the bar's beat count, not four: a three-beat bar built from
- *  two rhythms makes eight measures, not sixteen, and the 4/4 form would have
- *  accepted a sixteen-question 3/4 round and then thrown while building it —
- *  the exact failure shape this function was written to prevent. */
-export function uniqueMeasures(size: number, beatsPerMeasure = 4): number {
-  return size ** beatsPerMeasure;
+ *  This has now been wrong twice in the same way, and both times the same
+ *  failure followed: the link was accepted and the round threw while being
+ *  built, which is precisely what this function exists to prevent.
+ *
+ *    1. It was `size ** 4`. A three-beat bar from two rhythms makes eight
+ *       measures, not sixteen, so a sixteen-question 3/4 round was accepted.
+ *    2. It was `size ** beatsPerMeasure`. That still assumes every cell fills
+ *       exactly one beat. A pool of {half, quarter} makes FIVE bars of 4/4 —
+ *       1+1+1+1, three arrangements of 2+1+1, and 2+2 — not sixteen.
+ *
+ *  So it counts the arrangements rather than estimating them: how many ordered
+ *  ways the pool's spans sum to the bar. All-silent bars are subtracted rather
+ *  than ignored, because the generator refuses them and a ceiling that counts
+ *  bars the generator will not build is the same bug a third time. */
+export function uniqueMeasures(
+  cells: readonly { readonly beats: number; readonly activePositions: readonly number[] }[],
+  beatsPerMeasure = 4,
+): number {
+  const arrangements = (pool: readonly { readonly beats: number }[]): number => {
+    const ways = new Array<number>(beatsPerMeasure + 1).fill(0);
+    ways[0] = 1;
+    for (let filled = 1; filled <= beatsPerMeasure; filled += 1) {
+      for (const cell of pool) {
+        if (cell.beats <= filled) ways[filled] += ways[filled - cell.beats];
+      }
+    }
+    return ways[beatsPerMeasure];
+  };
+  const silent = cells.filter((cell) => cell.activePositions.length === 0);
+  return arrangements(cells) - arrangements(silent);
 }
 
 export interface AssignmentError {
@@ -84,6 +108,7 @@ export interface AssignmentError {
     | "scope"
     | "meter"
     | "meter-cells"
+    | "scope-cells"
     | "system"
     | "feedback"
     | "retry"
@@ -385,11 +410,37 @@ export function parseAssignment(search: string): AssignmentResult {
     }
   }
 
+  /* A rhythm that lasts longer than a beat cannot be a one-beat question.
+     The generator drops such cells in beat scope, which is right for the app's
+     own controls — the student chose the scope and the vocabulary follows. It
+     is wrong for a LINK: a teacher who wrote `cells=half,quarter&scope=beat`
+     meant something the round cannot deliver, and silently handing the class a
+     quarter-note-only round is the "pool with a cell missing teaches a
+     different step" failure this file exists to refuse. */
+  if (scope === "beat" && cells) {
+    const spanning = cells.map((id) => getRhythmCell(id)).filter((cell) => cell.beats > 1);
+    if (spanning.length > 0) {
+      return {
+        ok: false,
+        error: {
+          code: "scope-cells",
+          entry: spanning[0].id,
+          message:
+            `${spanning.length === 1 ? "The rhythm" : "The rhythms"} ` +
+            `${spanning.map((cell) => `\u201c${cell.id}\u201d`).join(", ")} ` +
+            `${spanning.length === 1 ? "lasts" : "last"} longer than one beat, so ` +
+            "this practice link cannot ask for one-beat questions. Ask for full measures, " +
+            "or drop those rhythms.",
+        },
+      };
+    }
+  }
+
   if (scope === "measure") {
-    const poolSize = cells
-      ? cells.length
-      : getCellsForLevel(level, activeMeter.beatUnit).length;
-    const available = uniqueMeasures(poolSize, activeMeter.beatsPerMeasure);
+    const pool = cells
+      ? cells.map((id) => getRhythmCell(id))
+      : getCellsForLevel(level, activeMeter.beatUnit);
+    const available = uniqueMeasures(pool, activeMeter.beatsPerMeasure);
     const wanted = count ?? DEFAULT_QUESTIONS;
     if (available < wanted) {
       return {
@@ -397,7 +448,7 @@ export function parseAssignment(search: string): AssignmentResult {
         error: {
           code: "measure-pool",
           message:
-            `This practice link asks for ${wanted} full-measure questions, but ${poolSize} ` +
+            `This practice link asks for ${wanted} full-measure questions, but ${pool.length} ` +
             `rhythms can only make ${available} different ${activeMeter.label} measures. Ask for ` +
             "fewer questions, or add rhythms to the link.",
         },

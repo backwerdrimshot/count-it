@@ -121,7 +121,14 @@ export default function NotationAuditPage() {
 
       <section className="audit-grid" aria-label="Rhythm-cell engraving review">
         {ALL_RHYTHM_CELLS.map((cell, index) => {
-          const prompt = createBeatPrompt(cell, cell.beatUnit === "4" ? "4-4" : "3-8");
+          /* A spanning cell cannot be a one-beat prompt, so it is shown in the
+             smallest bar that holds it: a half note plus two quarters, a whole
+             note alone. The card is still about the cell's own engraving. */
+          const meter = cell.beatUnit === "4" ? "4-4" : "3-8";
+          const filler = 4 - cell.beats;
+          const prompt = cell.beats === 1
+            ? createBeatPrompt(cell, meter)
+            : createMeasurePrompt([cell, ...Array.from({ length: filler }, () => "quarter")], meter);
           const expectation = ENGRAVING_EXPECTATIONS[cell.id];
           return (
             <article

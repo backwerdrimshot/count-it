@@ -89,6 +89,28 @@ export function isMeterId(value: unknown): value is MeterId {
   return typeof value === "string" && Object.hasOwn(METERS, value);
 }
 
+/* Where each cell of a measure prompt starts, as a beat number.
+ *
+ * This was `index + 1` in four different files, which is the same statement as
+ * "every cell is one beat" written four times. A half note is two beats, so the
+ * cell after it starts on beat three — and an answer that numbered it two would
+ * be teaching the bar wrong, not merely rendering it wrong. */
+export function beatStarts(cells: readonly { readonly beats: number }[]): readonly number[] {
+  let beat = 1;
+  return Object.freeze(
+    cells.map((cell) => {
+      const start = beat;
+      beat += cell.beats;
+      return start;
+    }),
+  );
+}
+
+/** Total beats a run of cells occupies. */
+export function beatSpan(cells: readonly { readonly beats: number }[]): number {
+  return cells.reduce((total, cell) => total + cell.beats, 0);
+}
+
 export function getMeter(id: MeterId): Meter {
   const found = METERS[id];
   if (!found) throw new RangeError(`Unsupported meter: ${String(id)}`);

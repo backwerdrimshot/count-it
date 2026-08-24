@@ -19,12 +19,12 @@
  *      worse than none: it is confidently wrong, and consumers act on it.
  */
 import { DEFAULT_QUESTIONS, MAX_QUESTIONS, MIN_POOL, MIN_QUESTIONS } from "./assignment";
-import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, LEVELS, METER_IDS, RHYTHM_CELLS } from "./rhythm";
+import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, LEVELS, METER_IDS, RHYTHM_CELLS, SPANNING_CELLS } from "./rhythm";
 
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-24";
+export const COUNT_IT_BUILD = "2026-08-24.1";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -72,8 +72,10 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
     "assignment nobody set.",
   roundLengthRule:
-    "A full-measure round never repeats a measure, so a pool of k rhythms can fill at most " +
-    "k^(beats per bar) questions: two rhythms make 16 in 4/4 and 8 in 3/4 or 3/8. Asking for " +
+    "A full-measure round never repeats a measure, so a pool of k ONE-BEAT rhythms can fill at " +
+    "most k^(beats per bar) questions: two rhythms make 16 in 4/4 and 8 in 3/4 or 3/8. A pool " +
+    "holding a whole or half note makes FEWER, because one cell fills several beats, and the " +
+    "ceiling is computed from the pool's real spans rather than from its size. Asking for " +
     "more is refused at the link rather than while the round is being built — the shape of " +
     "failure that let a banner state one assignment while the student answered another.",
   /* The ids a link is written against. Published because a link authored by
@@ -87,6 +89,20 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
      hand-written link would make. */
   quarterBeatCellIds: RHYTHM_CELLS.map((cell) => cell.id),
   eighthBeatCellIds: EIGHTH_BEAT_CELLS.map((cell) => cell.id),
+  /* Rhythms that last longer than one beat, with the beats each one spans.
+     Published separately because they change what a LINK can ask for: they are
+     legal only in `scope=measure`, and a pool containing them fills a bar by
+     span rather than one cell per beat. A consumer building a link needs both
+     facts, and neither is inferable from the id. */
+  spanningCellIds: SPANNING_CELLS.map((cell) => cell.id),
+  spanningCellBeats: Object.fromEntries(SPANNING_CELLS.map((cell) => [cell.id, cell.beats])),
+  spanningCellStatus:
+    "Whole and half notes, and the half rest \u2014 the values the Notes & Rests poster teaches " +
+    "that a one-beat catalog could not express. They sound once, at the top of the span, and " +
+    "the beats underneath are silent because the note is held: this app counts the notes that " +
+    "sound, so a half note on beat one of 4/4 answers \"1\". They are measure-scope only, and a " +
+    "beat-scope link naming one is refused. There is no whole rest: it fills the bar, so a " +
+    "measure containing one contains nothing else and has no count to ask for.",
   meters: METER_IDS,
   meterStatus:
     "4/4, 3/4 and 3/8. A meter is chosen per link and defaults to 4/4, so every assignment " +
@@ -164,7 +180,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   },
   teachingSequence: "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
   limitations: [
-    "Straight quarter-, eighth-, and sixteenth-note subdivisions in 4/4, 3/4 and 3/8.",
+    "Whole, half, quarter, eighth and sixteenth values in 4/4, 3/4 and 3/8. A whole note needs " +
+      "four beats and so appears in 4/4 only; a half note needs two and appears in 4/4 and 3/4.",
     "No triplets, compound meter, or ties across beats. 3/8 here is a simple meter counted in " +
       "three, not 6/8 or any other compound meter.",
     "Levels 1-3 describe how a quarter-note beat subdivides, so they do not apply in 3/8: a " +

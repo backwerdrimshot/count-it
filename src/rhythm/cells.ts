@@ -43,6 +43,12 @@ const allDistractors: readonly DistractorCategory[] = Object.freeze([
   "wrong_beat_number",
 ]);
 
+const TICKS: Readonly<Record<NotationToken["duration"], number>> = Object.freeze({
+  /* A sixteenth is one tick, in every meter and every duration. A whole note is
+     sixteen of them because it is sixteen sixteenths, not because a bar is. */
+  "1": 16, "2": 8, "4": 4, "8": 2, "16": 1,
+});
+
 function token(
   duration: NotationToken["duration"],
   partial: PartialPosition,
@@ -51,7 +57,7 @@ function token(
   return Object.freeze({
     duration,
     partial,
-    ticks: duration === "4" ? 4 : duration === "8" ? 2 : 1,
+    ticks: TICKS[duration] as NotationToken["ticks"],
     ...(rest ? { rest: true as const } : {}),
   });
 }
@@ -73,6 +79,7 @@ function buildCell(
   explanation: string,
   partialBeamDirections: RhythmCell["notation"]["partialBeamDirections"] = {},
   beatUnit: BeatUnit = "4",
+  beats = 1,
 ): RhythmCell {
   const minLevel = `level-${difficulty}` as LevelId;
   const partials: PartialCount = beatUnit === "4" ? 4 : 2;
@@ -93,6 +100,7 @@ function buildCell(
     label,
     shortLabel,
     beatUnit,
+    beats,
     resolution,
     activePositions: Object.freeze([...activePositions]),
     restPositions: Object.freeze(restPositions),
@@ -155,12 +163,46 @@ export const EIGHTH_BEAT_CELLS: readonly RhythmCell[] = Object.freeze([
   buildCell("rest-sixteenth", "Sixteenth rest, then note", "Rest, then &", 2, 1, [1], "&", [token("16", 0, true), token("16", 1)], [], "The beat is silent; the note enters on the & halfway through it.", {}, "8"),
 ]);
 
+/* Notes that last longer than a beat.
+ *
+ * Every cell above fills exactly one beat, which is what let the whole model
+ * treat a bar as a list of beats. A half note is two beats and a whole note is
+ * four, and no amount of subdividing one beat expresses either — so they are
+ * the first cells with a span, and the reason `beats` exists.
+ *
+ * They sound ONCE, at the top of the span. The beats underneath are silent
+ * because the note is still ringing, not because anything rests there, and the
+ * count does not distinguish those: this app counts the notes that sound. A
+ * half note on beat one of 4/4 answers "1", and beat two contributes nothing.
+ * That is the whole reading skill these teach, and it is exactly the one the
+ * Notes & Rests poster covers and the drill did not.
+ *
+ * Difficulty 1: a student meeting a half note is not meeting a harder
+ * subdivision, they are meeting a note that lasts. Grading them 2 or 3 would
+ * hide the simplest values in the catalog behind a sixteenth-note gate.
+ *
+ * MEASURE SCOPE ONLY, and the prompt builder enforces it — a two-beat note
+ * cannot be asked as a one-beat question, and "what does this fill?" is not a
+ * question a single beat can pose.
+ *
+ * No whole rest here. A whole rest fills the bar, so a measure containing one
+ * contains nothing else and has no answer to ask for — the question would be
+ * "which count matches?" with silence as the correct response. The half rest
+ * is fine because the rest of the bar still sounds, and a prompt-level check
+ * refuses a bar that is silent throughout. */
+export const SPANNING_CELLS: readonly RhythmCell[] = Object.freeze([
+  buildCell("half", "Half note", "Half", 1, 1, [0], "1", [token("2", 0)], [], "The note begins on the beat and holds through the next one. Say the beat it starts on; the beat it covers is not counted.", {}, "4", 2),
+  buildCell("half-rest", "Half rest", "Half rest", 1, 1, [], "", [token("2", 0, true)], [], "Two beats of silence. Nothing is counted here — the numbers belong to the beats that sound.", {}, "4", 2),
+  buildCell("whole", "Whole note", "Whole", 1, 1, [0], "1", [token("1", 0)], [], "The note begins on the beat and holds for the whole bar. Only the beat it starts on is counted.", {}, "4", 4),
+]);
+
 /* Every cell this app knows, both beat families. Order matters: `getCellsByIds`
    returns catalog order so two links naming the same cells in either order are
    the same round, and the quarter-beat family keeps the positions it has held
    since the first release. */
 export const ALL_RHYTHM_CELLS: readonly RhythmCell[] = Object.freeze([
   ...RHYTHM_CELLS,
+  ...SPANNING_CELLS,
   ...EIGHTH_BEAT_CELLS,
 ]);
 

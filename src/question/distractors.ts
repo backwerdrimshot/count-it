@@ -22,10 +22,24 @@ type Grid = readonly (readonly boolean[])[];
    beat there are two positions and three beats, so each of those constants is
    now the meter's. Nothing about the ALGORITHM changed — a wrong answer is
    still every other way the beat could have been filled. */
+/* One row per BEAT, not one per cell.
+ *
+ * A half note is two beats, so it contributes two rows: the first carries its
+ * attack, the second is entirely silent because the note is still ringing. The
+ * grid has always been "what sounds where", and that is exactly what a held
+ * beat answers — nothing.
+ *
+ * This falls out better than it had any right to. The mask below flips one row
+ * at a time, so the distractor it builds from a held row is a bar where that
+ * beat sounds too: "1 2 3 4" against a correct "1 3 4". That is precisely the
+ * misconception a half note produces — hearing it as two quarters — and it is
+ * generated rather than authored. */
 function promptGrid(prompt: RhythmPrompt, partials: PartialCount): Grid {
-  return prompt.cells.map((cell) =>
-    Array.from({ length: partials }, (_, partial) =>
-      cell.activePositions.includes(partial as PartialPosition),
+  return prompt.cells.flatMap((cell) =>
+    Array.from({ length: cell.beats }, (_, beatWithinCell) =>
+      Array.from({ length: partials }, (_, partial) =>
+        beatWithinCell === 0 && cell.activePositions.includes(partial as PartialPosition),
+      ),
     ),
   );
 }

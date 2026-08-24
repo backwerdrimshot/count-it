@@ -959,10 +959,10 @@ export default function CountItApp() {
      link rather than quietly shortened into a different one. */
   const practiceCount = useMemo(() => {
     if (scope !== "measure") return 12;
-    const poolSize = assignedCells
-      ? getCellsByIds(assignedCells).length
-      : getCellsForLevel(level, getMeter(meter).beatUnit).length;
-    return Math.max(1, Math.min(12, uniqueMeasures(poolSize, getMeter(meter).beatsPerMeasure)));
+    const pool = assignedCells
+      ? getCellsByIds(assignedCells)
+      : getCellsForLevel(level, getMeter(meter).beatUnit);
+    return Math.max(1, Math.min(12, uniqueMeasures(pool, getMeter(meter).beatsPerMeasure)));
   }, [assignedCells, level, meter, scope]);
   const practiceQuestions = useMemo(
     () => generateQuestions({ level, scope, meter, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),

@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-24`
+- **Build:** `2026-08-24.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -21,6 +21,7 @@ documentation.
 - **Practice:** move through one-beat or full-measure prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
 - **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
+- **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4 alone.
 - **Three simple meters:** 4/4, 3/4 and 3/8, chosen per assignment link. 3/4 reads the same quarter-note beat as 4/4 with one fewer of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. 3/8 counts an eighth-note beat and has its own four-rhythm vocabulary, and its bars beam across the whole measure — matching the Rhythms in Three lesson and the Theory Reference poster rather than this app's own per-beat house rule. A link that names no meter means 4/4 and generates exactly the round it always did.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { COUNT_IT_BUILD, COUNT_IT_CAPABILITY_MANIFEST } from "../src/capabilities";
-import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, METER_IDS, RHYTHM_CELLS } from "../src/rhythm";
+import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, METER_IDS, RHYTHM_CELLS, SPANNING_CELLS } from "../src/rhythm";
 
 const served = JSON.parse(
   readFileSync(new URL("../public/praxis-capabilities.json", import.meta.url), "utf8"),
@@ -50,12 +50,27 @@ describe("the published capability manifest", () => {
     expect(COUNT_IT_CAPABILITY_MANIFEST.eighthBeatCellIds).toEqual(
       EIGHTH_BEAT_CELLS.map((cell) => cell.id),
     );
-    /* Every published id belongs to exactly one family, and the two together
-       are the whole catalog — no id in both, none in neither. */
+    expect(COUNT_IT_CAPABILITY_MANIFEST.spanningCellIds).toEqual(
+      SPANNING_CELLS.map((cell) => cell.id),
+    );
+    /* The span of each, because it is what decides how many of them fit a bar
+       and it cannot be read off the id. */
+    expect(COUNT_IT_CAPABILITY_MANIFEST.spanningCellBeats).toEqual(
+      Object.fromEntries(SPANNING_CELLS.map((cell) => [cell.id, cell.beats])),
+    );
+    /* Every published id belongs to exactly one beat family, and the families
+       together are the whole catalog — no id in both, none in neither. The
+       spanning cells are quarter-beat rhythms, so they are a SUBSET of that
+       family rather than a fourth column; the check below would fail if they
+       were double-counted. */
     const quarter = new Set<string>(COUNT_IT_CAPABILITY_MANIFEST.quarterBeatCellIds);
     const eighth = new Set<string>(COUNT_IT_CAPABILITY_MANIFEST.eighthBeatCellIds);
+    const spanning = new Set<string>(COUNT_IT_CAPABILITY_MANIFEST.spanningCellIds);
     expect([...quarter].filter((id) => eighth.has(id))).toEqual([]);
-    expect(quarter.size + eighth.size).toBe(COUNT_IT_CAPABILITY_MANIFEST.rhythmCellIds.length);
+    expect([...spanning].filter((id) => quarter.has(id) || eighth.has(id))).toEqual([]);
+    expect(quarter.size + eighth.size + spanning.size).toBe(
+      COUNT_IT_CAPABILITY_MANIFEST.rhythmCellIds.length,
+    );
     expect(COUNT_IT_CAPABILITY_MANIFEST.meters).toEqual(METER_IDS);
   });
 

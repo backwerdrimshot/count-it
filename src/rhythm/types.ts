@@ -21,13 +21,13 @@ export type DistractorCategory =
   | "eighth_sixteenth_confusion"
   | "wrong_beat_number";
 
-export type NoteDuration = "4" | "8" | "16";
+export type NoteDuration = "1" | "2" | "4" | "8" | "16";
 export type PartialBeamDirection = "left" | "right";
 
 export interface NotationToken {
   readonly duration: NoteDuration;
   readonly partial: PartialPosition;
-  readonly ticks: 1 | 2 | 3 | 4;
+  readonly ticks: 1 | 2 | 3 | 4 | 8 | 16;
   readonly rest?: true;
   readonly dots?: 1;
 }
@@ -41,6 +41,15 @@ export interface RhythmCell {
      a student to count a bar that does not add up, so the pool is filtered by
      this rather than by hoping a link author knows the difference. */
   readonly beatUnit: BeatUnit;
+  /* How many beats the cell SPANS. One for everything the catalog held until
+     whole and half notes arrived — a half note is two beats and a whole note
+     is four, and no amount of subdividing one beat can express either.
+     A spanning cell sounds once, at the top of its span, and the beats it
+     covers are silent because they are held rather than because they are
+     rests. The count does not distinguish those: this app counts the notes
+     that sound, so a half note on beat one of 4/4 answers "1" and beat two
+     contributes nothing. */
+  readonly beats: number;
   /** Equal divisions of the beat this cell uses: 1 whole, 2 halves, 4 quarters. */
   readonly resolution: 1 | 2 | 4;
   readonly activePositions: readonly PartialPosition[];
@@ -71,8 +80,10 @@ export interface BeatPrompt {
   readonly cells: readonly [RhythmCell];
 }
 
-/* Was a fixed four-tuple, which is the type system asserting 4/4. The length
-   is the meter's beatsPerMeasure and is checked when the prompt is built. */
+/* Was a fixed four-tuple, which is the type system asserting 4/4. The cells'
+   beat SPANS sum to the meter's beatsPerMeasure, which is checked when the
+   prompt is built — the length alone stopped being the right question once a
+   cell could be worth more than one beat. */
 export interface MeasurePrompt {
   readonly scope: "measure";
   readonly meter: MeterId;

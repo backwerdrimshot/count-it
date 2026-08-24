@@ -72,6 +72,14 @@ export const ENGRAVING_EXPECTATIONS: Readonly<Record<string, EngravingExpectatio
        measure renderer, where 3/8 beams the whole bar as one group. That
        exception is recorded in MEASURE_BEAM_POLICY below rather than here,
        because it is a property of the meter and not of any cell. */
+    /* Notes that last longer than a beat. Nothing to beam and nothing to dot:
+       a beam joins notes, and these ARE one note held across beats. The whole
+       engraving question they raise is handled one level up, by the measure
+       renderer giving them the right number of beats. */
+    half: expectation([], [], "A half note holds two beats and carries no beam."),
+    "half-rest": expectation([], [], "A half rest sits on the middle line for two beats and carries no beam."),
+    whole: expectation([], [], "A whole note holds the bar and carries no beam."),
+
     "eighth-beat": expectation([], [], "A lone eighth fills the 3/8 beat and carries no beam of its own."),
     "two-sixteenths": expectation([[0, 1]], [], "The two sixteenths dividing the beat share one beam."),
     "sixteenth-rest": expectation([], [], "The sounding sixteenth keeps its flags; the following rest is not beamed."),

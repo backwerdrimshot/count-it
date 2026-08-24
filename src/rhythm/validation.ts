@@ -9,8 +9,20 @@ export function validateRhythmCell(cell: RhythmCell): void {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cell.id)) {
     throw new TypeError("Rhythm cell IDs must be stable kebab-case strings.");
   }
-  if (!Array.isArray(cell.activePositions) || cell.activePositions.length === 0) {
-    throw new TypeError(`${cell.id} must contain at least one sounding position.`);
+  if (!Array.isArray(cell.activePositions)) {
+    throw new TypeError(`${cell.id} must declare its sounding positions.`);
+  }
+  /* A cell may now be entirely silent — a half rest is two beats of nothing —
+     but only a REST may be. The rule this replaces said every cell must sound,
+     which was the right rule while every cell was one beat and a silent one
+     would have been a beat with no notation at all. The invariant that
+     actually matters moved up a level: a PROMPT must have something to count,
+     and createMeasurePrompt refuses a bar that is silent throughout. */
+  if (cell.activePositions.length === 0 && cell.notation.tokens.some((t) => !t.rest)) {
+    throw new TypeError(`${cell.id} sounds nothing but is not written as a rest.`);
+  }
+  if (!Number.isInteger(cell.beats) || cell.beats < 1) {
+    throw new TypeError(`${cell.id} must span a whole number of beats.`);
   }
   const partials: PartialCount = cell.beatUnit === "4" ? 4 : 2;
   if (
@@ -39,12 +51,15 @@ export function validateRhythmCell(cell: RhythmCell): void {
     throw new TypeError(`${cell.id} uses positions outside its stated resolution.`);
   }
   const ticks = cell.notation.tokens.reduce((total, notationToken) => total + notationToken.ticks, 0);
-  /* A sixteenth is one tick in every meter, so a quarter beat is four and an
-     eighth beat is two. This is the check that would catch a quarter-beat cell
-     smuggled into the eighth-beat catalog. */
-  if (ticks !== partials) {
+  /* A sixteenth is one tick in every meter, so a quarter beat is four ticks and
+     an eighth beat is two — times however many beats the cell spans. This is
+     the check that catches a quarter-beat cell smuggled into the eighth-beat
+     catalog, and now also a half note that claims to span three beats. */
+  const expected = partials * cell.beats;
+  if (ticks !== expected) {
+    const unit = cell.beatUnit === "4" ? "quarter" : "eighth";
     throw new TypeError(
-      `${cell.id} notation must fill exactly one ${cell.beatUnit === "4" ? "quarter" : "eighth"}-note beat.`,
+      `${cell.id} notation must fill exactly ${cell.beats} ${unit}-note beat${cell.beats === 1 ? "" : "s"}.`,
     );
   }
   const tokenAttacks = cell.notation.tokens
