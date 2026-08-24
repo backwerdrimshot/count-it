@@ -7,6 +7,7 @@ import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
   LEVELS,
   getCellsByIds,
+  getCellsForLevel,
   DEFAULT_METER,
   METERS,
   METER_IDS,
@@ -38,6 +39,7 @@ import {
   parseAssignment,
   retakeSeed,
   serializeAssignment,
+  uniqueMeasures,
   verificationCode,
   type Assignment,
   type AssignmentError,
@@ -936,9 +938,31 @@ export default function CountItApp() {
     return () => window.clearTimeout(applyLink);
   }, []);
 
+  /* Practice pages through as many prompts as the pool can actually make, up
+     to twelve.
+
+     A full-measure round never repeats a measure, so k rhythms fill at most
+     k^(beats per bar) of them. Twelve was safe while every bar had four beats —
+     the smallest legal pool, two rhythms, still makes sixteen. In a three-beat
+     bar the same two rhythms make eight, and asking for twelve threw inside the
+     generator and took the whole component down with it: a valid 3/8 assignment
+     link rendered a white screen.
+
+     Clamping is right HERE and wrong in the assignment layer, and the
+     difference is what the number means. A practice round is unassessed paging
+     — fewer cards is fewer cards. An assignment's length is part of what the
+     teacher set, so a round that cannot be built as written is refused at the
+     link rather than quietly shortened into a different one. */
+  const practiceCount = useMemo(() => {
+    if (scope !== "measure") return 12;
+    const poolSize = assignedCells
+      ? getCellsByIds(assignedCells).length
+      : getCellsForLevel(level, getMeter(meter).beatUnit).length;
+    return Math.max(1, Math.min(12, uniqueMeasures(poolSize, getMeter(meter).beatsPerMeasure)));
+  }, [assignedCells, level, meter, scope]);
   const practiceQuestions = useMemo(
-    () => generateQuestions({ level, scope, meter, count: 12, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
-    [assignedCells, level, meter, practiceSeed, scope],
+    () => generateQuestions({ level, scope, meter, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
+    [assignedCells, level, meter, practiceCount, practiceSeed, scope],
   );
   const practiceQuestion = practiceQuestions[practiceIndex % practiceQuestions.length];
   // A pooled round is its own achievement: "the rest-entry cells" is not
