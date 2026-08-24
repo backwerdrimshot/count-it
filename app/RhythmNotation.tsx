@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
-import { getMeter, measureBeamRuns } from "../src/rhythm";
+import { getMeter, measureBeamRuns, secondaryBeamBreaks } from "../src/rhythm";
 import type { RhythmPrompt } from "../src/rhythm";
 
 /** A note as drawn, with the cell and token it came from — needed because a
@@ -85,6 +85,11 @@ export default function RhythmNotation({
             prompt.cells[entry.cellIndex].notation.partialBeamDirections[entry.tokenIndex];
           if (direction) beam.setPartialBeamSideAt(position, direction === "left" ? "L" : "R");
         });
+        /* A beam that crosses a beat still has to SHOW the beat: the primary
+           runs the bar, the secondary breaks where the beats do. Empty in every
+           per-beat meter, because those runs never cross one. */
+        const breaks = secondaryBeamBreaks(run);
+        if (breaks.length > 0) beam.breakSecondaryAt([...breaks]);
         beams.push(beam);
       }
 
