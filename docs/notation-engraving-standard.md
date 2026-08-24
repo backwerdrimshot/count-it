@@ -4,7 +4,7 @@ Count It treats engraving as instructional data. Beam grouping, dots, rests, dur
 
 Current baseline: `count-it-simple-meters-beginner-v2`  
 Rules review date: 2026-07-20 (quarter-beat family)  
-Eighth-beat family review date: **not yet reviewed**  
+Eighth-beat family review date: 2026-08-24 (owner, on the audit sheet)  
 Independent musician sign-off: pending
 
 ## House rules for the MVP
@@ -97,7 +97,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 | Review | Reviewer | Date | Status | Notes |
 | --- | --- | --- | --- | --- |
 | Rules and implementation | Codex | 2026-07-20 | Complete | Structured expectations, explicit partial beams, tests, and audit route added. |
-| Eighth-beat family and the 3/8 whole-bar beam | — | — | **Pending** | Four new cells and the cross-beat beam exception. Automated gates pass; no human has looked at the rendering. The whole-bar beam is the item to check hardest — it is this app departing from its own house rule. |
+| Eighth-beat family and the 3/8 whole-bar beam | Owner | 2026-08-24 | Complete | Four new cells and the cross-beat beam exception, reviewed on `/notation-audit` and approved. What this row covers is the rendering as the audit sheet shows it. It does NOT cover the two rows below, which were pending before this work and still are: no comparison against an independently engraved reference, and no check at classroom-display size or on a real device. |
 | Independent musician engraving review | — | — | Pending | Compare against a trusted engraved reference before public release. |
 | Real-device/classroom display review | — | — | Pending | Check phone, tablet, projector, and high zoom. |
 
