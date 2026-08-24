@@ -105,7 +105,16 @@ describe("the assignment link", () => {
     expect(uniqueMeasures(2)).toBe(16);
     const tooLong = bad("?scope=measure&cells=quarter,eighths&n=20");
     expect(tooLong.code).toBe("measure-pool");
-    expect(tooLong.message).toContain("16 different measures");
+    expect(tooLong.message).toContain("16 different 4/4 measures");
+    /* The ceiling is the bar's beat count, not four. The same two rhythms make
+       eight three-beat measures, so a nine-question 3/4 round is refused where
+       the same link in 4/4 is fine — and refused at the LINK rather than
+       thrown while the round is being built, which is the failure this whole
+       check exists to prevent. */
+    const threeFour = bad("?scope=measure&meter=3-4&cells=quarter,eighths&n=9");
+    expect(threeFour.code).toBe("measure-pool");
+    expect(threeFour.message).toContain("8 different 3/4 measures");
+    expect(ok("?scope=measure&meter=3-4&cells=quarter,eighths&n=8").assignment.meter).toBe("3-4");
     expect(bad("?scope=measure&level=1&n=17").code).toBe("measure-pool");
 
     // At the ceiling and below it, the link is fine — and it really builds.

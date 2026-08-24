@@ -2,7 +2,19 @@
 
 import { useEffect, useRef } from "react";
 import { Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
+import { getMeter, measureBeamRuns } from "../src/rhythm";
 import type { RhythmPrompt } from "../src/rhythm";
+
+/** A note as drawn, with the cell and token it came from — needed because a
+ *  whole-measure beam is built across cells and still has to look up a partial
+ *  beam direction recorded against a token index inside one of them. */
+interface DrawnNote {
+  readonly note: StaveNote;
+  readonly cellIndex: number;
+  readonly tokenIndex: number;
+  readonly rest: boolean;
+  readonly beamable: boolean;
+}
 
 export default function RhythmNotation({
   prompt,
@@ -19,44 +31,67 @@ export default function RhythmNotation({
 
     const draw = () => {
       element.replaceChildren();
-      const naturalWidth = prompt.scope === "measure" ? 760 : 390;
+      const meter = getMeter(prompt.meter);
+      const beats = prompt.scope === "measure" ? meter.beatsPerMeasure : 1;
+      const naturalWidth = prompt.scope === "measure" ? 190 * beats : 390;
       const width = Math.max(naturalWidth, element.clientWidth || naturalWidth);
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(width, 172);
       const context = renderer.getContext();
       const stave = new Stave(10, 26, width - 20);
       stave.addClef("percussion");
-      if (prompt.scope === "measure") stave.addTimeSignature("4/4");
+      /* A measure always shows its time signature. A single beat normally does
+         not — a lone quarter note is self-evidently one beat — but in a meter
+         whose beat is NOT a quarter it is the time signature that says so. An
+         eighth note on its own reads as half a beat to anyone who has only met
+         4/4, which is precisely the misreading the Rhythms in Three lesson is
+         about: "that is what the bottom number says, and it is all it says." */
+      if (prompt.scope === "measure" || meter.beatUnit !== "4") {
+        stave.addTimeSignature(meter.label);
+      }
       stave.setContext(context).draw();
 
       const beams: Beam[] = [];
-      const notes = prompt.cells.flatMap((cell) => {
-        const beatNotes = cell.notation.tokens.map((notationToken) => {
+      const drawn: DrawnNote[] = prompt.cells.flatMap((cell, cellIndex) =>
+        cell.notation.tokens.map((notationToken, tokenIndex) => {
           const note = new StaveNote({
             clef: "percussion",
             keys: [notationToken.rest ? "b/4" : "f/4"],
             duration: `${notationToken.duration}${notationToken.dots ? "d" : ""}${notationToken.rest ? "r" : ""}`,
           });
           if (notationToken.dots) Dot.buildAndAttach([note], { all: true });
-          return note;
+          return {
+            note,
+            cellIndex,
+            tokenIndex,
+            rest: Boolean(notationToken.rest),
+            beamable: notationToken.duration !== "4",
+          };
+        }),
+      );
+
+      /* Who shares a beam is decided by the data model, not here — including
+         the 3/8 whole-bar exception. This component draws what it is told. */
+      const find = (cellIndex: number, tokenIndex: number) =>
+        drawn.find((entry) => entry.cellIndex === cellIndex && entry.tokenIndex === tokenIndex);
+
+      for (const run of measureBeamRuns(prompt)) {
+        const members = run.map((member) => find(member.cellIndex, member.tokenIndex));
+        if (members.some((entry) => !entry)) continue;
+        const present = members as DrawnNote[];
+        const beam = new Beam(present.map((entry) => entry.note));
+        present.forEach((entry, position) => {
+          const direction =
+            prompt.cells[entry.cellIndex].notation.partialBeamDirections[entry.tokenIndex];
+          if (direction) beam.setPartialBeamSideAt(position, direction === "left" ? "L" : "R");
         });
-        for (const group of cell.notation.beamGroups) {
-          const beam = new Beam(group.map((index) => beatNotes[index]));
-          for (const [tokenIndex, direction] of Object.entries(cell.notation.partialBeamDirections)) {
-            const beamNoteIndex = group.indexOf(Number(tokenIndex));
-            if (beamNoteIndex >= 0) {
-              beam.setPartialBeamSideAt(beamNoteIndex, direction === "left" ? "L" : "R");
-            }
-          }
-          beams.push(beam);
-        }
-        return beatNotes;
-      });
+        beams.push(beam);
+      }
 
       const voice = new Voice({
-        numBeats: prompt.scope === "measure" ? 4 : 1,
-        beatValue: 4,
-      }).addTickables(notes);
+        numBeats: beats,
+        beatValue: meter.vexBeatValue,
+      }).addTickables(drawn.map((entry) => entry.note));
       new Formatter().joinVoices([voice]).format([voice], width - (prompt.scope === "measure" ? 135 : 105));
       voice.draw(context, stave);
       beams.forEach((beam) => beam.setContext(context).draw());

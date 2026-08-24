@@ -22,7 +22,18 @@
  *   * Nothing here is a timer. Difficulty comes from cell vocabulary, scope,
  *     and the guide — never from speed.
  */
-import { RHYTHM_CELLS, getCellsForLevel, getLevel, type LevelId } from "../rhythm";
+import {
+  ALL_RHYTHM_CELLS,
+  DEFAULT_METER,
+  METER_IDS,
+  getCellsForLevel,
+  getLevel,
+  getMeter,
+  getRhythmCell,
+  isMeterId,
+  type LevelId,
+  type MeterId,
+} from "../rhythm";
 
 export type GuidePolicy = "on" | "off";
 /** When the correct answer is shown. `each` teaches, `end` assesses. */
@@ -50,12 +61,17 @@ export const MAX_NAME_LENGTH = 60;
  *  round and put an unreachable goal on every student's card. */
 export const DEFAULT_QUESTIONS = 5;
 
-/** Distinct 4/4 measures a pool of `size` cells can assemble. Measure rounds
+/** Distinct measures a pool of `size` cells can assemble. Measure rounds
  *  never repeat a measure, so this is a hard ceiling on the round length —
  *  the one bound that was never written down, and the only one that could
- *  fail AFTER the link had been accepted. */
-export function uniqueMeasures(size: number): number {
-  return size ** 4;
+ *  fail AFTER the link had been accepted.
+ *
+ *  The exponent is the bar's beat count, not four: a three-beat bar built from
+ *  two rhythms makes eight measures, not sixteen, and the 4/4 form would have
+ *  accepted a sixteen-question 3/4 round and then thrown while building it —
+ *  the exact failure shape this function was written to prevent. */
+export function uniqueMeasures(size: number, beatsPerMeasure = 4): number {
+  return size ** beatsPerMeasure;
 }
 
 export interface AssignmentError {
@@ -66,6 +82,8 @@ export interface AssignmentError {
     | "pass"
     | "level"
     | "scope"
+    | "meter"
+    | "meter-cells"
     | "system"
     | "feedback"
     | "retry"
@@ -83,6 +101,9 @@ export interface Assignment {
   readonly name: string | null;
   readonly level: LevelId;
   readonly scope: AssignmentScope;
+  /** The meter the round is read in. Null when the link did not say, which
+   *  means 4/4 — the meter every link written before this existed meant. */
+  readonly meter: MeterId | null;
   /** Explicit cell pool, or null when the level's own vocabulary is used. */
   readonly cells: readonly string[] | null;
   readonly guide: GuidePolicy | null;
@@ -105,7 +126,7 @@ export type AssignmentResult =
   | { readonly ok: true; readonly assignment: Assignment; readonly locked: readonly string[] }
   | { readonly ok: false; readonly error: AssignmentError };
 
-const CELL_IDS = new Set(RHYTHM_CELLS.map((cell) => cell.id));
+const CELL_IDS = new Set(ALL_RHYTHM_CELLS.map((cell) => cell.id));
 const LEVEL_IDS: readonly LevelId[] = ["level-1", "level-2", "level-3"];
 
 /** An assignment name is display text. Strip anything that could smuggle
@@ -184,6 +205,28 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("scope");
   }
 
+  /* The meter. Absent means 4/4, which is what every link written before this
+     parameter existed meant — so an old link is not merely still accepted, it
+     still generates the identical round. */
+  let meter: MeterId | null = null;
+  const meterRaw = params.get("meter");
+  if (meterRaw !== null) {
+    if (!isMeterId(meterRaw)) {
+      return {
+        ok: false,
+        error: {
+          code: "meter",
+          entry: meterRaw,
+          message:
+            `“${meterRaw}” is not a meter Count It reads. This app counts ` +
+            `${METER_IDS.map((id) => id.replace("-", "/")).join(", ")}.`,
+        },
+      };
+    }
+    meter = meterRaw;
+    locked.push("meter");
+  }
+
   // The cell pool. Levels are CUMULATIVE — level 2 contains level 1 — so a step
   // that teaches only the rest-entry cells cannot be expressed as a level at
   // all. This is that expression, and it is why an unknown id is fatal rather
@@ -228,7 +271,7 @@ export function parseAssignment(search: string): AssignmentResult {
     // identically. The generator normalizes the same way; if these two
     // disagreed, a round-tripped link would quietly become a different round.
     cells = Object.freeze(
-      RHYTHM_CELLS.filter((cell) => seen.has(cell.id)).map((cell) => cell.id),
+      ALL_RHYTHM_CELLS.filter((cell) => seen.has(cell.id)).map((cell) => cell.id),
     );
     locked.push("cells");
   }
@@ -314,9 +357,39 @@ export function parseAssignment(search: string): AssignmentResult {
      round under the assignment's stated conditions. Rejecting the link is the
      same rule as every other check in this file: a round that cannot be built
      as written is not repaired into a different one. */
+  /* A rhythm belongs to a beat family, and the meter says which family the bar
+     is made of. An eighth-beat rhythm in a 3/4 link is not a harder round, it
+     is a bar that does not add up — so it is refused at the link with the ids
+     named, on the same rule as every other check here: a round that cannot be
+     built as written is not repaired into a different one. */
+  const activeMeter = getMeter(meter ?? DEFAULT_METER);
+  if (cells) {
+    const wrongFamily = cells.filter(
+      (id) => getRhythmCell(id).beatUnit !== activeMeter.beatUnit,
+    );
+    if (wrongFamily.length > 0) {
+      return {
+        ok: false,
+        error: {
+          code: "meter-cells",
+          entry: wrongFamily[0],
+          message:
+            `${wrongFamily.length === 1 ? "The rhythm" : "The rhythms"} ` +
+            `${wrongFamily.map((id) => `“${id}”`).join(", ")} in this practice link ` +
+            `${wrongFamily.length === 1 ? "counts" : "count"} a ` +
+            `${activeMeter.beatUnit === "4" ? "eighth" : "quarter"}-note beat, and ` +
+            `${activeMeter.label} counts ${activeMeter.beatUnit === "4" ? "quarter" : "eighth"}-note ` +
+            "beats. The link needs to be fixed before it can be used.",
+        },
+      };
+    }
+  }
+
   if (scope === "measure") {
-    const poolSize = cells ? cells.length : getCellsForLevel(level).length;
-    const available = uniqueMeasures(poolSize);
+    const poolSize = cells
+      ? cells.length
+      : getCellsForLevel(level, activeMeter.beatUnit).length;
+    const available = uniqueMeasures(poolSize, activeMeter.beatsPerMeasure);
     const wanted = count ?? DEFAULT_QUESTIONS;
     if (available < wanted) {
       return {
@@ -325,8 +398,8 @@ export function parseAssignment(search: string): AssignmentResult {
           code: "measure-pool",
           message:
             `This practice link asks for ${wanted} full-measure questions, but ${poolSize} ` +
-            `rhythms can only make ${available} different measures. Ask for fewer questions, ` +
-            "or add rhythms to the link.",
+            `rhythms can only make ${available} different ${activeMeter.label} measures. Ask for ` +
+            "fewer questions, or add rhythms to the link.",
         },
       };
     }
@@ -369,6 +442,7 @@ export function parseAssignment(search: string): AssignmentResult {
       name,
       level,
       scope,
+      meter,
       cells,
       guide,
       feedback,

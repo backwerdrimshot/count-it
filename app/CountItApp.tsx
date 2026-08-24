@@ -7,10 +7,15 @@ import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
   LEVELS,
   getCellsByIds,
+  DEFAULT_METER,
+  METERS,
+  METER_IDS,
   getCompleteReference,
+  getMeter,
   getLevel,
   getPromptAnswer,
   type LevelId,
+  type MeterId,
   type RhythmPrompt,
 } from "../src/rhythm";
 import {
@@ -124,6 +129,7 @@ function assignmentLocks(assignment: Assignment, pinned: readonly string[]): str
 interface RoundSpec {
   readonly level: LevelId;
   readonly scope: QuestionScope;
+  readonly meter?: MeterId;
   readonly seed: string | number;
   readonly count: number;
   readonly cells?: readonly string[];
@@ -169,6 +175,7 @@ function misconceptionMessage(choice: QuestionChoice | undefined): string {
 function SetupControls({
   level,
   scope,
+  meter,
   showReference,
   assignment,
   locked,
@@ -176,11 +183,13 @@ function SetupControls({
   identityLocked,
   onLevelChange,
   onScopeChange,
+  onMeterChange,
   onReferenceChange,
   onStudentIdChange,
 }: {
   level: LevelId;
   scope: QuestionScope;
+  meter: MeterId;
   showReference: boolean;
   assignment: Assignment | null;
   locked: ReadonlySet<string>;
@@ -188,6 +197,7 @@ function SetupControls({
   identityLocked: boolean;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
+  onMeterChange: (value: MeterId) => void;
   onReferenceChange: (value: boolean) => void;
   onStudentIdChange: (value: string) => void;
 }) {
@@ -218,16 +228,44 @@ function SetupControls({
           <span>Beginner level</span>
           <select
             value={level}
-            disabled={locked.has("level")}
+            disabled={locked.has("level") || getMeter(meter).beatUnit !== "4"}
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
           >
             {LEVELS.map((option) => (
               <option key={option.id} value={option.id}>{option.name}</option>
             ))}
           </select>
-          <small>{getLevel(level).description}</small>
+          {/* The three levels describe how a QUARTER-note beat subdivides —
+              pulse and pairs, then the &, then the e and the a. An eighth-note
+              beat divides in two and that is the whole of it, so the ladder has
+              nothing to say in 3/8. Disabled and explained, rather than left
+              looking operable while changing nothing. */}
+          <small>
+            {getMeter(meter).beatUnit === "4"
+              ? getLevel(level).description
+              : "Levels describe how a quarter-note beat subdivides. In 3/8 the beat is an eighth and splits in two, so all four of its rhythms are in play."}
+          </small>
         </label>
       )}
+      <label className="level-control">
+        <span>Meter</span>
+        <select
+          value={meter}
+          disabled={locked.has("meter")}
+          onChange={(event) => onMeterChange(event.target.value as MeterId)}
+        >
+          {METER_IDS.map((id) => (
+            <option key={id} value={id}>{METERS[id].label}</option>
+          ))}
+        </select>
+        {/* Says which note is the beat, because that is the whole difference
+            between 3/4 and 3/8 and the one thing the numbers alone do not
+            spell out for a student meeting them. */}
+        <small>
+          {getMeter(meter).beatsPerMeasure} beats per bar, and the beat is
+          {getMeter(meter).beatUnit === "4" ? " a quarter note." : " an eighth note."}
+        </small>
+      </label>
       <fieldset className="scope-control">
         <legend>Question size</legend>
         <div className="scope-options">
@@ -321,7 +359,9 @@ function PracticeMode({
   onShuffle: () => void;
 }) {
   const answer = getPromptAnswer(prompt);
-  const notationLabel = `${prompt.scope === "beat" ? "One beat" : "One 4/4 measure"} rhythm for practice.`;
+  const notationLabel = `${
+    prompt.scope === "beat" ? "One beat" : `One ${getMeter(prompt.meter).label} measure`
+  } rhythm for practice.`;
   return (
     <section className="trainer-card practice-card" aria-labelledby="practice-title">
       <div className="trainer-topline">
@@ -634,7 +674,10 @@ function ChallengeMode({
             <small>
               {response && !holdFeedback
                 ? "Sounding positions are highlighted."
-                : getCompleteReference(scope)}
+                /* From the PROMPT's own meter rather than a prop: the grid
+                   under a 3/8 bar has to read "1 & | 2 & | 3 &", and the
+                   question already knows which meter it was built in. */
+                : getCompleteReference(scope, "standard", question.prompt.meter)}
             </small>
           </div>
           {/* Highlighting the sounding positions IS the answer, so a held round
@@ -764,6 +807,7 @@ export default function CountItApp() {
   const [mode, setMode] = useState<AppMode>("practice");
   const [level, setLevel] = useState<LevelId>("level-2");
   const [scope, setScope] = useState<QuestionScope>("beat");
+  const [meter, setMeter] = useState<MeterId>(DEFAULT_METER);
   const [showReference, setShowReference] = useState(true);
   const [practiceSeed, setPracticeSeed] = useState(INITIAL_SEED);
   const [practiceIndex, setPracticeIndex] = useState(0);
@@ -848,6 +892,11 @@ export default function CountItApp() {
         round = makeSession({
           level: pinned.level,
           scope: pinned.scope,
+          /* Null means the link named no meter, which means 4/4 — the meter it
+             meant before this parameter existed. Spread rather than passed as
+             `?? DEFAULT_METER` so the option is genuinely absent, which is what
+             keeps an old link's seed generating its old round. */
+          ...(pinned.meter ? { meter: pinned.meter } : {}),
           seed,
           count: pinned.count ?? SESSION_LENGTH,
           ...(pinned.cells ? { cells: pinned.cells } : {}),
@@ -875,6 +924,7 @@ export default function CountItApp() {
       setPinnedLocks(result.locked);
       setLevel(pinned.level);
       setScope(pinned.scope);
+      setMeter(pinned.meter ?? DEFAULT_METER);
       if (pinned.guide) setShowReference(pinned.guide === "on");
       // An assignment is a scored round by definition, so it opens in the
       // challenge rather than making a student find the tab.
@@ -887,8 +937,8 @@ export default function CountItApp() {
   }, []);
 
   const practiceQuestions = useMemo(
-    () => generateQuestions({ level, scope, count: 12, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
-    [assignedCells, level, practiceSeed, scope],
+    () => generateQuestions({ level, scope, meter, count: 12, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
+    [assignedCells, level, meter, practiceSeed, scope],
   );
   const practiceQuestion = practiceQuestions[practiceIndex % practiceQuestions.length];
   // A pooled round is its own achievement: "the rest-entry cells" is not
@@ -916,11 +966,11 @@ export default function CountItApp() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ level, scope, showReference }));
+      localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ level, scope, meter, showReference }));
     } catch {
       // Preferences are harmless enhancements, not required application state.
     }
-  }, [level, scope, showReference]);
+  }, [level, meter, scope, showReference]);
 
   useEffect(() => {
     if (session.status !== "complete") return;
@@ -946,7 +996,7 @@ export default function CountItApp() {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
   }
 
-  function resetForSettings(nextLevel: LevelId, nextScope: QuestionScope) {
+  function resetForSettings(nextLevel: LevelId, nextScope: QuestionScope, nextMeter: MeterId) {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setPracticeSeed((seed) => seed + 1);
@@ -957,6 +1007,7 @@ export default function CountItApp() {
     setSession(makeSession({
       level: nextLevel,
       scope: nextScope,
+      meter: nextMeter,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -966,12 +1017,21 @@ export default function CountItApp() {
 
   function changeLevel(nextLevel: LevelId) {
     setLevel(nextLevel);
-    resetForSettings(nextLevel, scope);
+    resetForSettings(nextLevel, scope, meter);
   }
 
   function changeScope(nextScope: QuestionScope) {
     setScope(nextScope);
-    resetForSettings(level, nextScope);
+    resetForSettings(level, nextScope, meter);
+  }
+
+  /* Changing the meter changes the beat, and in 3/8 it changes the whole
+     rhythm vocabulary with it — an eighth-beat bar cannot be built from
+     quarter-beat cells. The round is rebuilt rather than adjusted, the same as
+     for a level or a size change. */
+  function changeMeter(nextMeter: MeterId) {
+    setMeter(nextMeter);
+    resetForSettings(level, scope, nextMeter);
   }
 
   function nextPractice(direction: 1 | -1) {
@@ -987,6 +1047,7 @@ export default function CountItApp() {
     setSession(makeSession({
       level,
       scope,
+      meter,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -1015,6 +1076,7 @@ export default function CountItApp() {
       setSession(makeSession({
         level,
         scope,
+        meter,
         // Derived from the ORIGINAL seed, so attempts never chain.
         seed: retakeSeed(challengeSeed, nextAttempt),
         count: sessionLength,
@@ -1037,6 +1099,7 @@ export default function CountItApp() {
     setSession(makeSession({
       level,
       scope,
+      meter,
       seed: challengeSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -1120,6 +1183,7 @@ export default function CountItApp() {
           <SetupControls
             level={level}
             scope={scope}
+            meter={meter}
             showReference={showReference}
             assignment={assignment}
             locked={locked}
@@ -1127,6 +1191,7 @@ export default function CountItApp() {
             identityLocked={identityLocked}
             onLevelChange={changeLevel}
             onScopeChange={changeScope}
+            onMeterChange={changeMeter}
             onReferenceChange={setShowReference}
             onStudentIdChange={changeStudentId}
           />
@@ -1189,7 +1254,7 @@ export default function CountItApp() {
           <a className="foot-btn foot-ico" href="https://www.instagram.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Instagram" title="Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm7.846-10.405a1.441 1.441 0 01-2.88 0 1.44 1.44 0 012.88 0z"/></svg></a>
           <a className="foot-btn foot-ico" href="https://www.youtube.com/@backwerdrhythmshop" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on YouTube" title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
         </div>
-        <p>Standard American counting · 4/4 · Quarter, eighth, and sixteenth-note cells</p>
+        <p>Standard American counting · 4/4, 3/4 and 3/8 · Quarter, eighth, and sixteenth-note cells</p>
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
         <BuildStamp />
       </footer>
