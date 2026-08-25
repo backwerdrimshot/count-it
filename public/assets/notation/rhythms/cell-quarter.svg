@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -820 435 1015" width="435" height="1015" data-units-per-space="250" data-cell="quarter" data-counting="1" role="img" aria-label="Quarter note">
+<!-- Quarter note ("1"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<path transform="translate(0 0) scale(1 -1)" d="M97 -125C186 -125 295 -43 295 42C295 93 255 125 198 125C88 125 0 44 0 -42C0 -94 43 -125 97 -125Z"/>
+<rect x="265" y="-750" width="30" height="708"/>
+</g>
+</svg>

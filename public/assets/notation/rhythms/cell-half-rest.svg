@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-180 -212 642 298.5" width="642" height="298.5" data-units-per-space="250" data-cell="half-rest" data-counting="(1 2)" role="img" aria-label="Half rest">
+<!-- Half rest ("(1 2)"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<rect x="-110" y="-16.5" width="502" height="33"/>
+<path transform="translate(0 0) scale(1 -1)" d="M282 24V116C282 131 270 142 256 142H26C11 142 0 131 0 116V24C0 10 11 -2 26 -2H256C270 -2 282 10 282 24Z"/>
+</g>
+</svg>

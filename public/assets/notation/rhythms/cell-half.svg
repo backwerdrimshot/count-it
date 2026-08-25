@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -820 435 1015" width="435" height="1015" data-units-per-space="250" data-cell="half" data-counting="1 (2)" role="img" aria-label="Half note">
+<!-- Half note ("1 (2)"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<path transform="translate(0 0) scale(1 -1)" d="M97 -125C262 -125 295 9 295 42C295 93 254 125 196 125C47 125 0 10 0 -42C0 -95 42 -125 97 -125ZM173 -46C128 -76 97 -87 75 -87C54 -87 42 -76 35 -64C32 -58 29 -51 29 -44C29 -22 51 5 120 45C170 74 201 84 221 84C240 84 251 75 258 63C261 57 264 51 264 44C264 24 243 0 173 -46Z"/>
+<rect x="265" y="-750" width="30" height="708"/>
+</g>
+</svg>
