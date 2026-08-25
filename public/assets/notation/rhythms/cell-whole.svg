@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -195 562 390" width="562" height="390" data-units-per-space="250" data-cell="whole" data-counting="1 (2 3 4)" role="img" aria-label="Whole note">
+<!-- Whole note ("1 (2 3 4)"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<path transform="translate(0 0) scale(1 -1)" d="M216 125C83 125 0 70 0 2C0 -65 57 -125 206 -125C370 -125 422 -68 422 2C422 73 309 125 216 125ZM111 63C122 98 159 103 190 103C259 103 314 29 314 -31C314 -38 313 -44 312 -50C307 -75 293 -92 268 -98C258 -101 247 -102 237 -102C228 -102 220 -101 211 -98C194 -93 178 -84 164 -72C156 -65 149 -58 143 -50C123 -27 108 7 108 39C108 47 109 55 111 63Z"/>
+</g>
+</svg>

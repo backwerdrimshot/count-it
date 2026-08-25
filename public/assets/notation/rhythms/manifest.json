@@ -1,0 +1,174 @@
+{
+  "source": "Composed from the extracted Bravura glyphs in svg/ — see compose-lib.mjs. Same license and coordinate conventions as the glyph set (LICENSE-bravura.txt; 250 units per staff space).",
+  "baseline": "Notehead baseline is y=0; cards are stave-less by design.",
+  "cells": [
+    {
+      "file": "cell-quarter.svg",
+      "label": "Quarter note",
+      "counting": "1",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-two-eighths.svg",
+      "label": "Two eighth notes",
+      "counting": "1 &",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-four-sixteenths.svg",
+      "label": "Four sixteenth notes",
+      "counting": "1 e & a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-eighth-two-sixteenths.svg",
+      "label": "Eighth + two sixteenths",
+      "counting": "1 & a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-two-sixteenths-eighth.svg",
+      "label": "Two sixteenths + eighth",
+      "counting": "1 e &",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-dotted-eighth-sixteenth.svg",
+      "label": "Dotted eighth + sixteenth",
+      "counting": "1 a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-sixteenth-dotted-eighth.svg",
+      "label": "Sixteenth + dotted eighth",
+      "counting": "1 e",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-syncopa.svg",
+      "label": "Sixteenth–eighth–sixteenth",
+      "counting": "1 e a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-eighth-rest-eighth.svg",
+      "label": "Eighth rest + eighth",
+      "counting": "(1) &",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-eighth-eighth-rest.svg",
+      "label": "Eighth + eighth rest",
+      "counting": "1 (&)",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-sixteenth-rest-three.svg",
+      "label": "Sixteenth rest + three sixteenths",
+      "counting": "(1) e & a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-eighth-rest-two-sixteenths.svg",
+      "label": "Eighth rest + two sixteenths",
+      "counting": "(1) & a",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-triplet.svg",
+      "label": "Eighth-note triplet",
+      "counting": "1 trip let",
+      "spb": 3,
+      "slots": 3
+    },
+    {
+      "file": "cell-sextuplet.svg",
+      "label": "Sixteenth-note sextuplet",
+      "counting": "1 ta la ta li ta",
+      "spb": 6,
+      "slots": 6
+    },
+    {
+      "file": "cell-quarter-rest.svg",
+      "label": "Quarter rest",
+      "counting": "(1)",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-half.svg",
+      "label": "Half note",
+      "counting": "1 (2)",
+      "spb": 4,
+      "slots": 8
+    },
+    {
+      "file": "cell-half-rest.svg",
+      "label": "Half rest",
+      "counting": "(1 2)",
+      "spb": 4,
+      "slots": 8
+    },
+    {
+      "file": "cell-whole.svg",
+      "label": "Whole note",
+      "counting": "1 (2 3 4)",
+      "spb": 4,
+      "slots": 16
+    },
+    {
+      "file": "cell-whole-rest.svg",
+      "label": "Whole rest",
+      "counting": "(1 2 3 4)",
+      "spb": 4,
+      "slots": 16
+    },
+    {
+      "file": "cell-diddled-eighths.svg",
+      "label": "Diddled eighths (16th diddles)",
+      "counting": "1 &, doubled",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-rolled-quarter.svg",
+      "label": "Rolled quarter (three-slash roll)",
+      "counting": "1, rolled",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-buzz-quarter.svg",
+      "label": "Buzz quarter (multiple bounce)",
+      "counting": "1, buzzed",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-flam-quarter.svg",
+      "label": "Flam",
+      "counting": "1, flammed",
+      "spb": 4,
+      "slots": 4
+    },
+    {
+      "file": "cell-drag-quarter.svg",
+      "label": "Drag",
+      "counting": "1, dragged",
+      "spb": 4,
+      "slots": 4
+    }
+  ]
+}

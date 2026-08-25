@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -945 2295 1515" width="2295" height="1515" data-units-per-space="250" data-cell="sixteenth-rest-three" data-counting="(1) e & a" role="img" aria-label="Sixteenth rest + three sixteenths">
+<!-- Sixteenth rest + three sixteenths ("(1) e & a"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<path transform="translate(620 0) scale(1 -1)" d="M97 -125C186 -125 295 -43 295 42C295 93 255 125 198 125C88 125 0 44 0 -42C0 -94 43 -125 97 -125Z"/>
+<rect x="885" y="-875" width="30" height="833"/>
+<path transform="translate(1240 0) scale(1 -1)" d="M97 -125C186 -125 295 -43 295 42C295 93 255 125 198 125C88 125 0 44 0 -42C0 -94 43 -125 97 -125Z"/>
+<rect x="1505" y="-875" width="30" height="833"/>
+<path transform="translate(1860 0) scale(1 -1)" d="M97 -125C186 -125 295 -43 295 42C295 93 255 125 198 125C88 125 0 44 0 -42C0 -94 43 -125 97 -125Z"/>
+<rect x="2125" y="-875" width="30" height="833"/>
+<rect x="885" y="-875" width="1270" height="125"/>
+<rect x="885" y="-687.5" width="650" height="125"/>
+<rect x="1505" y="-687.5" width="650" height="125"/>
+<path transform="translate(0 0) scale(1 -1)" d="M208 111C208 149 178 179 140 179C103 179 72 149 72 111C72 91 84 72 100 60C108 54 118 49 128 46C135 44 143 43 152 43C166 43 182 46 194 50C208 54 217 58 230 65C233 66 235 67 237 67C240 67 242 65 242 60C242 57 241 52 239 45C237 37 193 -101 184 -120C176 -139 149 -151 135 -151C136 -147 136 -144 136 -141C136 -103 105 -73 68 -73C30 -73 0 -103 0 -141C0 -161 12 -180 28 -192C36 -198 45 -203 55 -206C63 -208 71 -209 80 -209C94 -209 110 -206 122 -202C136 -198 142 -195 155 -188C157 -188 159 -190 159 -193C159 -194 158 -195 158 -196L63 -479C63 -480 62 -481 62 -482C62 -490 71 -500 93 -500C122 -500 127 -488 131 -477L247 -96C273 -11 292 56 292 56C292 56 317 144 319 157C319 159 320 160 320 161C320 167 312 171 310 172C305 172 302 170 299 168C292 162 242 102 208 101Z"/>
+</g>
+</svg>

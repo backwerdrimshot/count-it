@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-180 -86.5 642 291.5" width="642" height="291.5" data-units-per-space="250" data-cell="whole-rest" data-counting="(1 2 3 4)" role="img" aria-label="Whole rest">
+<!-- Whole rest ("(1 2 3 4)"). Composed from Bravura-extracted glyphs — SIL OFL 1.1, see LICENSE-bravura.txt. -->
+<g fill="currentColor">
+<rect x="-110" y="-16.5" width="502" height="33"/>
+<path transform="translate(0 0) scale(1 -1)" d="M282 -109V-17C282 -2 270 9 256 9H26C11 9 0 -2 0 -17V-109C0 -123 11 -135 26 -135H256C270 -135 282 -123 282 -109Z"/>
+</g>
+</svg>
