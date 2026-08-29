@@ -2,12 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
-import { getMeter, measureBeamRuns, secondaryBeamBreaks } from "../src/rhythm";
+import { getMeter, measureBeamRuns } from "../src/rhythm";
 import type { RhythmPrompt } from "../src/rhythm";
 
-/** A note as drawn, with the cell and token it came from — needed because a
- *  whole-measure beam is built across cells and still has to look up a partial
- *  beam direction recorded against a token index inside one of them. */
+/** A note as drawn, with the cell and token it came from — the beam runs name
+ *  their members by (cell, token), and a partial beam direction is recorded
+ *  against a token index inside one cell. */
 interface DrawnNote {
   readonly note: StaveNote;
   readonly cellIndex: number;
@@ -40,29 +40,15 @@ export default function RhythmNotation({
       const context = renderer.getContext();
       const stave = new Stave(10, 26, width - 20);
       stave.addClef("percussion");
-      /* A measure always shows its time signature. A single beat normally does
-         not — a lone quarter note is self-evidently one beat — but in a meter
-         whose beat is NOT a quarter it is the time signature that says so. An
-         eighth note on its own reads as half a beat to anyone who has only met
-         4/4, which is precisely the misreading the Rhythms in Three lesson is
-         about: "that is what the bottom number says, and it is all it says." */
-      if (prompt.scope === "measure" || meter.beatUnit !== "4") {
+      /* A measure shows its time signature. A single beat does not — a lone
+         quarter note is self-evidently one beat, and printing a signature over
+         a fragment would claim a bar the arithmetic denies. */
+      if (prompt.scope === "measure") {
         stave.addTimeSignature(meter.label);
       }
       /* A single beat is a FRAGMENT, so it does not get a closing barline.
          Without one it reads as an incipit — here is a beat — which is what it
-         is. With one it reads as a complete measure, and in 3/8 that was a
-         measure the arithmetic contradicted: the beat cards print the 3/8
-         signature (a lone eighth otherwise reads as half a beat to anyone who
-         has only met 4/4), and closing the bar around one eighth claimed a
-         three-eighth measure holding one. The 4/4 beat cards print no
-         signature, so the same closed bar made no claim to be false — which is
-         why this was only ever visible in 3/8, and why it reached a review
-         sheet whose whole job is to catch it.
-
-         This is not an audit-sheet fix. Beat-scope QUESTIONS use this same
-         renderer, so every 3/8 beat a student has been shown sat inside a short
-         bar. */
+         is. With one it reads as a complete measure, which the prompt is not. */
       if (prompt.scope === "beat") stave.setEndBarType(Barline.type.NONE);
       stave.setContext(context).draw();
 
@@ -80,9 +66,9 @@ export default function RhythmNotation({
                The site draws the same rhythms at `base - 2 * SPACE` in
                assets/notation/rhythm-staff.js — the middle line, where it also
                centres the percussion clef — for notes and rests alike. An app
-               that engraves a figure differently from the poster on the wall of
-               the room using it is the thing the 3/8 beam rule already refused
-               to do; this is the same rule applied to the same staff.
+               should not engrave a figure differently from the poster on the
+               wall of the room using it; this is that rule applied to the
+               same staff.
                Stems are forced up because VexFlow would otherwise flip them down
                on the middle line, and the lesson figures beam upward. */
             keys: ["b/4"],
@@ -100,8 +86,8 @@ export default function RhythmNotation({
         }),
       );
 
-      /* Who shares a beam is decided by the data model, not here — including
-         the 3/8 whole-bar exception. This component draws what it is told. */
+      /* Who shares a beam is decided by the data model, not here. This
+         component draws what it is told. */
       const find = (cellIndex: number, tokenIndex: number) =>
         drawn.find((entry) => entry.cellIndex === cellIndex && entry.tokenIndex === tokenIndex);
 
@@ -115,11 +101,6 @@ export default function RhythmNotation({
             prompt.cells[entry.cellIndex].notation.partialBeamDirections[entry.tokenIndex];
           if (direction) beam.setPartialBeamSideAt(position, direction === "left" ? "L" : "R");
         });
-        /* A beam that crosses a beat still has to SHOW the beat: the primary
-           runs the bar, the secondary breaks where the beats do. Empty in every
-           per-beat meter, because those runs never cross one. */
-        const breaks = secondaryBeamBreaks(run);
-        if (breaks.length > 0) beam.breakSecondaryAt([...breaks]);
         beams.push(beam);
       }
 

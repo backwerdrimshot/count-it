@@ -19,12 +19,12 @@
  *      worse than none: it is confidently wrong, and consumers act on it.
  */
 import { DEFAULT_QUESTIONS, MAX_QUESTIONS, MIN_POOL, MIN_QUESTIONS } from "./assignment";
-import { ALL_RHYTHM_CELLS, EIGHTH_BEAT_CELLS, LEVELS, METER_IDS, RHYTHM_CELLS, SPANNING_CELLS } from "./rhythm";
+import { ALL_RHYTHM_CELLS, LEVELS, METER_IDS, SPANNING_CELLS } from "./rhythm";
 
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-24.1";
+export const COUNT_IT_BUILD = "2026-08-29.1";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -53,8 +53,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "seed"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
-    "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 4/4, " +
-    "3/4 or 3/8, `guide` fixes the " +
+    "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 4/4 " +
+    "or 3/4, `guide` fixes the " +
     "subdivision-guide policy, `fb` chooses whether the correct answer appears after each " +
     "question or only at the end, `retry` chooses what trying again means, `n` and `pass` set " +
     "the length and the goal, and `seed` makes " +
@@ -66,14 +66,14 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     `after duplicates collapse, a question count outside ${MIN_QUESTIONS}–${MAX_QUESTIONS}, a ` +
     `pass mark the round cannot reach (measured against the round's real length, ${DEFAULT_QUESTIONS} ` +
     "when the link sets none), a full-measure round longer than the pool can fill without " +
-    "repeating, a meter this app does not read, a rhythm whose beat unit the chosen meter does " +
-    "not count, an unrecognized feedback or retry setting, or a counting system this app does " +
+    "repeating, a meter this app does not read, " +
+    "an unrecognized feedback or retry setting, or a counting system this app does " +
     "not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
     "assignment nobody set.",
   roundLengthRule:
     "A full-measure round never repeats a measure, so a pool of k ONE-BEAT rhythms can fill at " +
-    "most k^(beats per bar) questions: two rhythms make 16 in 4/4 and 8 in 3/4 or 3/8. A pool " +
+    "most k^(beats per bar) questions: two rhythms make 16 in 4/4 and 8 in 3/4. A pool " +
     "holding a whole or half note makes FEWER, because one cell fills several beats, and the " +
     "ceiling is computed from the pool's real spans rather than from its size. Asking for " +
     "more is refused at the link rather than while the round is being built — the shape of " +
@@ -82,13 +82,6 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
      hand depends on them, which makes a rename a breaking change to every
      assignment already posted in a classroom. */
   rhythmCellIds: ALL_RHYTHM_CELLS.map((cell) => cell.id),
-  /* Which beat each id counts, because the two families are not interchangeable
-     and a link mixing them is refused. Published rather than left to be
-     inferred from the name: `eighths` is a QUARTER beat filled with two eighths
-     and `eighth-beat` is an eighth-note beat, which is exactly the confusion a
-     hand-written link would make. */
-  quarterBeatCellIds: RHYTHM_CELLS.map((cell) => cell.id),
-  eighthBeatCellIds: EIGHTH_BEAT_CELLS.map((cell) => cell.id),
   /* Rhythms that last longer than one beat, with the beats each one spans.
      Published separately because they change what a LINK can ask for: they are
      legal only in `scope=measure`, and a pool containing them fills a bar by
@@ -105,12 +98,13 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "measure containing one contains nothing else and has no count to ask for.",
   meters: METER_IDS,
   meterStatus:
-    "4/4, 3/4 and 3/8. A meter is chosen per link and defaults to 4/4, so every assignment " +
+    "4/4 and 3/4. A meter is chosen per link and defaults to 4/4, so every assignment " +
     "written before meters existed means what it meant and generates the identical round. " +
-    "3/4 reuses the whole quarter-beat vocabulary unchanged — same beat, one fewer of them. " +
-    "3/8 counts an eighth-note beat and has its own four-rhythm vocabulary, and its bars beam " +
-    "across the whole measure, matching the Rhythms in Three lesson and the Theory Reference " +
-    "poster rather than this app's own per-beat house rule.",
+    "3/4 reuses the whole vocabulary unchanged — same quarter-note beat, one fewer of them per " +
+    "bar. 3/8 was supported from 2026-08-24.1 to 2026-08-29.1 and then removed toward an app " +
+    "of its own: a link naming meter=3-8, or any of the retired eighth-beat cell ids " +
+    "(eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a " +
+    "plain-language message rather than repaired.",
   levels: LEVELS.map((level) => level.id),
   countingSystems: ["standard"],
   countingSystemStatus:
@@ -180,12 +174,10 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   },
   teachingSequence: "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
   limitations: [
-    "Whole, half, quarter, eighth and sixteenth values in 4/4, 3/4 and 3/8. A whole note needs " +
+    "Whole, half, quarter, eighth and sixteenth values in 4/4 and 3/4. A whole note needs " +
       "four beats and so appears in 4/4 only; a half note needs two and appears in 4/4 and 3/4.",
-    "No triplets, compound meter, or ties across beats. 3/8 here is a simple meter counted in " +
-      "three, not 6/8 or any other compound meter.",
-    "Levels 1-3 describe how a quarter-note beat subdivides, so they do not apply in 3/8: a " +
-      "3/8 round draws its whole four-rhythm vocabulary at every level.",
+    "No triplets, compound meter, or ties across beats.",
+    "No eighth-note-beat meters: 3/8 was removed in 2026-08-29.1 and is planned as its own app.",
     "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Standard American counting only in this release.",

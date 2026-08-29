@@ -40,29 +40,19 @@ import {
    repeats a measure, so the pool sets a ceiling the control cannot see. */
 function practiceCount(level: LevelId, meter: MeterId, scope: QuestionScope): number {
   if (scope !== "measure") return 12;
-  const { beatUnit, beatsPerMeasure } = getMeter(meter);
-  const pool = getCellsForLevel(level, beatUnit);
+  const { beatsPerMeasure } = getMeter(meter);
+  const pool = getCellsForLevel(level);
   return Math.max(1, Math.min(12, uniqueMeasures(pool, beatsPerMeasure)));
 }
 
 const SCOPES: readonly QuestionScope[] = ["beat", "measure"];
 
-/* The pairs the setup panel can actually reach.
- *
- * This file enumerates CONTROLS rather than cases, which only means anything
- * while the list matches what the panel offers. 3/8 asks whole bars only — a
- * one-beat question there is a third of a measure and cannot be drawn as one —
- * so the panel disables that size, the link parser refuses it, and a test that
- * went on asserting it builds would be testing a state no student can enter.
- *
- * Read from the meter rather than listed here, so a fourth meter is covered
- * the day it is added and this stays a description of the app instead of a
- * second opinion about it. */
+/* The pairs the setup panel can actually reach: every meter offers both
+ * question sizes. Built from the app's own exports, so a third meter is
+ * covered the day it is added and this stays a description of the app instead
+ * of a second opinion about it. */
 const REACHABLE: readonly { meter: MeterId; scope: QuestionScope }[] = METER_IDS.flatMap((meter) =>
-  SCOPES.filter((scope) => scope === "measure" || getMeter(meter).allowsBeatScope).map((scope) => ({
-    meter,
-    scope,
-  })),
+  SCOPES.map((scope) => ({ meter, scope })),
 );
 
 describe("every state the setup panel can reach", () => {
@@ -143,7 +133,6 @@ describe("every state the setup panel can reach", () => {
     const failures: string[] = [];
     for (const meter of METER_IDS) {
       for (const scope of SCOPES) {
-        if (scope === "beat" && !getMeter(meter).allowsBeatScope) continue;
         const where = `${meter} · ${scope}`;
         try {
           generateQuestions({

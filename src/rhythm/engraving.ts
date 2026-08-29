@@ -1,17 +1,14 @@
-import { getMeter } from "./meter";
 import type { PartialBeamDirection, RhythmCell, RhythmPrompt } from "./types";
 
-/* Renamed from `count-it-4-4-beginner-v1` when the app stopped being 4/4 only.
-   The version is part of the reviewed baseline's identity, so widening what it
-   covers is a new version rather than the same name meaning more. The 4/4 and
-   3/4 rows below are the 2026-07-20 baseline unchanged; the eighth-beat rows
-   are new and carry their own review date — see the sign-off table in
-   docs/notation-engraving-standard.md. The eighth-beat rendering was reviewed
-   on /notation-audit and approved 2026-08-24; the independent-musician and
+/* The version is part of the reviewed baseline's identity, so changing what it
+   covers is a new version rather than the same name meaning more. v1 was 4/4
+   only; v2 added 3/4 and the 3/8 eighth-beat family; v3 removed 3/8 again
+   (2026-08-29 — the meter moved out toward an app of its own) and covers the
+   quarter-beat meters. The rows below are the 2026-07-20 baseline unchanged —
+   narrowing the standard re-reviewed nothing. The independent-musician and
    classroom-display reviews were pending before this work and still are. */
-export const ENGRAVING_STANDARD_VERSION = "count-it-simple-meters-beginner-v2";
+export const ENGRAVING_STANDARD_VERSION = "count-it-quarter-meters-beginner-v3";
 export const ENGRAVING_REVIEW_DATE = "2026-07-20";
-export const EIGHTH_BEAT_REVIEW_DATE: string | null = "2026-08-24";
 
 export interface EngravingExpectation {
   readonly beamGroups: readonly (readonly number[])[];
@@ -66,12 +63,6 @@ export const ENGRAVING_EXPECTATIONS: Readonly<Record<string, EngravingExpectatio
     "two-rest": expectation([[0, 1]], [], "The opening sixteenth pair is beamed before the eighth rest."),
     "rest-two": expectation([[1, 2]], [], "The closing sixteenth pair is beamed after the eighth rest."),
 
-    /* The eighth-beat family, for 3/8. Within a beat these follow the same
-       house rules as everything above: a beam joins adjacent sounding notes
-       and never crosses a rest. What differs happens one level up, in the
-       measure renderer, where 3/8 beams the whole bar as one group. That
-       exception is recorded in MEASURE_BEAM_POLICY below rather than here,
-       because it is a property of the meter and not of any cell. */
     /* Notes that last longer than a beat. Nothing to beam and nothing to dot:
        a beam joins notes, and these ARE one note held across beats. The whole
        engraving question they raise is handled one level up, by the measure
@@ -79,31 +70,6 @@ export const ENGRAVING_EXPECTATIONS: Readonly<Record<string, EngravingExpectatio
     half: expectation([], [], "A half note holds two beats and carries no beam."),
     "half-rest": expectation([], [], "A half rest sits on the middle line for two beats and carries no beam."),
     whole: expectation([], [], "A whole note holds the bar and carries no beam."),
-
-    "eighth-beat": expectation([], [], "A lone eighth fills the 3/8 beat and carries no beam of its own."),
-    "two-sixteenths": expectation([[0, 1]], [], "The two sixteenths dividing the beat share one beam."),
-    "sixteenth-rest": expectation([], [], "The sounding sixteenth keeps its flags; the following rest is not beamed."),
-    "rest-sixteenth": expectation([], [], "The entering sixteenth keeps its flags; the preceding rest is not beamed."),
-  });
-
-/* Why a beam may cross a beat, in one meter only.
- *
- * The house rule everywhere else is that a beam stays inside its beat, and the
- * measure renderer has never made a cross-beat beam. 3/8 is the exception, and
- * this app did not decide it: the Rhythms in Three lesson teaches it and the
- * Theory Reference poster prints it — "in 3/8 the whole bar beams as one
- * group, because at that level the measure itself is the unit — a fast 3/8 is
- * often felt as one pulse per bar rather than three."
- *
- * The rule is stated as data so the renderer reads it instead of testing the
- * meter id inline, and so a test can assert the exception exists in exactly
- * one meter. Rests still break a beam: a bar with a rest in it beams the
- * sounding runs on either side, which is the same rule as everywhere else. */
-export const MEASURE_BEAM_POLICY: Readonly<Record<string, "per-beat" | "whole-measure">> =
-  Object.freeze({
-    "4-4": "per-beat",
-    "3-4": "per-beat",
-    "3-8": "whole-measure",
   });
 
 /** One note as it will be drawn, addressed by the cell and token it came from. */
@@ -114,91 +80,17 @@ export interface BeamMember {
 
 /* Which notes share a beam, for a whole prompt.
  *
- * This was inline in the React effect that drives VexFlow, which meant the one
- * piece of engraving this app decides at RENDER time — rather than reading off
- * a reviewed per-cell expectation — was the only piece no test could reach. It
- * is the 3/8 whole-bar beam, i.e. exactly the rule that breaks the house style,
- * so it was the last thing that should have been untestable.
- *
- * Per-beat meters return each cell's reviewed beam groups unchanged. 3/8
- * returns maximal runs of adjacent beamable sounding notes ACROSS the bar. A
- * rest ends a run in both cases — the house style has never beamed across one
- * and nothing about 3/8 changes that — and a run of one note keeps its flags. */
+ * Every meter beams per beat, so this returns each cell's reviewed beam groups
+ * unchanged — the renderer never decides engraving at render time, it reads a
+ * reviewed expectation. (The one meter that beamed across its bar, 3/8, moved
+ * out 2026-08-29; the whole-bar run builder and the secondary-beam breaks it
+ * needed left with it.) */
 export function measureBeamRuns(prompt: RhythmPrompt): readonly (readonly BeamMember[])[] {
-  const meter = getMeter(prompt.meter);
-  const wholeMeasure =
-    prompt.scope === "measure" && MEASURE_BEAM_POLICY[meter.id] === "whole-measure";
-
-  if (!wholeMeasure) {
-    return Object.freeze(
-      prompt.cells.flatMap((cell, cellIndex) =>
-        cell.notation.beamGroups.map((group) =>
-          Object.freeze(group.map((tokenIndex) => Object.freeze({ cellIndex, tokenIndex }))),
-        ),
+  return Object.freeze(
+    prompt.cells.flatMap((cell, cellIndex) =>
+      cell.notation.beamGroups.map((group) =>
+        Object.freeze(group.map((tokenIndex) => Object.freeze({ cellIndex, tokenIndex }))),
       ),
-    );
-  }
-
-  const runs: BeamMember[][] = [];
-  let run: BeamMember[] = [];
-  const flush = () => {
-    if (run.length > 1) runs.push(run);
-    run = [];
-  };
-  prompt.cells.forEach((cell, cellIndex) => {
-    cell.notation.tokens.forEach((token, tokenIndex) => {
-      if (token.rest || token.duration === "4") flush();
-      else run.push({ cellIndex, tokenIndex });
-    });
-  });
-  flush();
-  return Object.freeze(
-    runs.map((entries) => Object.freeze(entries.map((entry) => Object.freeze(entry)))),
-  );
-}
-
-/* NOT settable from here: which way a lone note's stub points.
- *
- * Once the secondary breaks at the beat, a note can be alone at that level and
- * draw a stub instead of a beam. Which way it points decides which beat it
- * READS as, so it matters — and VexFlow 5 consults setPartialBeamSideAt only
- * for a short note flanked by two LONGER ones (beam.ts, the `S` guard). Every
- * note in a 3/8 run is a sixteenth, so the hook is never reached and the
- * library falls back to "last note in the run stubs left".
- *
- * That is why the audit sheet now carries a card for the case rather than a
- * fix: 3/8 — a beat that sounds then rests. Its middle beat opens with a
- * sixteenth whose partner is a rest, and the stub points back into beat one.
- * Whether that is acceptable, or whether such a note should carry a flag and
- * no beam at all, is an engraving decision for the review, not one to make
- * silently in a renderer. A tried-and-reverted setPartialBeamSideAt call is
- * recorded here so the next person does not spend the afternoon on it. */
-
-/* Where the SECONDARY beam breaks inside a run.
- *
- * The whole-bar rule above is about the PRIMARY beam, and applying it to both
- * levels is what shipped: a 3/8 bar of six sixteenths drew one unbroken
- * primary AND one unbroken secondary across all six, so the three beats
- * vanished into an undifferentiated run. The audit card asked the reviewer
- * "six sixteenths under ONE beam across the bar, not three beams of two?" —
- * which the drawing satisfied, because the question offered two options and
- * the correct engraving is the third: one primary across the bar, secondary
- * broken into three pairs.
- *
- * That is the standard sub-grouping rule, and here it is also the lesson's
- * own — "the beams tell you where the beats are" — on a page whose figure only
- * ever showed three PLAIN eighths, the one case with no secondary beam at all
- * and so the one case that could not reveal this. The poster prints no
- * sixteenth in 3/8 either. Nothing was contradicted by breaking it; the
- * unbroken version was an extrapolation nobody wrote down.
- *
- * Returned as indexes WITHIN the run, naming the note after which the break
- * falls, which is what VexFlow's breakSecondaryAt takes. Per-beat meters need
- * none: their runs never cross a beat, so there is nothing to break. */
-export function secondaryBeamBreaks(run: readonly BeamMember[]): readonly number[] {
-  return Object.freeze(
-    run.flatMap((member, index) =>
-      index < run.length - 1 && run[index + 1].cellIndex !== member.cellIndex ? [index] : [],
     ),
   );
 }
@@ -224,8 +116,7 @@ export function getDottedTokenIndexes(cell: RhythmCell): readonly number[] {
  * review, no review without a cell — and worked only while there was exactly
  * one catalog. `validateCatalog` is also called on SUBSETS (a level's
  * vocabulary, a link's explicit pool), where "every expectation has a cell" is
- * not a fact about the subset and failed on a correct catalog the moment a
- * second beat family existed.
+ * not a fact about the subset and fails on a correct catalog.
  *
  * So: every cell handed here must have a reviewed expectation, checked on
  * whatever set is passed. And separately, no expectation may sit unused across

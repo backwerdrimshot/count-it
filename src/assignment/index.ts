@@ -107,8 +107,6 @@ export interface AssignmentError {
     | "level"
     | "scope"
     | "meter"
-    | "meter-cells"
-    | "meter-scope"
     | "scope-cells"
     | "system"
     | "feedback"
@@ -383,59 +381,7 @@ export function parseAssignment(search: string): AssignmentResult {
      round under the assignment's stated conditions. Rejecting the link is the
      same rule as every other check in this file: a round that cannot be built
      as written is not repaired into a different one. */
-  /* A rhythm belongs to a beat family, and the meter says which family the bar
-     is made of. An eighth-beat rhythm in a 3/4 link is not a harder round, it
-     is a bar that does not add up — so it is refused at the link with the ids
-     named, on the same rule as every other check here: a round that cannot be
-     built as written is not repaired into a different one. */
   const activeMeter = getMeter(meter ?? DEFAULT_METER);
-
-  /* A meter that asks whole bars only refuses a one-beat link.
-   *
-   * In 3/8 the beat IS an eighth, so a one-beat question is a third of a
-   * measure and no honest way to draw it exists: closing the barline claims a
-   * complete bar the arithmetic denies, and leaving it open draws a 3/8
-   * signature trailing into empty space. The meter beams across its whole bar
-   * because the bar is the unit; asking a third of it worked against that.
-   *
-   * Refused at the link rather than quietly promoted to a measure, on the same
-   * rule as every other check here: a round that cannot be built as written is
-   * not repaired into a different one. */
-  if (scope === "beat" && !activeMeter.allowsBeatScope) {
-    return {
-      ok: false,
-      error: {
-        code: "meter-scope",
-        entry: activeMeter.id,
-        message:
-          `${activeMeter.label} counts ${activeMeter.beatUnit === "8" ? "an eighth" : "a quarter"}-note beat, ` +
-          `so a one-beat question would show a third of a bar. This practice link needs to ask ` +
-          "one measure. The link needs to be fixed before it can be used.",
-      },
-    };
-  }
-
-  if (cells) {
-    const wrongFamily = cells.filter(
-      (id) => getRhythmCell(id).beatUnit !== activeMeter.beatUnit,
-    );
-    if (wrongFamily.length > 0) {
-      return {
-        ok: false,
-        error: {
-          code: "meter-cells",
-          entry: wrongFamily[0],
-          message:
-            `${wrongFamily.length === 1 ? "The rhythm" : "The rhythms"} ` +
-            `${wrongFamily.map((id) => `“${id}”`).join(", ")} in this practice link ` +
-            `${wrongFamily.length === 1 ? "counts" : "count"} a ` +
-            `${activeMeter.beatUnit === "4" ? "eighth" : "quarter"}-note beat, and ` +
-            `${activeMeter.label} counts ${activeMeter.beatUnit === "4" ? "quarter" : "eighth"}-note ` +
-            "beats. The link needs to be fixed before it can be used.",
-        },
-      };
-    }
-  }
 
   /* A rhythm that lasts longer than a beat cannot be a one-beat question.
      The generator drops such cells in beat scope, which is right for the app's
@@ -466,7 +412,7 @@ export function parseAssignment(search: string): AssignmentResult {
   if (scope === "measure") {
     const pool = cells
       ? cells.map((id) => getRhythmCell(id))
-      : getCellsForLevel(level, activeMeter.beatUnit);
+      : getCellsForLevel(level);
     const available = uniqueMeasures(pool, activeMeter.beatsPerMeasure);
     const wanted = count ?? DEFAULT_QUESTIONS;
     if (available < wanted) {
