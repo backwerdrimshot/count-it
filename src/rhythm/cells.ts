@@ -1,8 +1,6 @@
 import { formatCounts } from "./counting";
 import type {
-  BeatUnit,
   CountingSystemId,
-  PartialCount,
   DistractorCategory,
   LevelDefinition,
   LevelId,
@@ -78,28 +76,22 @@ function buildCell(
   beamGroups: readonly (readonly number[])[],
   explanation: string,
   partialBeamDirections: RhythmCell["notation"]["partialBeamDirections"] = {},
-  beatUnit: BeatUnit = "4",
   beats = 1,
 ): RhythmCell {
   const minLevel = `level-${difficulty}` as LevelId;
-  const partials: PartialCount = beatUnit === "4" ? 4 : 2;
-  /* Bounded by the beat, not by the number four. An eighth beat has two
-     counted positions, so its silent positions can only be 0 and 1 — listing
-     2 and 3 as rests would describe time the beat does not contain. */
-  const restPositions = Array.from({ length: partials }, (_, position) => position).filter(
+  const restPositions = Array.from({ length: 4 }, (_, position) => position).filter(
     (position) => !activePositions.includes(position as PartialPosition),
   ) as PartialPosition[];
   const verifiedAnswers: Record<CountingSystemId, string> = {
     standard: verifiedStandardAnswer,
-    eastman: formatCounts(activePositions, 1, "eastman", partials),
-    takadimi: formatCounts(activePositions, 1, "takadimi", partials),
+    eastman: formatCounts(activePositions, 1, "eastman"),
+    takadimi: formatCounts(activePositions, 1, "takadimi"),
   };
 
   return Object.freeze({
     id,
     label,
     shortLabel,
-    beatUnit,
     beats,
     resolution,
     activePositions: Object.freeze([...activePositions]),
@@ -138,31 +130,6 @@ export const RHYTHM_CELLS: readonly RhythmCell[] = Object.freeze([
   buildCell("rest-two", "Eighth rest, two sixteenths", "& and a", 4, 3, [2, 3], "& a", [token("8", 0, true), token("16", 2), token("16", 3)], [[1, 2]], "The first half is silent, then the notes sound on & and a."),
 ]);
 
-/* The eighth-beat catalog, for 3/8.
- *
- * A separate list rather than more rows above, because these cells are not
- * harder versions of the ones above — they are the same beat written smaller.
- * The lesson makes the equivalence explicit: "in 3/8 the beat is an eighth, so
- * half a beat is a sixteenth. Same count, same sticking, same sound at the
- * same beat speed." So `eighth-beat` here is `quarter` up there, and
- * `two-sixteenths` is `eighths`, note for note and count for count.
- *
- * Four cells, not sixteen. An eighth beat divides in two, so there are only
- * four things a beat can be: sound it, split it, sound the first half, sound
- * the second half. That is the entire vocabulary — the list is short because
- * the meter is, not because it is unfinished.
- *
- * Difficulty 1 throughout, and deliberately: a student meeting 3/8 is not
- * meeting a harder subdivision, they are meeting a smaller note value for a
- * beat they can already count. Grading these 2 or 3 would hide them behind a
- * level gate that has nothing to do with what makes them unfamiliar. */
-export const EIGHTH_BEAT_CELLS: readonly RhythmCell[] = Object.freeze([
-  buildCell("eighth-beat", "Eighth note", "Eighth", 1, 1, [0], "1", [token("8", 0)], [], "The eighth note IS the beat in 3/8, so say the beat number.", {}, "8"),
-  buildCell("two-sixteenths", "Two sixteenth notes", "Two sixteenths", 2, 1, [0, 1], "1 &", [token("16", 0), token("16", 1)], [[0, 1]], "The beat splits in two: the beat itself and the & halfway through it.", {}, "8"),
-  buildCell("sixteenth-rest", "Sixteenth note, then rest", "Beat, then rest", 2, 1, [0], "1", [token("16", 0), token("16", 1, true)], [], "Only the first half sounds. Say the beat number and keep the & silent.", {}, "8"),
-  buildCell("rest-sixteenth", "Sixteenth rest, then note", "Rest, then &", 2, 1, [1], "&", [token("16", 0, true), token("16", 1)], [], "The beat is silent; the note enters on the & halfway through it.", {}, "8"),
-]);
-
 /* Notes that last longer than a beat.
  *
  * Every cell above fills exactly one beat, which is what let the whole model
@@ -191,19 +158,18 @@ export const EIGHTH_BEAT_CELLS: readonly RhythmCell[] = Object.freeze([
  * is fine because the rest of the bar still sounds, and a prompt-level check
  * refuses a bar that is silent throughout. */
 export const SPANNING_CELLS: readonly RhythmCell[] = Object.freeze([
-  buildCell("half", "Half note", "Half", 1, 1, [0], "1", [token("2", 0)], [], "The note begins on the beat and holds through the next one. Say the beat it starts on; the beat it covers is not counted.", {}, "4", 2),
-  buildCell("half-rest", "Half rest", "Half rest", 1, 1, [], "", [token("2", 0, true)], [], "Two beats of silence. Nothing is counted here — the numbers belong to the beats that sound.", {}, "4", 2),
-  buildCell("whole", "Whole note", "Whole", 1, 1, [0], "1", [token("1", 0)], [], "The note begins on the beat and holds for the whole bar. Only the beat it starts on is counted.", {}, "4", 4),
+  buildCell("half", "Half note", "Half", 1, 1, [0], "1", [token("2", 0)], [], "The note begins on the beat and holds through the next one. Say the beat it starts on; the beat it covers is not counted.", {}, 2),
+  buildCell("half-rest", "Half rest", "Half rest", 1, 1, [], "", [token("2", 0, true)], [], "Two beats of silence. Nothing is counted here — the numbers belong to the beats that sound.", {}, 2),
+  buildCell("whole", "Whole note", "Whole", 1, 1, [0], "1", [token("1", 0)], [], "The note begins on the beat and holds for the whole bar. Only the beat it starts on is counted.", {}, 4),
 ]);
 
-/* Every cell this app knows, both beat families. Order matters: `getCellsByIds`
-   returns catalog order so two links naming the same cells in either order are
-   the same round, and the quarter-beat family keeps the positions it has held
-   since the first release. */
+/* Every cell this app knows. Order matters: `getCellsByIds` returns catalog
+   order so two links naming the same cells in either order are the same round,
+   and the one-beat cells keep the positions they have held since the first
+   release. */
 export const ALL_RHYTHM_CELLS: readonly RhythmCell[] = Object.freeze([
   ...RHYTHM_CELLS,
   ...SPANNING_CELLS,
-  ...EIGHTH_BEAT_CELLS,
 ]);
 
 const CELL_BY_ID = new Map(ALL_RHYTHM_CELLS.map((cell) => [cell.id, cell]));
@@ -220,15 +186,7 @@ export function getLevel(levelId: LevelId): LevelDefinition {
   return level;
 }
 
-/* A level names a vocabulary WITHIN one beat family. Levels describe how a
-   quarter beat subdivides, which is a question an eighth beat does not ask —
-   so a 3/8 round takes the whole eighth-beat catalog at every level rather
-   than pretending the three-level ladder means something there. */
-export function getCellsForLevel(
-  levelId: LevelId,
-  beatUnit: BeatUnit = "4",
-): readonly RhythmCell[] {
-  if (beatUnit === "8") return EIGHTH_BEAT_CELLS;
+export function getCellsForLevel(levelId: LevelId): readonly RhythmCell[] {
   const level = getLevel(levelId);
   return Object.freeze(RHYTHM_CELLS.filter((cell) => cell.difficulty <= level.order));
 }

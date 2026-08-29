@@ -7,93 +7,51 @@
  * imported by nothing. A meter is a small object instead, so a second one
  * cannot be half-added.
  *
- * WHAT A METER ACTUALLY VARIES. Two things, and they are independent:
+ * WHAT A METER ACTUALLY VARIES, today: one thing.
  *
- *   beatsPerMeasure   how many beats a bar holds        4/4 → 4, 3/4 → 3, 3/8 → 3
- *   beatUnit          which written note IS the beat    4/4 and 3/4 → quarter,
- *                                                       3/8 → eighth
+ *   beatsPerMeasure   how many beats a bar holds        4/4 → 4, 3/4 → 3
  *
- * 3/4 varies only the first. The beat is still a quarter, it still divides
- * into four sixteenth partials, and every one of the sixteen catalog cells is
- * still a legal beat — which is why 3/4 costs a number and 3/8 costs a
- * vocabulary. The shop's own lesson makes the same point: "3/4 and 3/8 are two
- * spellings of the same thing... in 3/8 the beat is an eighth, so half a beat
- * is a sixteenth. Same count, same sticking, same sound at the same beat
- * speed."
+ * The beat itself is a quarter note in every meter this app reads, and it
+ * divides into four sixteenth partials. That used to be a second axis: 3/8
+ * counted an eighth-note beat with its own four-cell vocabulary, a whole-bar
+ * beaming exception, and a whole-bars-only rule. It was removed 2026-08-29 —
+ * the formatting and rule load it carried earned it an app of its own — and
+ * the beat-unit axis went with it. Git history holds the full shape of what
+ * left, should the two ever be recombined.
  *
- * TICKS. A sixteenth is one tick, everywhere, in every meter. A quarter beat is
- * therefore four ticks and an eighth beat is two. Keeping the tick a fixed
- * musical value rather than a fraction of the beat is what lets one validator
- * check both families.
- *
- * FULL-MEASURE BEAMING IN 3/8 is a deliberate exception to this app's house
- * rule that a beam never crosses a beat, and it is not this app's invention:
- * the Rhythms in Three lesson already teaches it, and the Theory Reference
- * poster already prints it. "In 3/8 the whole bar beams as one group, because
- * at that level the measure itself is the unit — a fast 3/8 is often felt as
- * one pulse per bar rather than three." An app that beamed 3/8 beat-by-beat
- * would contradict the poster on the wall of the room using it.
+ * TICKS. A sixteenth is one tick, everywhere, so a quarter beat is four ticks.
+ * Keeping the tick a fixed musical value rather than a fraction of the beat is
+ * what lets one validator check every cell the same way.
  */
-import type { BeatUnit, MeterId, PartialCount } from "./types";
+import type { MeterId } from "./types";
 
 export interface Meter {
   readonly id: MeterId;
   /** How the meter is written and spoken. Also the VexFlow time signature. */
   readonly label: string;
   readonly beatsPerMeasure: 3 | 4;
-  readonly beatUnit: BeatUnit;
-  /** Counted positions inside one beat: 4 for a quarter beat, 2 for an eighth. */
-  readonly partialsPerBeat: PartialCount;
-  /** Sixteenth-ticks one beat holds. Always partialsPerBeat, kept separate
-   *  because they answer different questions — one is notation, one is counting. */
-  readonly ticksPerBeat: PartialCount;
-  /** True where a beam is drawn across the whole bar rather than per beat. */
-  readonly beamsWholeMeasure: boolean;
-  /** VexFlow voice timing. `beatValue` is the denominator, not the beat unit. */
-  readonly vexBeatValue: 4 | 8;
-  /** Whether a one-beat question can be ASKED in this meter.
-   *
-   *  False where a beat is too small a slice of the bar to draw as one: in
-   *  3/8 the beat IS an eighth, so a one-beat prompt is a third of a measure
-   *  and the stave shows a bar with two thirds missing. The app spent a day
-   *  trying to make that read honestly — closing the barline claimed a
-   *  complete bar the arithmetic denied, and leaving it open drew a 3/8
-   *  signature trailing into empty space. Neither is a measure, because the
-   *  prompt is not one.
-   *
-   *  A meter that beams across its whole bar is saying the bar is the unit;
-   *  asking a third of it was always working against that. Stated as data so
-   *  a fourth meter declares its own answer and the refusal has one source. */
-  readonly allowsBeatScope: boolean;
+  /** Counted positions inside one beat. Every beat here is a quarter note, so
+   *  every beat holds four — the beat, e, &, and a. Kept on the meter rather
+   *  than as a loose constant so the consumers that count, grid, and distract
+   *  per position all read the same source. */
+  readonly partialsPerBeat: 4;
+  /** VexFlow voice timing. `beatValue` is the time signature's denominator. */
+  readonly vexBeatValue: 4;
 }
 
-function meter(
-  id: MeterId,
-  beatsPerMeasure: 3 | 4,
-  beatUnit: BeatUnit,
-  beamsWholeMeasure: boolean,
-  allowsBeatScope: boolean,
-): Meter {
-  const partialsPerBeat: PartialCount = beatUnit === "4" ? 4 : 2;
+function meter(id: MeterId, beatsPerMeasure: 3 | 4): Meter {
   return Object.freeze({
     id,
     label: id.replace("-", "/"),
     beatsPerMeasure,
-    beatUnit,
-    partialsPerBeat,
-    ticksPerBeat: partialsPerBeat,
-    beamsWholeMeasure,
-    vexBeatValue: beatUnit === "4" ? (4 as const) : (8 as const),
-    allowsBeatScope,
+    partialsPerBeat: 4 as const,
+    vexBeatValue: 4 as const,
   });
 }
 
 export const METERS: Readonly<Record<MeterId, Meter>> = Object.freeze({
-  "4-4": meter("4-4", 4, "4", false, true),
-  "3-4": meter("3-4", 3, "4", false, true),
-  /* The one meter that beams across its beats, and the one that asks whole
-     bars only. Both for the same reason: in 3/8 the bar is the unit. */
-  "3-8": meter("3-8", 3, "8", true, false),
+  "4-4": meter("4-4", 4),
+  "3-4": meter("3-4", 3),
 });
 
 export const DEFAULT_METER: MeterId = "4-4";

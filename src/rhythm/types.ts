@@ -4,11 +4,12 @@
    assumptions instead of one setting. They are properties of a Meter now —
    see ./meter.ts. */
 
-export type MeterId = "4-4" | "3-4" | "3-8";
-/** Which written note gets the beat: a quarter, or an eighth. */
-export type BeatUnit = "4" | "8";
-/** Counted positions inside one beat. A quarter beat holds four, an eighth two. */
-export type PartialCount = 2 | 4;
+/* "3-8" lived here from 2026-08-24 to 2026-08-29 and was removed deliberately:
+   an eighth-note beat brought its own four-cell vocabulary, a whole-bar beaming
+   exception, and a whole-bars-only rule, and the formatting and rule load it
+   put on this app earned it an app of its own. See git history for the full
+   shape of what left, should the two ever be recombined. */
+export type MeterId = "4-4" | "3-4";
 
 export type BeatNumber = 1 | 2 | 3 | 4;
 export type PartialPosition = 0 | 1 | 2 | 3;
@@ -36,11 +37,6 @@ export interface RhythmCell {
   readonly id: string;
   readonly label: string;
   readonly shortLabel: string;
-  /* Which beat this cell IS one of. A quarter-beat cell is legal in 4/4 and
-     3/4; an eighth-beat cell is legal in 3/8. A round mixing the two would ask
-     a student to count a bar that does not add up, so the pool is filtered by
-     this rather than by hoping a link author knows the difference. */
-  readonly beatUnit: BeatUnit;
   /* How many beats the cell SPANS. One for everything the catalog held until
      whole and half notes arrived — a half note is two beats and a whole note
      is four, and no amount of subdividing one beat can express either.

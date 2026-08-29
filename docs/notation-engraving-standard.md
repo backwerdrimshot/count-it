@@ -2,16 +2,20 @@
 
 Count It treats engraving as instructional data. Beam grouping, dots, rests, durations, sounding positions, and spoken counts must agree before a rhythm cell can ship.
 
-Current baseline: `count-it-simple-meters-beginner-v2`  
-Rules review date: 2026-07-20 (quarter-beat family)  
-Eighth-beat family review date: 2026-08-24 (owner, on the audit sheet)  
+Current baseline: `count-it-quarter-meters-beginner-v3`  
+Rules review date: 2026-07-20  
 Spanning-note family review date: **not yet reviewed**  
 Independent musician sign-off: pending
 
+v3 removed the 3/8 eighth-beat family and its whole-bar beam exception
+(2026-08-29 — eight-time is planned as an app of its own). The remaining rows
+are the 2026-07-20 baseline untouched; narrowing the standard re-reviewed
+nothing.
+
 ## House rules for the MVP
 
-- Each catalog cell fills a whole number of beats of its own family: four sixteenth-ticks per quarter-note beat (4/4, 3/4), two per eighth-note beat (3/8), times the beats it spans. Almost everything spans one; a half note spans two and a whole note four.
-- Beam groups remain inside that beat, **except in 3/8** — see "The one cross-beat beam" below.
+- Each catalog cell fills a whole number of quarter-note beats: four sixteenth-ticks per beat, times the beats it spans. Almost everything spans one; a half note spans two and a whole note four.
+- Beam groups remain inside their beat. A beam never crosses a beat or a rest.
 - Eighth notes and shorter may be beamed. Quarter notes may not.
 - The beginner baseline does not beam across rests.
 - Consecutive sounding notes use beams that expose their primary and secondary subdivision grouping.
@@ -51,30 +55,11 @@ Independent musician sign-off: pending
 
 Nothing to beam and nothing to dot: a beam joins separate notes, and these **are** one note held across beats. What a reviewer has to check is one level up — that the bar gives them the right number of beats, and that the note sits where its beat starts. The measure cards on the audit sheet are where that shows.
 
-### Eighth-beat family — reviewed 2026-08-24
-
-| Cell | Beam groups | Dotted tokens | Explicit partial beams |
-| --- | --- | --- | --- |
-| `eighth-beat` | none | none | none |
-| `two-sixteenths` | `[0, 1]` | none | none |
-| `sixteenth-rest` | none | none | none |
-| `rest-sixteenth` | none | none | none |
-
 Token indexes are local to a one-beat rhythm cell. A partial-beam direction is recorded against the original token index and translated to its position inside the VexFlow beam group at render time.
 
-## The one cross-beat beam
+## No cross-beat beam
 
-In 3/8, and only in 3/8, the measure renderer beams the whole bar as one group rather than beat by beat. This contradicts the house rule directly, so it is written down rather than left to be discovered in the renderer.
-
-**It is not this app's decision.** The Rhythms in Three lesson on backwerdrhythmshop.com already teaches it and the Theory Reference poster already prints it:
-
-> In 3/8 the whole bar beams as one group, because at that level the measure itself is the unit — a fast 3/8 is often felt as one pulse per bar rather than three.
-
-An app beaming 3/8 beat-by-beat would contradict the poster on the wall of the room using it. The exception is recorded as data in `MEASURE_BEAM_POLICY` so the renderer reads it instead of testing a meter id inline, and so a test can assert that exactly one meter takes it.
-
-**What the exception does NOT widen:** a beam still never crosses a rest. A 3/8 bar containing a rest beams the sounding runs on either side of it, which is the same rule as everywhere else.
-
-Because this is the only engraving decision made at render time rather than read from a per-cell expectation, the run-finding is a pure function — `measureBeamRuns` — rather than inline in the React effect that drives VexFlow. It was inline, which made the rule that breaks the house style the one rule no test could reach.
+There is no meter here that beams across a beat: every bar beams beat by beat, reading each cell's reviewed groups. 3/8 was the one exception — it beamed its whole bar as one group, with the secondary beam broken at the beats — and it left with the meter on 2026-08-29. `measureBeamRuns` remains the single place beam runs are assembled for a bar, so the renderer still never decides engraving inline, and a future cross-beat rule would land there deliberately rather than be discovered in a React effect.
 
 ## Automated gates
 
@@ -96,7 +81,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 
 1. Run the app locally with `pnpm dev`.
 2. Open `/notation-audit`.
-3. Review all 23 cell cards **and the measure cards** at phone, tablet, desktop, and classroom-display widths. The measure cards exist because no single-beat card can show the 3/8 whole-bar beam or prove a rest still breaks it.
+3. Review all 19 cell cards **and the measure cards** at phone, tablet, desktop, and classroom-display widths. The measure cards exist because per-beat beaming across a full bar is not visible on any single-beat card.
 4. Compare the mixed-duration and rest patterns with an independently engraved reference.
 5. Check the dotted eighth–sixteenth and sixteenth–eighth–sixteenth cells at high zoom.
 6. Confirm that the reference highlight and spoken count agree with every note attack.
@@ -109,7 +94,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 | --- | --- | --- | --- | --- |
 | Rules and implementation | Codex | 2026-07-20 | Complete | Structured expectations, explicit partial beams, tests, and audit route added. |
 | Spanning notes — half, whole, half rest | — | — | **Pending** | Three cells that last longer than a beat, which is new to this catalog. Automated gates pass. Two things need a human: that a whole note alone in a bar is placed acceptably (VexFlow left-aligns it; some engravers centre it), and that the half rest sits on the correct side of the middle line in percussion clef. |
-| Eighth-beat family and the 3/8 whole-bar beam | Owner | 2026-08-24 | Complete | Four new cells and the cross-beat beam exception, reviewed on `/notation-audit` and approved. What this row covers is the rendering as the audit sheet shows it. It does NOT cover the two rows below, which were pending before this work and still are: no comparison against an independently engraved reference, and no check at classroom-display size or on a real device. |
+| Eighth-beat family and the 3/8 whole-bar beam | Owner | 2026-08-24 | Superseded | Reviewed and approved on `/notation-audit`, then removed with the meter on 2026-08-29 — eight-time is planned as an app of its own, and this row travels with it as the record of what was signed off. |
 | Independent musician engraving review | — | — | Pending | Compare against a trusted engraved reference before public release. |
 | Real-device/classroom display review | — | — | Pending | Check phone, tablet, projector, and high zoom. |
 

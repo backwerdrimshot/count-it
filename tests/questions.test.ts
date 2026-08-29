@@ -159,23 +159,18 @@ describe("questions in three", () => {
      is none of those: it can be eliminated without reading a single notehead,
      which quietly turns a four-choice question into a three-choice one. */
   it("never offers a beat number the meter does not have", () => {
-    for (const [meter, cells] of [
-      ["3-4", ["quarter", "eighths", "sixteenths"]],
-      ["3-8", ["eighth-beat", "two-sixteenths", "rest-sixteenth"]],
-    ] as const) {
-      const questions = generateQuestions({
-        level: "level-3",
-        scope: "measure",
-        meter,
-        count: 12,
-        seed: `three-${meter}`,
-        cells: [...cells],
-      });
-      expect(questions).toHaveLength(12);
-      for (const question of questions) {
-        for (const choice of question.choices) {
-          expect(choice.label).not.toMatch(/\b4\b/);
-        }
+    const questions = generateQuestions({
+      level: "level-3",
+      scope: "measure",
+      meter: "3-4",
+      count: 12,
+      seed: "three-3-4",
+      cells: ["quarter", "eighths", "sixteenths"],
+    });
+    expect(questions).toHaveLength(12);
+    for (const question of questions) {
+      for (const choice of question.choices) {
+        expect(choice.label).not.toMatch(/\b4\b/);
       }
     }
 
@@ -185,14 +180,6 @@ describe("questions in three", () => {
        reach the last beat and roll past the end of the bar. With beats one and
        two silent on the beat, the first digit in "& | & | 3" is a 3 — and a
        wrap at four turns it into a beat this meter does not have. */
-    const offBeatOpening = createMeasurePrompt(
-      ["rest-sixteenth", "rest-sixteenth", "eighth-beat"],
-      "3-8",
-    );
-    expect(getPromptAnswer(offBeatOpening)).toBe("& | & | 3");
-    for (const distractor of generateDistractors(offBeatOpening, createSeededRandom("wrap"), 3)) {
-      expect(distractor.label).not.toMatch(/\b4\b/);
-    }
     const threeFourOpening = createMeasurePrompt(
       ["rest-eighth", "rest-eighth", "quarter"],
       "3-4",
@@ -217,10 +204,8 @@ describe("questions in three", () => {
   });
 
   it("builds bars of the right length and counts them from the right beat", () => {
-    for (const [meter, beats] of [["4-4", 4], ["3-4", 3], ["3-8", 3]] as const) {
-      const cells = meter === "3-8"
-        ? ["eighth-beat", "two-sixteenths", "rest-sixteenth"]
-        : ["quarter", "eighths", "sixteenths"];
+    for (const [meter, beats] of [["4-4", 4], ["3-4", 3]] as const) {
+      const cells = ["quarter", "eighths", "sixteenths"];
       const questions = generateQuestions({
         level: "level-3", scope: "measure", meter, count: 6, seed: `bars-${meter}`, cells,
       });
@@ -262,21 +247,22 @@ describe("the measure ceiling is a real ceiling", () => {
      three-beat bar the same two rhythms make EIGHT, and asking for twelve
      throws inside the generator.
 
-     This shipped. Seventy-nine tests passed and a valid 3/8 assignment link
-     white-screened the app, because every test here asked for a round the pool
-     could fill. The generator was never the thing at fault; the caller was. */
+     This shipped. Seventy-nine tests passed and a valid three-beat assignment
+     link white-screened the app, because every test here asked for a round the
+     pool could fill. The generator was never the thing at fault; the caller
+     was. */
   it("throws rather than repeating when a three-beat pool cannot fill the round", () => {
-    const twoCells = ["eighth-beat", "two-sixteenths"];
+    const twoCells = ["quarter", "eighths"];
     expect(uniqueMeasures(getCellsByIds(twoCells), 3)).toBe(8);
     expect(() =>
       generateQuestions({
-        level: "level-1", scope: "measure", meter: "3-8", count: 12,
+        level: "level-1", scope: "measure", meter: "3-4", count: 12,
         seed: "over", cells: twoCells,
       }),
     ).toThrow(/non-repeating/);
     /* Eight is exactly fillable, and every measure is distinct. */
     const full = generateQuestions({
-      level: "level-1", scope: "measure", meter: "3-8", count: 8,
+      level: "level-1", scope: "measure", meter: "3-4", count: 8,
       seed: "exact", cells: twoCells,
     });
     expect(new Set(full.map((q) => q.prompt.cells.map((c) => c.id).join("+"))).size).toBe(8);
@@ -290,8 +276,7 @@ describe("the measure ceiling is a real ceiling", () => {
     for (const [meter, beats, pool] of [
       ["4-4", 4, ["quarter", "eighths"]],
       ["3-4", 3, ["quarter", "eighths"]],
-      ["3-8", 3, ["eighth-beat", "two-sixteenths"]],
-      ["3-8", 3, ["eighth-beat", "two-sixteenths", "sixteenth-rest"]],
+      ["3-4", 3, ["quarter", "eighths", "eighth-rest"]],
     ] as const) {
       const ceiling = uniqueMeasures(getCellsByIds([...pool]), beats);
       const wanted = Math.min(12, ceiling);
@@ -305,46 +290,15 @@ describe("the measure ceiling is a real ceiling", () => {
   });
 });
 
-describe("a question offers as many choices as the meter can distinguish", () => {
-  /* A beat with P counted positions can be filled 2^P - 1 ways. An eighth beat
-     has two, so a ONE-BEAT question in 3/8 has three possible answers in total
-     and at most two wrong ones. Asking for three threw, and the ask sits under
-     a useMemo — so choosing 3/8 in free practice was a white screen.
-
-     This is the SECOND crash of exactly this shape: a fixed number that was
-     only ever safe because every bar had four beats. The first was the
-     twelve-prompt practice round. Both were reachable from the UI and neither
-     was reachable from a test, because every test named its own vocabulary. */
-  it("builds a 3/8 one-beat round from the whole eighth-beat vocabulary", () => {
-    const questions = generateQuestions({
-      level: "level-3", scope: "beat", meter: "3-8", count: 12, seed: "free-practice",
-    });
-    expect(questions).toHaveLength(12);
-    for (const question of questions) {
-      /* Three choices, not four, and every one distinct. Padding to four would
-         mean repeating an option, which is worse than offering three. */
-      expect(question.choices).toHaveLength(3);
-      expect(new Set(question.choices.map((c) => c.label)).size).toBe(3);
-      expect(question.choices.filter((c) => c.isCorrect)).toHaveLength(1);
-    }
-    /* The cell whose only sound is off the beat is the one that ran out: its
-       answer carries no digit, so the wrong-beat-number distractor cannot be
-       built from it either. */
-    const offBeat = generateQuestions({
-      level: "level-3", scope: "beat", meter: "3-8", count: 4,
-      seed: "off-beat", cells: ["rest-sixteenth", "sixteenth-rest"],
-    });
-    for (const question of offBeat) expect(question.choices.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it("still offers four choices everywhere the meter allows it", () => {
-    /* The strictness is unchanged where the ceiling is high: 4/4 and 3/4 in
-       both scopes, and 3/8 across a whole bar, all still carry three wrong
-       answers. If this ever drops, the fix above has leaked. */
+describe("every question carries three wrong answers", () => {
+  /* Four choices, everywhere. A quarter beat has four counted positions, so
+     even a one-beat question can be filled fifteen ways and three distinct
+     wrong answers always exist. (The one meter that could not manage four
+     choices, 3/8 in beat scope, was removed 2026-08-29.) */
+  it("offers four choices in every meter and scope", () => {
     for (const [meter, scope] of [
       ["4-4", "beat"], ["4-4", "measure"],
       ["3-4", "beat"], ["3-4", "measure"],
-      ["3-8", "measure"],
     ] as const) {
       const questions = generateQuestions({
         level: "level-3", scope, meter, count: 6, seed: `wide-${meter}-${scope}`,

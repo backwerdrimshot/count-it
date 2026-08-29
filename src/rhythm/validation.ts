@@ -1,6 +1,6 @@
 import { formatCounts } from "./counting";
 import { validateEngravingCatalog } from "./engraving";
-import type { CountingSystemId, PartialCount, RhythmCell } from "./types";
+import type { CountingSystemId, RhythmCell } from "./types";
 
 const systems: readonly CountingSystemId[] = ["standard", "eastman", "takadimi"];
 
@@ -24,7 +24,7 @@ export function validateRhythmCell(cell: RhythmCell): void {
   if (!Number.isInteger(cell.beats) || cell.beats < 1) {
     throw new TypeError(`${cell.id} must span a whole number of beats.`);
   }
-  const partials: PartialCount = cell.beatUnit === "4" ? 4 : 2;
+  const partials = 4;
   if (
     cell.activePositions.some(
       (position) => !Number.isInteger(position) || position < 0 || position >= partials,
@@ -38,11 +38,7 @@ export function validateRhythmCell(cell: RhythmCell): void {
     throw new TypeError(`${cell.id} sounding positions must be ordered.`);
   }
   /* Resolution is how many EQUAL parts of its beat a cell uses, so the legal
-     positions are the multiples of partials/resolution. The old form of this
-     rule tested `position % 2` and `position !== 0` against a hardcoded
-     four-partial beat, which silently accepted anything once an eighth beat
-     existed: on a two-partial beat every position is even, so a resolution-2
-     rule caught nothing. Same semantics, stated as arithmetic. */
+     positions are the multiples of partials/resolution. */
   if (cell.resolution > partials) {
     throw new TypeError(`${cell.id} claims a finer resolution than its beat divides into.`);
   }
@@ -51,15 +47,13 @@ export function validateRhythmCell(cell: RhythmCell): void {
     throw new TypeError(`${cell.id} uses positions outside its stated resolution.`);
   }
   const ticks = cell.notation.tokens.reduce((total, notationToken) => total + notationToken.ticks, 0);
-  /* A sixteenth is one tick in every meter, so a quarter beat is four ticks and
-     an eighth beat is two — times however many beats the cell spans. This is
-     the check that catches a quarter-beat cell smuggled into the eighth-beat
-     catalog, and now also a half note that claims to span three beats. */
+  /* A sixteenth is one tick, so a quarter beat is four ticks — times however
+     many beats the cell spans. This is the check that catches a half note that
+     claims to span three beats. */
   const expected = partials * cell.beats;
   if (ticks !== expected) {
-    const unit = cell.beatUnit === "4" ? "quarter" : "eighth";
     throw new TypeError(
-      `${cell.id} notation must fill exactly ${cell.beats} ${unit}-note beat${cell.beats === 1 ? "" : "s"}.`,
+      `${cell.id} notation must fill exactly ${cell.beats} quarter-note beat${cell.beats === 1 ? "" : "s"}.`,
     );
   }
   const tokenAttacks = cell.notation.tokens
@@ -83,7 +77,7 @@ export function validateRhythmCell(cell: RhythmCell): void {
     }
   }
   for (const system of systems) {
-    const expected = formatCounts(cell.activePositions, 1, system, partials);
+    const expected = formatCounts(cell.activePositions, 1, system);
     if (cell.verifiedAnswers[system] !== expected) {
       throw new TypeError(`${cell.id} has an unverified ${system} counting answer.`);
     }

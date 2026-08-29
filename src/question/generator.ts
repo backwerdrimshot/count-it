@@ -122,31 +122,6 @@ function measurePrompts(
   return prompts;
 }
 
-/* How many wrong answers a question can honestly carry.
- *
- * Three, everywhere except one place. A beat with P counted positions can be
- * filled 2^P - 1 ways, so a ONE-BEAT question in 3/8 — where an eighth beat
- * has two positions — has three possible answers in total and therefore at
- * most two wrong ones. Asking for three threw, and because the ask sits under
- * a useMemo it took the whole app down: choosing 3/8 in free practice was a
- * white screen.
- *
- * The fix is not to relax the shortfall check. It is to ask for what the meter
- * can actually distinguish: a 3/8 one-beat question is a THREE-choice
- * question, and saying so is honest where padding it with a fourth option that
- * repeats one of the other three would not be. Everywhere else the ceiling is
- * far above three, so the number and the strictness are both unchanged — 4/4
- * still asks for three and still throws if it cannot produce them. */
-function distractorTarget(prompt: RhythmPrompt): number {
-  const { partialsPerBeat } = getMeter(prompt.meter);
-  const fillsPerBeat = 2 ** partialsPerBeat - 1;
-  /* Rows, not cells: a half note contributes two beats to the grid the
-     distractors are drawn from, so the space is bigger than the cell count. */
-  const rows = prompt.cells.reduce((total, cell) => total + cell.beats, 0);
-  const answers = fillsPerBeat ** rows;
-  return Math.max(1, Math.min(3, answers - 1));
-}
-
 function buildQuestion(
   prompt: RhythmPrompt,
   index: number,
@@ -155,7 +130,7 @@ function buildQuestion(
 ): CountQuestion {
   const correctAnswer = getPromptAnswer(prompt, "standard");
   const correctChoiceId = `q${index + 1}-correct`;
-  const distractors = generateDistractors(prompt, random, distractorTarget(prompt));
+  const distractors = generateDistractors(prompt, random, 3);
   const ordered = shuffle<QuestionChoice>(
     [
       Object.freeze({ id: correctChoiceId, label: correctAnswer, category: "correct" as const, isCorrect: true }),
@@ -205,8 +180,7 @@ export function generateQuestions({
     throw new RangeError("Question count must be between 1 and 20.");
   }
   if (scope !== "beat" && scope !== "measure") throw new RangeError(`Unsupported question scope: ${scope}`);
-  const { beatUnit } = getMeter(meter);
-  let cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level, beatUnit);
+  let cells = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level);
   /* A one-beat question cannot ask a half note, so a beat-scope round drops
      them rather than throwing. Dropping is right HERE and wrong in the
      assignment layer: this is the app's own vocabulary for a scope the student
