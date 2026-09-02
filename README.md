@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-08-29.1`
+- **Build:** `2026-09-02.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -22,7 +22,7 @@ documentation.
 - **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
 - **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4 alone.
-- **Two simple meters:** 4/4 and 3/4, chosen per assignment link. 3/4 reads the same quarter-note beat as 4/4 with one fewer of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned eight-time an app of its own (planned; the two may be recombined later). A link naming `meter=3-8` or a retired eighth-beat cell id is refused with a plain-language message, never repaired.
+- **Two simple meters:** 4/4 and 3/4, chosen per assignment link. 3/4 reads the same quarter-note beat as 4/4 with one fewer of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned eight-time an app of its own — live at <https://eight-time.backwerdrhythmshop.com/> since 2026-09-02, where every 3/8 link written here generates the byte-identical round (the two may be recombined later). A link naming `meter=3-8` or a retired eighth-beat cell id is refused with a plain-language message, never repaired.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
@@ -227,14 +227,17 @@ hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
 the whole thing locally without credentials.
 
 > **Size headroom is thin, and the number moves.** Measured with
-> `wrangler deploy --dry-run --config dist/server/wrangler.json` at `2026-08-22`:
-> **2690.02 KiB, 1004.59 KiB gzipped**, up 0.09 KiB from `2026-08-08.6`
-> (1004.50 KiB) — the analytics beacon is one script tag and costs about what
-> that sounds like. Before it, `2026-08-08.6` was up 1.07 KiB from
-> `2026-08-08.5` (1003.43 KiB), itself up 2.55 KiB from the release before. The
-> figure this note carried two passes ago (995 KiB) had gone stale unnoticed,
-> which is the failure mode a hand-copied number has. Re-measure here on every
-> release rather than trusting the line above it.
+> `wrangler deploy --dry-run --config dist/server/wrangler.json` at `2026-09-02`:
+> **2707.08 KiB, 1010.08 KiB gzipped**, up 5.49 KiB from the `2026-08-22`
+> measurement (1004.59 KiB) across two releases — and a correction to the
+> intuition that removing 3/8 in `2026-08-29.1` would shrink the bundle: that
+> release shipped without re-measuring, and the catalog turns out to be cheap
+> next to the shared frame, so the app has only grown. (Eight Time, carrying
+> the four-cell catalog on the same frame, weighs 1009.13 KiB — the two apps
+> are within a kilobyte of each other.) The figure this note once carried
+> (995 KiB) had gone stale unnoticed, which is the failure mode a hand-copied
+> number has. Re-measure here on every release rather than trusting the line
+> above it.
 >
 > Against the 1 MiB (1024 KiB) Workers script limit on the free plan that leaves
 > roughly 20 KiB. **Confirm the plan's real ceiling in the Cloudflare dashboard

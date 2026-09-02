@@ -63,7 +63,7 @@ A link that names no meter means 4/4, and generates the identical round it alway
 
 ### The retired eighth-beat catalog (3/8)
 
-3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed. It counted an **eighth-note** beat, which brought a separate four-cell vocabulary (`eighth-beat`, `two-sixteenths`, `sixteenth-rest`, `rest-sixteenth`), a whole-bar beaming exception, a whole-bars-only question rule, and a beat-family check on every link. That formatting and rule load earned eight-time an app of its own (planned; the two may be recombined later — git history holds the full shape of what left).
+3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed. It counted an **eighth-note** beat, which brought a separate four-cell vocabulary (`eighth-beat`, `two-sixteenths`, `sixteenth-rest`, `rest-sixteenth`), a whole-bar beaming exception, a whole-bars-only question rule, and a beat-family check on every link. That formatting and rule load earned eight-time an app of its own — live at `eight-time.backwerdrhythmshop.com` since 2026-09-02, generating the byte-identical round from every 3/8 link written here (the two may be recombined later — git history holds the full shape of what left).
 
 The four retired ids stay retired: a link naming any of them, or `meter=3-8`, is refused with a plain-language message rather than repaired, and a future cell must not reuse the names — an old link would quietly come to mean something new.
 
