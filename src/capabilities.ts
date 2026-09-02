@@ -24,7 +24,7 @@ import { ALL_RHYTHM_CELLS, LEVELS, METER_IDS, SPANNING_CELLS } from "./rhythm";
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-29.1";
+export const COUNT_IT_BUILD = "2026-09-02.1";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
@@ -101,10 +101,11 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "4/4 and 3/4. A meter is chosen per link and defaults to 4/4, so every assignment " +
     "written before meters existed means what it meant and generates the identical round. " +
     "3/4 reuses the whole vocabulary unchanged — same quarter-note beat, one fewer of them per " +
-    "bar. 3/8 was supported from 2026-08-24.1 to 2026-08-29.1 and then removed toward an app " +
-    "of its own: a link naming meter=3-8, or any of the retired eighth-beat cell ids " +
-    "(eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a " +
-    "plain-language message rather than repaired.",
+    "bar. 3/8 was supported from 2026-08-24.1 to 2026-08-29.1 and then moved to Eight Time, " +
+    "this app's sibling, which generates the byte-identical round from any 3/8 link written " +
+    "here: a link naming meter=3-8, or any of the retired eighth-beat cell ids (eighth-beat, " +
+    "two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a plain-language " +
+    "message rather than repaired.",
   levels: LEVELS.map((level) => level.id),
   countingSystems: ["standard"],
   countingSystemStatus:
@@ -169,6 +170,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "own canonical link, and the ordering string is random and meaningless outside this " +
     "browser. The visit counter is progressive enhancement and its absence changes nothing.",
   siblingApps: {
+    "eight-time": "https://eight-time.backwerdrhythmshop.com/",
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
     "scale-trail": "https://scale-trail.backwerdrhythmshop.com/",
   },
@@ -177,7 +179,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Whole, half, quarter, eighth and sixteenth values in 4/4 and 3/4. A whole note needs " +
       "four beats and so appears in 4/4 only; a half note needs two and appears in 4/4 and 3/4.",
     "No triplets, compound meter, or ties across beats.",
-    "No eighth-note-beat meters: 3/8 was removed in 2026-08-29.1 and is planned as its own app.",
+    "No eighth-note-beat meters: 3/8 was removed in 2026-08-29.1 and lives in Eight Time, this app's sibling.",
     "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Standard American counting only in this release.",
