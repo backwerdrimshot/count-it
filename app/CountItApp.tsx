@@ -368,7 +368,7 @@ function PracticeMode({
         <div className="reference-panel">
           <div className="mini-heading">
             <span>Complete subdivision</span>
-            <small>{revealed ? "Orange counts match sounding notes." : "Use the guide to locate each note."}</small>
+            <small>{revealed ? "Green counts match sounding notes." : "Use the guide to locate each note."}</small>
           </div>
           <CountReference prompt={prompt} revealSounding={revealed} />
         </div>

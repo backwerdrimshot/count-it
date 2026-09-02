@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-08-29.1",
+  "version": "2026-09-02.2",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
