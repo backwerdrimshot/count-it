@@ -24,7 +24,7 @@ import { ALL_RHYTHM_CELLS, LEVELS, METER_IDS, SPANNING_CELLS } from "./rhythm";
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-08-29.1";
+export const COUNT_IT_BUILD = "2026-09-02.2";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.0.0",
