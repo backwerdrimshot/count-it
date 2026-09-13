@@ -1,0 +1,80 @@
+name: Deploy to Cloudflare Workers
+
+# A merge to main publishes — but only a commit that CI has already passed.
+#
+# This replaces the Cloudflare Workers Git integration, which published this
+# Worker from the dashboard. That arrangement deployed correctly; what it cost
+# was visibility. The build command, the branch it watched and the credentials
+# it used were all settings in a web console, so nothing in this repository
+# stated how its own app reached production, and the only trace here was a
+# check whose logs the repository could not read. A sibling in this family sat
+# with that check failing in under a second on every pull request for weeks
+# before anyone worked out why, because the failure had nowhere to be seen.
+#
+# The deploy now lives next to the thing it deploys, and it is gated: nothing
+# reaches production unless "Validate" went green on that exact commit, and the
+# checkout below pins that commit rather than whatever main happens to be by
+# the time this runs.
+on:
+  workflow_run:
+    workflows: ["Validate"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-workers-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # A failed or cancelled CI run must not publish. A manual dispatch is an
+    # explicit human decision and carries no workflow_run to inspect.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: cloudflare-workers-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Deploy the commit CI validated. On workflow_run the default is the
+          # branch tip, which can already have moved past it.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Require Cloudflare credentials
+        # Fail here, naming the missing secret, rather than several minutes
+        # later inside wrangler with an authentication error that reads like a
+        # revoked token.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?not set for the cloudflare-workers-production environment}"
+          : "${CLOUDFLARE_ACCOUNT_ID:?not set for the cloudflare-workers-production environment}"
+      - name: Validate
+        # The same gate CI ran, re-run rather than trusted. `check` runs the
+        # unit suite and then test:render, which builds and asserts over the
+        # rendered HTML — so this also produces the dist/ that deploys.
+        run: pnpm check
+      - name: Deploy
+        # vinext writes dist/server/wrangler.json at build time and takes the
+        # Worker name from package.json. --name pins the Worker this actually
+        # deploys to, in the repository, rather than leaving it to a filename
+        # matching by luck: the dashboard integration this replaces deployed to
+        # the Worker it was attached to and ignored that field entirely.
+        run: pnpm exec wrangler deploy --config dist/server/wrangler.json --name count-it
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

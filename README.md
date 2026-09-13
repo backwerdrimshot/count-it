@@ -185,12 +185,18 @@ The public build is at `count-it.backwerdrhythmshop.com`, and as of
 audit, which runs on GitHub Actions where that domain is reachable and reported
 `now shipped` for this app.
 
-**Publishing is configured in Cloudflare, outside this repository.** There is no
-deploy workflow here and none is wanted: the Workers Git integration is
-configured dashboard-side and is not visible from git. That has one consequence
-worth internalising — **you cannot tell from this repo whether a merge
-published.** Check the Cloudflare dashboard, or run the site repo's **Link
-audit** workflow, which fetches the live origin and reports what it finds.
+**Publishing lives in this repository, and a merge ships once CI is green.**
+`.github/workflows/workers.yml` runs on a successful **Validate** run against
+`main`, re-runs `pnpm check`, and deploys the commit CI validated — not whatever
+`main` has become by the time it starts.
+
+This section used to say the opposite: "There is no deploy workflow here and none
+is wanted", because the Workers Git integration was configured dashboard-side and
+was not visible from git. That arrangement deployed correctly, and it had one
+consequence worth remembering now that it is gone — **you could not tell from
+this repo whether a merge published.** You can now: read the workflow run. The
+site repo's **Link audit** workflow still fetches the live origin independently,
+which is the stronger check of the two.
 
 This app spent roughly 2026-07-27 to 2026-08-01 with four merged releases that
 never reached users, because nothing in the repo published and nothing said so.
