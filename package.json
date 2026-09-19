@@ -21,7 +21,7 @@
     "vexflow": "5.0.0"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
+    "@cloudflare/vite-plugin": "1.54.8",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
@@ -33,10 +33,10 @@
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vinext": "0.0.50",
+    "vinext": "0.2.1",
     "vite": "8.0.13",
     "vitest": "3.2.4",
-    "wrangler": "4.92.0"
+    "wrangler": "4.131.2"
   },
   "type": "module",
   "packageManager": "pnpm@11.7.0"
