@@ -1125,6 +1125,10 @@ export default function CountItApp() {
     <div className="app-shell">
       <a className="skip-link" href="#trainer">Skip to the trainer</a>
       <header className="site-header">
+        <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brs-monogram.svg" alt="" width="34" height="34" />
+        </a>
         <a className="brand-lockup" href="#top" aria-label="Count It home">
           <BrandMark />
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
