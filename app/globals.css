@@ -171,6 +171,13 @@ a:focus-visible,
   text-transform: uppercase;
 }
 
+/* Backwerd Rhythm Shop monogram: the way back to the shop from anywhere in the app. */
+.brs-home { display: inline-flex; flex: none; align-items: center; justify-content: center; margin-right: -12px; border-radius: 50%; } /* header gap is 24px, so -12px leaves ~12px */
+.brs-home img { display: block; width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line); }
+@media (pointer: coarse) { .brs-home { padding: 5px; margin: -5px -17px -5px -5px; } }
+@media print { .brs-home { display: none; } }
+.brs-home + .brand-lockup { margin-right: auto; }
+
 .brand-lockup {
   display: inline-flex;
   align-items: center;
