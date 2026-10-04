@@ -2470,6 +2470,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .builder-problem p { margin: 0; }
 
 .builder-fine { margin: 14px 0 0; color: var(--ink-soft); font-size: 0.78rem; }
+.builder-preset-note { margin: 10px 0 0; color: var(--ink-soft); font-size: 0.8rem; }
+.level-control small a { color: var(--forest-deep); font-weight: 800; }
 
 @media (min-width: 640px) {
   .builder-pair { grid-template-columns: 1fr 1fr; }
