@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BUILDER_CELLS,
   BUILDER_LEVELS,
@@ -9,6 +9,7 @@ import {
   MAX_QUESTIONS,
   MIN_QUESTIONS,
   PRODUCTION_ORIGIN,
+  applyQuiz,
   cellsForLevel,
   evaluateBuilder,
   makeSeed,
@@ -18,9 +19,12 @@ import {
 import {
   COUNTING_RHYTHMS_SEQUENCE_URL,
   COUNTING_RHYTHMS_STEPS,
+  RHYTHMS_IN_THREE_SEQUENCE_URL,
+  RHYTHMS_IN_THREE_STEPS,
   getPreset,
 } from "../src/assignment/presets";
 import type { MeterId } from "../src/rhythm";
+import { PageFooter, PageHeader } from "./PageChrome";
 
 type VocabularyKind = Vocabulary["kind"];
 
@@ -51,6 +55,16 @@ const GROUPS: readonly { readonly level: 0 | 1 | 2 | 3; readonly title: string; 
   },
 ];
 
+/* What a starting point does about the meter. Counting Rhythms' published links
+   leave it to the student and the preset pins it; Rhythms in Three's already
+   name it. */
+function meterNote(published: MeterId | null, meter: MeterId | null): string {
+  const label = BUILDER_METERS.find((option) => option.id === meter)?.label ?? "";
+  return published === null
+    ? `The meter is pinned to ${label}.`
+    : `The meter is ${label}, as the step publishes it.`;
+}
+
 export default function AssignmentBuilder() {
   const [name, setName] = useState("");
   const [vocabKind, setVocabKind] = useState<VocabularyKind>("level");
@@ -67,23 +81,9 @@ export default function AssignmentBuilder() {
   const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
   const [copyMessage, setCopyMessage] = useState("");
+  const [quizMessage, setQuizMessage] = useState("");
   const linkField = useRef<HTMLInputElement>(null);
   const copyTimer = useRef<number | undefined>(undefined);
-
-  /* The seed is random and the origin is the page's own, and neither is known on
-     the server — so they are filled in once the page is in a browser, rather
-     than during the render, which would make the server's HTML and the
-     browser's disagree. */
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      setOrigin(window.location.origin);
-      setSeed((current) => current || makeSeed(Math.random));
-    }, 0);
-    return () => {
-      window.clearTimeout(id);
-      window.clearTimeout(copyTimer.current);
-    };
-  }, []);
 
   const vocabulary: Vocabulary = useMemo(() => {
     if (vocabKind === "level") return { kind: "level", level };
@@ -112,11 +112,11 @@ export default function AssignmentBuilder() {
 
   const heldNotesAllowed = scope === "measure";
 
-  /* Fill every field from a step of the Counting Rhythms sequence, exactly as
-     the sequence page publishes it (the presets' own test holds the published
+  /* Fill every field from a published teaching-sequence step, exactly as the
+     sequence page publishes it (the presets' own test holds the published
      links verbatim). Everything stays editable afterwards. Choosing "my own
      choices" leaves the form as it is rather than wiping it. */
-  function applyPreset(id: string) {
+  const applyPreset = useCallback((id: string) => {
     setPresetId(id);
     const preset = getPreset(id);
     if (!preset) return;
@@ -133,9 +133,47 @@ export default function AssignmentBuilder() {
     setCountText(next.count === null ? "" : String(next.count));
     setPassText(next.passing === null ? "" : String(next.passing));
     setSeed(next.seed);
-  }
+  }, []);
+
+  /* The seed is random and the origin is the page's own, and neither is known on
+     the server — so they are filled in once the page is in a browser, rather
+     than during the render, which would make the server's HTML and the
+     browser's disagree. A link from the assignments page (`?from=<step id>`)
+     starts the form from that step instead, keeping the step's own seed. */
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setOrigin(window.location.origin);
+      const from = new URLSearchParams(window.location.search).get("from");
+      if (from && getPreset(from)) applyPreset(from);
+      else setSeed((current) => current || makeSeed(Math.random));
+    }, 0);
+    return () => {
+      window.clearTimeout(id);
+      window.clearTimeout(copyTimer.current);
+    };
+  }, [applyPreset]);
 
   const chosenPreset = getPreset(presetId);
+
+  /* "Make this a quiz" applies the rule in src/assignment/builder.ts (applyQuiz,
+     tested there) and says what it did. The message is shown only while the form
+     still matches it, so it cannot go on claiming a hidden guide after the
+     teacher turned the guide back on. */
+  const isQuiz = guide === "off" && feedback === "end" && retry === "off";
+  function makeQuiz() {
+    const next = applyQuiz(state);
+    setGuide(next.guide);
+    setFeedback(next.feedback);
+    setRetry(next.retry);
+    setCountText(next.count === null ? "" : String(next.count));
+    setPassText(next.passing === null ? "" : String(next.passing));
+    const oncePerRhythm = state.vocabulary.kind === "cells" && state.scope === "beat" && state.vocabulary.cells.length >= 2;
+    setQuizMessage(
+      oncePerRhythm
+        ? `Quiz settings applied: guide hidden, answers held to the end, one attempt, and ${next.count} questions — one for each rhythm you ticked.`
+        : "Quiz settings applied: guide hidden, answers held to the end, one attempt. Your question count and pass mark are unchanged.",
+    );
+  }
 
   function changeScope(next: "beat" | "measure" | null) {
     setScope(next);
@@ -170,22 +208,7 @@ export default function AssignmentBuilder() {
   return (
     <div className="builder-shell">
       <a className="skip-link" href="#builder-form">Skip to the form</a>
-      <header className="site-header">
-        {/* Plain anchors, not next/link: under this vinext build next/link logs an
-            RSC prefetch error on mount and throws on click, so the navigation
-            never happens. Two small pages lose nothing to a full page load. */}
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-        <a className="brand-lockup" href="/" aria-label="Count It home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="brand-mark" src="/icon-192.png" alt="" aria-hidden="true" />
-          <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
-        </a>
-        <p>Free percussion tools that teach.</p>
-        <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brs-monogram.svg" alt="" width="28" height="28" />
-        </a>
-      </header>
+      <PageHeader />
 
       <main className="builder-main">
         <div className="builder-intro">
@@ -208,30 +231,57 @@ export default function AssignmentBuilder() {
             <fieldset className="builder-group">
               <legend>Start from a step <small>optional</small></legend>
               <label className="level-control">
-                <span className="builder-visually-hidden">Counting Rhythms step to start from</span>
+                <span className="builder-visually-hidden">Teaching-sequence step to start from</span>
                 <select value={presetId} onChange={(event) => applyPreset(event.target.value)}>
                   <option value="">My own choices</option>
-                  {COUNTING_RHYTHMS_STEPS.map((preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      Step {preset.step}: {preset.title}
-                    </option>
-                  ))}
+                  <optgroup label="Counting Rhythms — 4/4">
+                    {COUNTING_RHYTHMS_STEPS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        Step {preset.step}: {preset.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Rhythms in Three — 3/4">
+                    {RHYTHMS_IN_THREE_STEPS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        Step {preset.step}: {preset.title}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
                 <small>
                   {chosenPreset
                     ? `${chosenPreset.focus}. ${chosenPreset.state.count} questions, pass at ${chosenPreset.state.passing}. Change anything below.`
-                    : "The ten steps of the Counting Rhythms sequence, filled in as published. Change anything after."}
+                    : "The steps of Counting Rhythms and Rhythms in Three that run in Count It, filled in as published. Change anything after."}
                   {" "}
-                  <a href={COUNTING_RHYTHMS_SEQUENCE_URL} target="_blank" rel="noopener noreferrer">About the sequence</a>
+                  <a
+                    href={chosenPreset?.sequence === "rhythms-in-three" ? RHYTHMS_IN_THREE_SEQUENCE_URL : COUNTING_RHYTHMS_SEQUENCE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    About the sequence
+                  </a>
                 </small>
               </label>
               {chosenPreset && (
                 <p className="builder-preset-note">
                   This keeps the step&rsquo;s own seed, so your class runs the same questions as the published
-                  step and scores stay comparable. The meter is pinned to 4/4. Press &ldquo;New seed&rdquo; for
-                  different questions.
+                  step and scores stay comparable. {meterNote(chosenPreset.publishedMeter, chosenPreset.state.meter)}{" "}
+                  Press &ldquo;New seed&rdquo; for different questions.
                 </p>
               )}
+            </fieldset>
+
+            <fieldset className="builder-group">
+              <legend>Quiz <small>optional</small></legend>
+              <button type="button" className="quiet-button" onClick={makeQuiz}>Make this a quiz</button>
+              <small className="builder-quiz-note">
+                Hides the guide, holds the answers to the end and allows one attempt. With &ldquo;Pick the
+                rhythms&rdquo; and one beat, it asks each ticked rhythm once. It is a quick knowledge check, not
+                secure testing: one attempt can&rsquo;t stop a page reload, and the pass mark is shown on the card but
+                never enforced.
+              </small>
+              <p className="builder-quiz-status" role="status" aria-live="polite">{isQuiz ? quizMessage : ""}</p>
             </fieldset>
 
             <fieldset className="builder-group">
@@ -491,17 +541,7 @@ export default function AssignmentBuilder() {
         </div>
       </main>
 
-      <footer className="site-footer">
-        <div><strong>Count It.</strong><span>by <a className="shop-link" href="https://backwerdrhythmshop.com">Backwerd Rhythm Shop</a></span></div>
-        <div className="foot-links">
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a className="foot-btn" href="/">Back to Count It</a>
-          <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
-          <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
-          <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Assignment%20builder%20feedback">Send feedback</a>
-        </div>
-        <p>© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
-      </footer>
+      <PageFooter page="build" feedbackSubject="Count It — Assignment builder feedback" />
     </div>
   );
 }

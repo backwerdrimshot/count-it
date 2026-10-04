@@ -50,6 +50,7 @@ import {
 } from "../src/assignment";
 import { createPraxisEvidenceResult } from "../src/result";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
+import { readAttempts, writeAttempts } from "../src/attempt-tally";
 
 type AppMode = "practice" | "challenge";
 
@@ -65,38 +66,6 @@ const PREFERENCES_KEY = "count-it-preferences-v1";
    particular student's ordering; with neither, the round is ordered as it
    always was. */
 const DEVICE_KEY = "count-it-device-v1";
-/* How many times this browser has finished a given assignment.
- *
- * Attempt numbers used to live in React state alone, so a reload restarted the
- * count at one and the number on the card could be quietly reset by pressing
- * F5 — which is the same gesture that replays the round. Keyed by the
- * assignment's own canonical link, so it names a round rather than a person. */
-const ATTEMPTS_KEY = "count-it-attempts-v1";
-
-function readAttempts(fingerprint: string): number {
-  try {
-    const saved = localStorage.getItem(ATTEMPTS_KEY);
-    if (!saved) return 0;
-    const value = (JSON.parse(saved) as Record<string, number>)[fingerprint];
-    return typeof value === "number" && value > 0 ? value : 0;
-  } catch {
-    return 0;
-  }
-}
-
-function writeAttempts(fingerprint: string, attempt: number): void {
-  try {
-    const saved = localStorage.getItem(ATTEMPTS_KEY);
-    const all = saved ? (JSON.parse(saved) as Record<string, number>) : {};
-    if ((all[fingerprint] ?? 0) >= attempt) return;
-    all[fingerprint] = attempt;
-    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(all));
-  } catch {
-    // Storage denied. The attempt still shows for this sitting; it just will
-    // not survive a reload, which is the old behaviour rather than a new fault.
-  }
-}
-
 function readDeviceVariant(): string {
   try {
     const saved = localStorage.getItem(DEVICE_KEY);
@@ -1356,7 +1325,9 @@ export default function CountItApp() {
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
         <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
           {/* A plain anchor: next/link throws on click in this vinext build. */}
+          <a className="foot-btn" href="/assignments" title="Every published teaching-sequence step, ready to try, copy or customize">Assignments</a>
           <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
+          <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
           <a className="foot-btn" href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Support%20request">Report a problem</a>
           <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>

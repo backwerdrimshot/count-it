@@ -2487,3 +2487,131 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* Under the question-size radios when an assignment rules one of them out. */
 .scope-note { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 0.76rem; }
 .scope-options label.is-unavailable { opacity: 0.55; cursor: not-allowed; }
+
+/* ---- /assignments: the catalog ---------------------------------------------------- */
+
+.catalog-lede-link { margin-top: 10px !important; }
+.catalog-lede-link a { color: var(--forest-deep); font-weight: 800; }
+
+.catalog-sequence { margin: 0 0 34px; }
+.catalog-sequence h2 {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 3.4vw, 1.9rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.catalog-blurb { margin: 0 0 14px; max-width: 760px; color: var(--ink-soft); }
+.catalog-blurb a { color: var(--forest-deep); font-weight: 800; }
+
+.catalog-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.catalog-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  padding: 16px clamp(14px, 3vw, 22px);
+}
+.catalog-step {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--forest-wash);
+  color: var(--forest-deep);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+.catalog-body { min-width: 0; }
+.catalog-body h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+.catalog-badge {
+  border: 1px solid var(--forest-deep);
+  border-radius: 999px;
+  padding: 2px 9px;
+  color: var(--forest-deep);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.catalog-focus { margin: 0 0 4px; }
+.catalog-summary { margin: 0 0 4px; color: var(--ink-soft); font-size: 0.86rem; font-weight: 700; }
+.catalog-status { margin: 0 0 4px; color: var(--ink-soft); font-size: 0.8rem; }
+.catalog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.catalog-actions a { display: inline-flex; align-items: center; text-decoration: none; }
+.catalog-linkbox { margin-top: 8px; }
+
+@media (max-width: 420px) {
+  .catalog-card { grid-template-columns: 1fr; }
+  .catalog-step { width: 32px; height: 32px; font-size: 1rem; }
+}
+
+.builder-quiz-note { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 0.8rem; }
+
+/* The "copied" line takes no room until it has something to say. */
+.catalog-card .builder-copied { min-height: 0; margin: 0; }
+.catalog-card .builder-copied:not(:empty) { margin-top: 8px; }
+
+/* ---- /notation: the teacher reference ------------------------------------------- */
+
+.notation-contents { margin: 0 0 22px; }
+.notation-contents ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.notation-contents a {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  padding: 8px 14px;
+  color: var(--forest-deep);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+.notation-contents a:hover { border-color: var(--forest-deep); }
+
+.notation-topic {
+  margin: 0 0 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  padding: 18px clamp(14px, 3vw, 24px) 20px;
+  scroll-margin-top: 16px;
+}
+.notation-topic h2 {
+  margin: 0 0 10px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.notation-topic > p, .notation-topic > ul { max-width: 760px; margin: 0 0 10px; }
+.notation-topic ul { padding-left: 20px; }
+.notation-topic li { margin-bottom: 6px; }
+.notation-topic a { color: var(--forest-deep); font-weight: 800; }
+
+.notation-example { margin: 14px 0 0; min-width: 0; }
+.notation-example figcaption { display: grid; gap: 2px; margin-top: 6px; font-size: 0.86rem; }
+.notation-example figcaption span { color: var(--ink-soft); font-weight: 700; }
+/* Examples stack at full width. A bar of five or seven beats needs the room: side
+   by side, a 5/4 staff was cut to three beats and had to be scrolled to see the
+   rest, which defeats an example about the bar. */
+.notation-pair { display: grid; gap: 4px; }
+
+/* The quiz button's confirmation. Its own class, not .builder-copied: that one names
+   the copy-link message, and two elements answering to it made anything that selects
+   the message ambiguous. */
+.builder-quiz-status { min-height: 1.4em; margin: 8px 0 0; color: var(--green-ink); font-size: 0.85rem; font-weight: 800; }

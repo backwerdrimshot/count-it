@@ -285,6 +285,46 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
 }
 
 /** The levels, for the form's select, in the app's own words. */
+/* "Make this a quiz": the settings that turn practice into a check.
+ *
+ *   * the subdivision guide hidden — reading without the grid printed is what is
+ *     being checked;
+ *   * answers held to the end — feedback after each question teaches, which is
+ *     the opposite of what a quiz is for;
+ *   * one attempt — the app offers no retry button.
+ *
+ * And, when the teacher has picked exact rhythms and a one-beat round, one
+ * question per rhythm: every ticked rhythm is asked exactly once, in an order the
+ * seed fixes. That is what a short quiz on a short list means, and it is the one
+ * case where the number of questions follows from the choices. The pass mark
+ * follows too (four in five, rounded up) unless there is nothing sensible to
+ * derive it from. Everything else is left exactly as the teacher set it, and
+ * everything stays editable afterwards.
+ *
+ * What it does NOT do is make the round secure. The app has no accounts and no
+ * server: one attempt cannot stop a page reload, and the pass mark is shown on
+ * the card, never enforced. The builder says so beside the button.
+ *
+ * Why only one-beat rounds get "one per rhythm": in a full-measure round each
+ * question is a bar of several rhythms, so there is no honest "once each". */
+export function applyQuiz(state: BuilderState): BuilderState {
+  const next: { -readonly [K in keyof BuilderState]: BuilderState[K] } = {
+    ...state,
+    guide: "off",
+    feedback: "end",
+    retry: "off",
+  };
+  if (state.vocabulary.kind === "cells" && state.scope === "beat") {
+    const rhythms = state.vocabulary.cells.length;
+    if (rhythms >= 2) {
+      const count = Math.min(rhythms, MAX_QUESTIONS);
+      next.count = count;
+      next.passing = Math.ceil(count * 0.8);
+    }
+  }
+  return Object.freeze(next);
+}
+
 export const BUILDER_LEVELS: readonly { readonly id: 1 | 2 | 3; readonly name: string; readonly description: string }[] =
   Object.freeze(
     ([1, 2, 3] as const).map((id) => {

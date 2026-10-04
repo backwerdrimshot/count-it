@@ -1,4 +1,7 @@
-/* The ten steps of the Counting Rhythms teaching sequence, as builder presets.
+/* The steps of the teaching sequences that run in this app, as builder presets:
+ * the ten of Counting Rhythms, and (further down) the three 3/4 steps of
+ * Rhythms in Three. The notes below are written about Counting Rhythms, where
+ * the two deliberate differences arise; Rhythms in Three has one of them.
  *
  * The sequence lives on the shop site (`sequences/counting-rhythms/` in
  * backwerd-rhythm-shop-site) as hand-written HTML with one assignment link per
@@ -32,47 +35,65 @@
  * the questions the published step gives, and scores stay comparable across
  * classes. "New seed" in the builder is how a teacher opts out of that.
  */
+import type { MeterId } from "../rhythm/types";
 import type { BuilderState, Vocabulary } from "./builder";
 
 export const COUNTING_RHYTHMS_SEQUENCE_URL =
   "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/";
 
+export const RHYTHMS_IN_THREE_SEQUENCE_URL =
+  "https://apps.backwerdrhythmshop.com/sequences/rhythms-in-three/";
+
+/** The published sequences whose steps run in this app. */
+export type SequenceId = "counting-rhythms" | "rhythms-in-three";
+
 export interface BuilderPreset {
   readonly id: string;
-  /** 1–10, the step's place in the sequence. */
+  readonly sequence: SequenceId;
+  /** The step's place in its sequence, as the sequence page numbers it. */
   readonly step: number;
   /** The step's name without its "Step N:" prefix, as the sequence page says it. */
   readonly title: string;
   /** What the step teaches, in a line, from the sequence page's own wording. */
   readonly focus: string;
+  /** The meter the PUBLISHED link names. Null: the link leaves it to the student. */
+  readonly publishedMeter: MeterId | null;
   readonly state: BuilderState;
 }
 
 const FOUR_FOUR = "4-4" as const;
+const THREE_FOUR = "3-4" as const;
 
-function step(
+interface StepSettings {
+  readonly vocabulary: Vocabulary;
+  readonly scope: "beat" | "measure";
+  readonly guide: "on" | "off";
+  readonly count: number;
+  readonly passing: number;
+  readonly seed: string;
+}
+
+function makeStep(
+  sequence: SequenceId,
+  meter: MeterId,
+  publishedMeter: MeterId | null,
   number: number,
   title: string,
   focus: string,
-  settings: {
-    readonly vocabulary: Vocabulary;
-    readonly scope: "beat" | "measure";
-    readonly guide: "on" | "off";
-    readonly count: number;
-    readonly passing: number;
-    readonly seed: string;
-  },
+  settings: StepSettings,
 ): BuilderPreset {
   return Object.freeze({
-    id: `counting-rhythms-${number}`,
+    id: `${sequence}-${number}`,
+    sequence,
     step: number,
     title,
     focus,
+    publishedMeter,
     state: Object.freeze({
       name: `Step ${number}: ${title}`,
       vocabulary: settings.vocabulary,
       scope: settings.scope,
-      meter: FOUR_FOUR,
+      meter,
       guide: settings.guide,
       feedback: null,
       retry: null,
@@ -82,6 +103,14 @@ function step(
     }),
   });
 }
+
+/* Counting Rhythms links leave the meter open; the preset pins 4/4 (see above). */
+const step = (number: number, title: string, focus: string, settings: StepSettings): BuilderPreset =>
+  makeStep("counting-rhythms", FOUR_FOUR, null, number, title, focus, settings);
+
+/* Rhythms in Three links already name their meter, so there is nothing to pin. */
+const threeStep = (number: number, title: string, focus: string, settings: StepSettings): BuilderPreset =>
+  makeStep("rhythms-in-three", THREE_FOUR, THREE_FOUR, number, title, focus, settings);
 
 const cells = (...ids: string[]): Vocabulary => Object.freeze({ kind: "cells" as const, cells: Object.freeze(ids) });
 const level = (value: 1 | 2 | 3): Vocabulary => Object.freeze({ kind: "level" as const, level: value });
@@ -138,6 +167,35 @@ export const COUNTING_RHYTHMS_STEPS: readonly BuilderPreset[] = Object.freeze([
   }),
 ]);
 
+/* Steps 1–3 of Rhythms in Three — the 3/4 half. Steps 4–6 are 3/8 and open in
+ * Eight Time, so they are not presets here (see ./catalog.ts, which lists them).
+ *
+ * Same provenance rule as the ten above: these are the sequence page's own
+ * links as of backwerd-rhythm-shop-site@63e57c8, held verbatim in
+ * tests/presets.test.ts, and each runs the byte-identical round its link runs.
+ * The links already name their meter, so unlike Counting Rhythms nothing is
+ * pinned here that the published link leaves open; the only difference is the
+ * missing seq/step label, for the reason given above. */
+export const RHYTHMS_IN_THREE_STEPS: readonly BuilderPreset[] = Object.freeze([
+  threeStep(1, "Three Beats, Not Four", "Quarter notes, pairs and rest entry in a bar of three", {
+    vocabulary: cells("quarter", "eighths", "eighth-rest", "rest-eighth"),
+    scope: "measure", guide: "on", count: 12, passing: 10, seed: "r3-1-three-beats",
+  }),
+  threeStep(2, "Sixteenths in Three", "Four sixteenth combinations in a bar of three", {
+    vocabulary: cells("sixteenths", "eighth-two", "two-eighth", "dotted-eighth-sixteenth"),
+    scope: "measure", guide: "on", count: 12, passing: 10, seed: "r3-2-sixteenths",
+  }),
+  threeStep(3, "3/4 Cold", "All sixteen quarter-beat rhythms in 3/4, guide hidden", {
+    vocabulary: level(3),
+    scope: "measure", guide: "off", count: 12, passing: 10, seed: "r3-3-cold",
+  }),
+]);
+
+export const ALL_PRESETS: readonly BuilderPreset[] = Object.freeze([
+  ...COUNTING_RHYTHMS_STEPS,
+  ...RHYTHMS_IN_THREE_STEPS,
+]);
+
 export function getPreset(id: string): BuilderPreset | undefined {
-  return COUNTING_RHYTHMS_STEPS.find((preset) => preset.id === id);
+  return ALL_PRESETS.find((preset) => preset.id === id);
 }

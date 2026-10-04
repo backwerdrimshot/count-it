@@ -190,3 +190,41 @@ export function validateEngravingCatalog(cells: readonly RhythmCell[]): void {
     }
   }
 }
+
+/* What a prompt's staff carries before any rhythm is drawn: the clef, the time
+ * signature, and whether the bar is closed. One function, because "when do we
+ * show a time signature?" is a rule people ask about, and a rule that lives only
+ * in the renderer is one nobody can test without a browser.
+ *
+ *   MEASURE  clef, time signature, closing barline.
+ *     The bar is the unit being read, and the meter is part of what is read — a
+ *     student (or a teacher's link) chose it, and the same rhythm counts
+ *     differently in 3/4 and 4/4. Every measure prompt shows its signature, not
+ *     only the first: each prompt is the start of its own staff, so there is no
+ *     earlier bar for it to have been printed on. The closing barline is what
+ *     makes the bar a bar: the notes fill it and then it ends.
+ *
+ *   BEAT     clef only — no time signature, no closing barline.
+ *     One beat is a FRAGMENT. A time signature over a fragment claims a bar the
+ *     arithmetic denies, and a closing barline reads as a finished measure, which
+ *     it is not. Without them it reads as an incipit: here is a beat.
+ *
+ * The clef is the percussion (neutral) clef in both. These pages carry rhythm
+ * rather than pitch, which is what a percussion part uses it for, and a staff
+ * with notes on it and no clef is not something a student has seen in a part.
+ *
+ * The family agrees: the shop site's rhythm staff (assets/notation/
+ * rhythm-staff.js), Eight Time, Rhythm Repper and the Praxis Press worksheet
+ * bars all draw a full bar with the clef, a time signature and a closing
+ * barline. Only Count It draws a one-beat fragment, so only Count It needed the
+ * second rule. */
+export interface StaffFurniture {
+  readonly clef: "percussion";
+  readonly timeSignature: boolean;
+  readonly closingBarline: boolean;
+}
+
+export function staffFurniture(scope: "beat" | "measure"): StaffFurniture {
+  const whole = scope === "measure";
+  return Object.freeze({ clef: "percussion" as const, timeSignature: whole, closingBarline: whole });
+}

@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-10-04.6",
+  "version": "2026-10-04.7",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
@@ -112,12 +112,14 @@
     "large-touch-targets",
     "non-color-status-cues"
   ],
-  "offlineBehavior": "No account, backend, or network dependency. Preferences, personal bests, a per-assignment attempt tally and an opaque per-browser string used only to vary answer order stay in browser storage; the optional assignment identifier is session-only and never persisted. None of the stored values name a person: the attempt tally is keyed by the assignment's own canonical link, and the ordering string is random and meaningless outside this browser. The visit counter is progressive enhancement and its absence changes nothing.",
+  "offlineBehavior": "No account, backend, or network dependency. Preferences, personal bests, a per-assignment attempt tally and an opaque per-browser string used only to vary answer order stay in browser storage; the optional assignment identifier is session-only and never persisted. None of the stored values name a person: the attempt tally is keyed by the assignment's own canonical link, and the ordering string is random and meaningless outside this browser. The assignments page reads that tally to show, on this device only, how many times a step was finished. The visit counter is progressive enhancement and its absence changes nothing.",
   "siblingApps": {
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
     "scale-trail": "https://scale-trail.backwerdrhythmshop.com/"
   },
   "teachingSequence": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+  "assignmentBuilder": "https://count-it.backwerdrhythmshop.com/build",
+  "assignmentCatalog": "https://count-it.backwerdrhythmshop.com/praxis-assignment-catalog.json",
   "limitations": [
     "Whole, half, quarter, eighth and sixteenth values in 2/4, 3/4, 4/4, 5/4 and 7/4. A whole note needs four beats and so appears in 4/4, 5/4 and 7/4 only; a half note needs two and appears in every meter.",
     "Quarter-note-beat meters only. No odd-meter grouping (3+2 vs 2+3), no mixed or changing meters, no pickup measures, no triplets, compound meter, or ties across beats.",
@@ -126,6 +128,7 @@
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Standard American counting only in this release.",
     "Progress is device-local; no account, roster, or cross-device sync.",
+    "The assignment catalog, the builder and the notation reference are free and open: a named assignment is a set of link settings anyone can rebuild, not a locked resource. A quiz (guide hidden, answers held to the end, one attempt) is a knowledge check, not secure testing: one attempt cannot stop a page reload, and the pass mark is shown, never enforced.",
     "The verification code is a deterrent, not proof — signed verification is future work."
   ]
 }

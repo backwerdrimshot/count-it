@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { COUNT_IT_BUILD, COUNT_IT_CAPABILITY_MANIFEST } from "../src/capabilities";
 import { ALL_RHYTHM_CELLS, METER_IDS, RHYTHM_CELLS, SPANNING_CELLS } from "../src/rhythm";
 
-const served = JSON.parse(
-  readFileSync(new URL("../public/praxis-capabilities.json", import.meta.url), "utf8"),
-);
+const MANIFEST_FILE = new URL("../public/praxis-capabilities.json", import.meta.url);
+
+/* To regenerate the served file after changing src/capabilities.ts:
+     UPDATE_CAPABILITIES_JSON=1 pnpm test tests/capabilities.test.ts
+   The next plain run then holds the file to the source again. */
+if (process.env.UPDATE_CAPABILITIES_JSON === "1") {
+  writeFileSync(MANIFEST_FILE, JSON.stringify(COUNT_IT_CAPABILITY_MANIFEST, null, 2) + "\n");
+}
+
+const served = JSON.parse(readFileSync(MANIFEST_FILE, "utf8"));
 
 describe("the published capability manifest", () => {
   it("is a serialized copy of the manifest the app builds", () => {

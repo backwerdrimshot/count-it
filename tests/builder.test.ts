@@ -6,6 +6,7 @@ import {
   BUILDER_METERS,
   PRODUCTION_ORIGIN,
   SEED_PATTERN,
+  applyQuiz,
   buildQuery,
   cellsForLevel,
   defaultBuilderState,
@@ -352,6 +353,106 @@ describe("every combination of choices", () => {
         const again = parseAssignment(result.query);
         expect(again.ok).toBe(true);
         if (again.ok) expect(again.assignment).toEqual(result.assignment);
+      }
+    }
+  });
+});
+
+describe("making the round a quiz", () => {
+  const withRhythms = (cells: readonly string[], scope: "beat" | "measure" | null = "beat"): BuilderState => ({
+    ...blank,
+    name: "Check",
+    vocabulary: { kind: "cells", cells },
+    scope,
+    meter: "4-4",
+    guide: "on",
+    count: 7,
+    passing: 3,
+    seed: "quiz-seed",
+  });
+
+  it("hides the guide, holds the answers to the end and allows one attempt", () => {
+    const quiz = applyQuiz(withRhythms(["quarter", "eighths"]));
+    expect(quiz.guide).toBe("off");
+    expect(quiz.feedback).toBe("end");
+    expect(quiz.retry).toBe("off");
+  });
+
+  it("keeps everything else the teacher set: name, meter, rhythms, seed", () => {
+    const before = withRhythms(["quarter", "eighths", "eighth-rest"]);
+    const quiz = applyQuiz(before);
+    expect(quiz.name).toBe("Check");
+    expect(quiz.meter).toBe("4-4");
+    expect(quiz.seed).toBe("quiz-seed");
+    expect(quiz.vocabulary).toEqual(before.vocabulary);
+  });
+
+  it("asks each ticked rhythm once, in a one-beat round: one question per rhythm, pass at four in five", () => {
+    const quiz = applyQuiz(withRhythms(["quarter", "eighths", "eighth-rest", "rest-eighth", "sixteenths"]));
+    expect(quiz.count).toBe(5);
+    expect(quiz.passing).toBe(4);
+    expect(applyQuiz(withRhythms(["quarter", "eighths"])).passing).toBe(2);
+    expect(applyQuiz(withRhythms(["quarter", "eighths", "eighth-rest"])).passing).toBe(3);
+  });
+
+  it("leaves the question count alone where there is no honest 'once each'", () => {
+    /* A full-measure question is a bar of several rhythms, so a measure round, a
+       level and a student's own choice keep the teacher's own numbers. */
+    const measure = applyQuiz(withRhythms(["quarter", "eighths"], "measure"));
+    expect([measure.count, measure.passing]).toEqual([7, 3]);
+    const level = applyQuiz({ ...blank, vocabulary: { kind: "level", level: 2 }, scope: "beat", count: 9, passing: 7 });
+    expect([level.count, level.passing]).toEqual([9, 7]);
+    const open = applyQuiz({ ...blank, vocabulary: { kind: "cells", cells: ["quarter", "eighths"] }, scope: null, count: 6, passing: 5 });
+    expect([open.count, open.passing]).toEqual([6, 5]);
+  });
+
+  it("leaves the count alone with fewer than two rhythms, which the builder refuses anyway", () => {
+    const one = applyQuiz(withRhythms(["quarter"]));
+    expect([one.count, one.passing]).toEqual([7, 3]);
+    expect(evaluateBuilder(one).ok).toBe(false);
+  });
+
+  it("is repeatable and does not change what it was given", () => {
+    const before = withRhythms(["quarter", "eighths", "eighth-rest"]);
+    const snapshot = JSON.stringify(before);
+    const once = applyQuiz(before);
+    expect(JSON.stringify(before)).toBe(snapshot);
+    expect(applyQuiz(once)).toEqual(once);
+  });
+
+  it("always yields a link the app can play, for every one-beat rhythm set of two to sixteen", () => {
+    const oneBeat = BUILDER_CELLS.filter((cell) => cell.beats === 1).map((cell) => cell.id);
+    expect(oneBeat).toHaveLength(16);
+    for (let size = 2; size <= oneBeat.length; size += 1) {
+      const result = evaluateBuilder(applyQuiz(withRhythms(oneBeat.slice(0, size))));
+      if (!result.ok) throw new Error(`${size} rhythms: ${result.problem}`);
+      expect(result.assignment.count, `${size} rhythms`).toBe(size);
+      expect(result.assignment.passing, `${size} rhythms`).toBe(Math.ceil(size * 0.8));
+      expect(result.assignment.feedback).toBe("end");
+      expect(result.assignment.retry).toBe("off");
+      expect(result.assignment.guide).toBe("off");
+    }
+  });
+
+  it("really does ask every ticked rhythm exactly once, checked against the real generator", () => {
+    const oneBeat = BUILDER_CELLS.filter((cell) => cell.beats === 1).map((cell) => cell.id);
+    const subsets: string[][] = [];
+    for (let size = 2; size <= oneBeat.length; size += 1) {
+      subsets.push(oneBeat.slice(0, size), oneBeat.slice(oneBeat.length - size));
+      subsets.push(oneBeat.filter((_, index) => index % 2 === size % 2).slice(0, size));
+    }
+    for (const subset of subsets) {
+      if (subset.length < 2) continue;
+      for (const seed of ["a", "quiz-seed", "x9"]) {
+        const quiz = applyQuiz({ ...withRhythms(subset), seed });
+        const result = evaluateBuilder(quiz);
+        if (!result.ok) throw new Error(result.problem);
+        const a = result.assignment;
+        const asked = generateQuestions({
+          level: a.level, scope: a.scope, ...(a.meter ? { meter: a.meter } : {}), cells: a.cells ?? undefined,
+          count: a.count ?? 5, seed: a.seed ?? "none", variant: "student",
+        }).map((question) => question.id.split(":").pop());
+        expect([...asked].sort(), `${subset.join(",")} / ${seed}`).toEqual([...subset].sort());
       }
     }
   });

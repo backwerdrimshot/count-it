@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import CountReference from "../CountReference";
 import RhythmNotation from "../RhythmNotation";
 import {
@@ -86,7 +85,10 @@ export default function NotationAuditPage() {
             beam, dot, and partial-beam expectation.
           </p>
         </div>
-        <Link href="/">Back to Count It</Link>
+        {/* A plain anchor: under this vinext build next/link throws on click, so the
+            navigation never happens (the same reason the other pages use one). */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/">Back to Count It</a>
       </header>
 
       <section className="audit-status" aria-label="Audit status">
