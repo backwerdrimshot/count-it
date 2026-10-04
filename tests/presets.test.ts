@@ -1,29 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { parseAssignment, type Assignment } from "../src/assignment";
 import { evaluateBuilder } from "../src/assignment/builder";
-import { COUNTING_RHYTHMS_STEPS, getPreset } from "../src/assignment/presets";
+import {
+  ALL_PRESETS,
+  COUNTING_RHYTHMS_STEPS,
+  RHYTHMS_IN_THREE_STEPS,
+  getPreset,
+} from "../src/assignment/presets";
 import { generateQuestions } from "../src/question";
+import {
+  PUBLISHED_COUNTING_RHYTHMS as PUBLISHED,
+  PUBLISHED_RHYTHMS_IN_THREE as PUBLISHED_THREE,
+} from "./fixtures/published-links";
 
-/* The ten Counting Rhythms steps exactly as the shop site publishes them.
- *
- * Copied verbatim from `sequences/counting-rhythms/index.html` in
- * backwerd-rhythm-shop-site, as of commit 06ca7b8 (the last to touch that page).
- * It is a copy on purpose: a preset that merely *agreed with itself* would be
- * worthless, and the thing a teacher is trusting is that "Step 3" here is the
- * same round as Step 3 there. If the page changes, this table is the place that
- * has to change with it, and the test below fails until it does. */
-const PUBLISHED: readonly string[] = [
-  "seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
-  "seq=counting-rhythms&step=2&a=Step%202%3A%20Where%27s%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
-  "seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
-  "seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
-  "seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=sixteenths,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest&guide=on&n=12&pass=10&seed=cr5-sixteenths",
-  "seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
-  "seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn%27t%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest,two-rest,rest-two,rest-three&guide=off&n=12&pass=10&seed=cr7-silent",
-  "seq=counting-rhythms&step=8&a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
-  "seq=counting-rhythms&step=9&a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
-  "seq=counting-rhythms&step=10&a=Step%2010%3A%20Notes%20That%20Last&level=1&scope=measure&cells=whole,half,half-rest,quarter,eighths&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
-];
 
 function published(index: number): Assignment {
   const parsed = parseAssignment(`?${PUBLISHED[index]}`);
@@ -120,7 +109,73 @@ describe("the Counting Rhythms presets", () => {
 
   it("are found by id, and an unknown id finds nothing", () => {
     expect(getPreset("counting-rhythms-3")?.title).toBe("Pulse & Pairs, No Help");
+    expect(getPreset("rhythms-in-three-2")?.title).toBe("Sixteenths in Three");
     expect(getPreset("counting-rhythms-11")).toBeUndefined();
+    /* Steps 4–6 of Rhythms in Three are 3/8 and live in Eight Time. */
+    expect(getPreset("rhythms-in-three-4")).toBeUndefined();
     expect(getPreset("")).toBeUndefined();
+  });
+
+  it("have unique ids and unique seeds across both sequences", () => {
+    /* A shared seed would make two named assignments the same round. */
+    expect(new Set(ALL_PRESETS.map((preset) => preset.id)).size).toBe(ALL_PRESETS.length);
+    expect(new Set(ALL_PRESETS.map((preset) => preset.state.seed)).size).toBe(ALL_PRESETS.length);
+  });
+});
+
+
+function publishedThree(index: number): Assignment {
+  const parsed = parseAssignment(`?${PUBLISHED_THREE[index]}`);
+  if (!parsed.ok) throw new Error(`published Rhythms in Three step ${index + 1} no longer parses: ${parsed.error.message}`);
+  return parsed.assignment;
+}
+
+describe("the Rhythms in Three presets", () => {
+  it("are steps 1–3, named as the sequence names them", () => {
+    expect(RHYTHMS_IN_THREE_STEPS.map((preset) => preset.step)).toEqual([1, 2, 3]);
+    for (const preset of RHYTHMS_IN_THREE_STEPS) {
+      expect(preset.sequence).toBe("rhythms-in-three");
+      expect(preset.state.name).toBe(`Step ${preset.step}: ${preset.title}`);
+      expect(preset.focus.length).toBeGreaterThan(10);
+    }
+  });
+
+  it("each run the byte-identical round the published link runs", () => {
+    for (let index = 0; index < RHYTHMS_IN_THREE_STEPS.length; index += 1) {
+      const preset = RHYTHMS_IN_THREE_STEPS[index];
+      const built = evaluateBuilder(preset.state);
+      if (!built.ok) throw new Error(`${preset.id}: ${built.problem}`);
+      expect(roundOf(built.assignment), preset.id).toBe(roundOf(publishedThree(index)));
+    }
+  });
+
+  it("agree with the published link on everything that defines the round, meter included", () => {
+    for (let index = 0; index < RHYTHMS_IN_THREE_STEPS.length; index += 1) {
+      const preset = RHYTHMS_IN_THREE_STEPS[index];
+      const built = evaluateBuilder(preset.state);
+      if (!built.ok) throw new Error(`${preset.id}: ${built.problem}`);
+      const a = built.assignment;
+      const site = publishedThree(index);
+      expect({ name: a.name, scope: a.scope, meter: a.meter, cells: a.cells, guide: a.guide, count: a.count, passing: a.passing, seed: a.seed, feedback: a.feedback, retry: a.retry }, preset.id)
+        .toEqual({ name: site.name, scope: site.scope, meter: site.meter, cells: site.cells, guide: site.guide, count: site.count, passing: site.passing, seed: site.seed, feedback: site.feedback, retry: site.retry });
+      if (!site.cells) expect(a.level, preset.id).toBe(site.level);
+    }
+  });
+
+  it("differ from the published links only by the sequence label", () => {
+    /* The link already names 3/4, so nothing is pinned that the page leaves open. */
+    for (let index = 0; index < RHYTHMS_IN_THREE_STEPS.length; index += 1) {
+      const preset = RHYTHMS_IN_THREE_STEPS[index];
+      expect(preset.publishedMeter, preset.id).toBe("3-4");
+      expect(publishedThree(index).meter, preset.id).toBe("3-4");
+      const built = evaluateBuilder(preset.state);
+      if (!built.ok) throw new Error(`${preset.id}: ${built.problem}`);
+      expect(built.query).not.toMatch(/seq=|step=/);
+    }
+  });
+
+  it("keep the sequence's gates", () => {
+    const gates = RHYTHMS_IN_THREE_STEPS.map((preset) => `${preset.state.passing}/${preset.state.count}`);
+    expect(gates).toEqual(["10/12", "10/12", "10/12"]);
   });
 });

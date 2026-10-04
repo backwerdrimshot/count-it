@@ -12,6 +12,7 @@ import {
   getMeter,
   measureBeamRuns,
   getRhythmCell,
+  staffFurniture,
   validateEngravingCatalog,
   validateEngravingExpectationsAreUsed,
   type RhythmCell,
@@ -201,5 +202,27 @@ describe("audit scope", () => {
     expect(fitsIn(getRhythmCell("half"))).toEqual(everyMeter);
     expect(fitsIn(getRhythmCell("half-rest"))).toEqual(everyMeter);
     expect(fitsIn(getRhythmCell("quarter"))).toEqual(everyMeter);
+  });
+});
+
+describe("what the staff carries before the rhythm: clef, time signature, closing barline", () => {
+  it("gives a full measure a clef, a time signature and a closing barline", () => {
+    expect(staffFurniture("measure")).toEqual({ clef: "percussion", timeSignature: true, closingBarline: true });
+  });
+
+  it("gives a one-beat fragment a clef and nothing that claims a bar", () => {
+    /* A time signature over one beat asserts a bar the arithmetic denies, and a
+       closing barline reads as a finished measure. */
+    expect(staffFurniture("beat")).toEqual({ clef: "percussion", timeSignature: false, closingBarline: false });
+  });
+
+  it("always uses the percussion clef, because these staves carry rhythm rather than pitch", () => {
+    expect(staffFurniture("beat").clef).toBe("percussion");
+    expect(staffFurniture("measure").clef).toBe("percussion");
+  });
+
+  it("is frozen, so one prompt cannot change what the next one gets", () => {
+    expect(Object.isFrozen(staffFurniture("measure"))).toBe(true);
+    expect(Object.isFrozen(staffFurniture("beat"))).toBe(true);
   });
 });

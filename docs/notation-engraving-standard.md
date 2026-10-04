@@ -24,6 +24,61 @@ nothing.
 - VexFlow draws the notation, but the Count It data model owns the engraving intent.
 - The complete subdivision reference and correct spoken answer come from the same timing model as the notation.
 
+## Clef, time signature and barlines
+
+Decided once, in `staffFurniture()` in `src/rhythm/engraving.ts`, which the
+renderer reads and `tests/engraving.test.ts` pins. This section clarifies how
+the staff has always been drawn; it is not a change to any rhythm, so the
+baseline version above is unchanged.
+
+| | Clef | Time signature | Closing barline |
+| --- | --- | --- | --- |
+| **One measure** | percussion | **shown** | **drawn** |
+| **One beat** | percussion | not shown | not drawn |
+
+**When the time signature shows.** On every measure prompt, and never on a beat.
+
+- A measure is the unit being read, and the meter is part of what is read: the
+  same rhythm is counted differently in 3/4 and 4/4, and a link or a student
+  chose the meter. Showing it on the page keeps the question honest about which
+  bar it asks.
+- It shows on *every* measure prompt, not only the first. Each prompt is the start
+  of its own staff, so there is no earlier bar it could have been printed on.
+  (Music prints the signature once at the head of a piece; a worksheet or a
+  trainer that deals one bar at a time is not a piece.)
+- It does not show on a one-beat prompt. A beat is a fragment, and a time
+  signature over a fragment claims a bar the arithmetic denies.
+
+**Barlines.** A measure ends with a single closing barline, which is what makes it
+a bar: the notes fill it and it ends. A one-beat fragment has none, so it reads as
+an incipit (here is a beat) and not as a finished measure it is not. A single
+barline closes the measure; a final (thin-thick) barline is for the end of an
+exercise or piece and is not used.
+
+*Open question, not decided here:* Count It also draws an opening barline at the
+left edge of every staff (VexFlow's default), on beats and measures alike. The
+Praxis Press worksheet bars and the shop site's staff helper draw no opening
+barline. Engravers differ on whether a single staff needs one. It is left as it
+is until the independent musician sign-off below rules on it.
+
+**Clef.** The percussion (neutral) clef, on every staff. These pages carry rhythm
+rather than pitch, which is what a percussion part uses the clef for, and a staff
+with notes and no clef is not something a student has seen in a part. Notes and
+rests both sit on the middle line, as on the shop site's posters.
+
+**The rest of the family agrees.** Checked against the code, not remembered:
+
+| Where | What it draws for a full bar |
+| --- | --- |
+| Count It (this app) | percussion clef, time signature, closing barline; none of the last two for one beat |
+| Eight Time | the same renderer (it is a fork), the same rule |
+| Rhythm Repper | percussion clef, `4/4`, the default closing barline |
+| Shop site rhythm staff (`assets/notation/rhythm-staff.js`) | the neutral clef and a time-signature helper; the staff helper draws no barlines, and how each lesson figure places them was not audited |
+| Praxis Press worksheet bars | neutral clef, a time signature on every bar, a closing barline |
+| Stick Lab | ships a percussion clef and single/double/final barline glyphs; where it places them was not traced |
+
+Only Count It draws a one-beat fragment, so only Count It needs the second row.
+
 ## Reviewed baseline
 
 | Cell | Beam groups | Dotted tokens | Explicit partial beams |

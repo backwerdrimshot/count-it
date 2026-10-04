@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-04.6`
+- **Build:** `2026-10-04.7`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -26,6 +26,8 @@ documentation.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
+- **Assignments page:** `/assignments` lists every published teaching-sequence step that runs here (and links the three that run in Eight Time) with Try it, Copy link, Customize in builder, and how many times this browser has finished each. Free and open.
+- **Notation reference:** `/notation` is a teacher's refresher on the clef, barlines, time signature, beams, rests and held notes, each with a live staff drawn by the same renderer the questions use.
 
 ### Assignment builder
 
@@ -53,18 +55,64 @@ Three decisions worth knowing:
 - **Legal but questionable is a note, never an error.** No seed, no pass mark, or
   leaving the question size to the student when full measures could not fill the
   round are said plainly and do not block the link.
-- **It can start from a Counting Rhythms step.** The "Start from a step" selector
+- **It can start from a published step.** The "Start from a step" selector
   fills the form from any of the ten steps of the
-  [Counting Rhythms sequence](https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/),
-  then everything stays editable. The steps are copied from the shop site's own
-  page, and `tests/presets.test.ts` holds that page's ten links verbatim and
-  requires each preset to run the **byte-identical round** its link runs — same
-  questions, same choices, same order — so "Step 3" here cannot quietly become a
-  different step from Step 3 there. Two deliberate differences, both asserted: the
-  meter is pinned to 4/4 (the published links leave it to the student, and a
-  student who switches a link naming a whole note to 2/4 gets a round that never
-  asks it), and the `seq`/`step` label is left off, because it stops being true
-  the moment a teacher changes anything.
+  [Counting Rhythms sequence](https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/)
+  or the three 3/4 steps of
+  [Rhythms in Three](https://apps.backwerdrhythmshop.com/sequences/rhythms-in-three/),
+  then everything stays editable; `/build?from=<step id>` opens it already filled
+  (that is what the assignments page's Customize button uses). The steps are
+  copied from the shop site's own pages, and `tests/presets.test.ts` holds those
+  links verbatim (in `tests/fixtures/published-links.ts`) and requires each preset
+  to run the **byte-identical round** its link runs — same questions, same
+  choices, same order — so "Step 3" here cannot quietly become a different step
+  from Step 3 there. Two deliberate differences, both asserted: for Counting
+  Rhythms the meter is pinned to 4/4 (the published links leave it to the
+  student, and a student who switches a link naming a whole note to 2/4 gets a
+  round that never asks it; Rhythms in Three's links already name 3/4), and the
+  `seq`/`step` label is left off, because it stops being true the moment a
+  teacher changes anything.
+- **"Make this a quiz" is a convention, not a lock.** It hides the guide, holds
+  the answers to the end and allows one attempt, and, when the teacher has picked
+  exact rhythms and a one-beat round, asks each ticked rhythm exactly once (one
+  question per rhythm, pass at four in five). `applyQuiz` in
+  `src/assignment/builder.ts` holds the rule; `tests/builder.test.ts` checks it
+  against the real generator. It is a knowledge check, not secure testing: one
+  attempt cannot stop a page reload, and the pass mark is shown, never enforced.
+
+### Assignment catalog
+
+`src/assignment/catalog.ts` lists every published step that runs in Count It or
+its sibling Eight Time as data: thirteen Count It steps (derived from the
+presets) and Eight Time's three 3/8 steps (stored verbatim from the shop site,
+because this app's parser refuses 3/8 by design). Three readers share it, so they
+cannot disagree: the `/assignments` page, the builder's step menu, and the JSON
+the app serves at
+[`/praxis-assignment-catalog.json`](https://count-it.backwerdrhythmshop.com/praxis-assignment-catalog.json),
+which other repositories (Praxis Press, Praxis Studio) can pin or fetch.
+
+Every entry is tier `free`. Nothing here is gated and nothing could be: the
+generator ships to the browser, so a named assignment is only a set of link
+settings anyone can rebuild at `/build`. Seeds are unique across the catalog
+(`tests/catalog.test.ts`), because a book unit's seed must differ from every free
+one. To regenerate the JSON after a catalog change:
+
+```sh
+UPDATE_CATALOG_JSON=1 pnpm test tests/catalog.test.ts
+```
+
+The next plain run holds the file to the data again. The same switch exists for
+the capability manifest (`UPDATE_CAPABILITIES_JSON=1 pnpm test tests/capabilities.test.ts`).
+
+### Notation reference
+
+`/notation` explains the conventions behind every staff, and the staff itself
+follows one rule that is written down and tested rather than left in the
+renderer: `staffFurniture()` in `src/rhythm/engraving.ts` decides that a **measure**
+gets the percussion clef, a time signature and a closing barline, and a
+**one-beat fragment** gets the clef only. The reasoning, and what the other
+repositories draw, are in
+[docs/notation-engraving-standard.md](docs/notation-engraving-standard.md).
 
 ### Capability manifest
 

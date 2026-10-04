@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, Voice } from "vexflow";
-import { getMeter, measureBeamRuns } from "../src/rhythm";
+import { getMeter, measureBeamRuns, staffFurniture } from "../src/rhythm";
 import type { RhythmPrompt } from "../src/rhythm";
 
 /** A note as drawn, with the cell and token it came from — the beam runs name
@@ -42,17 +42,13 @@ export default function RhythmNotation({
       renderer.resize(width, 172);
       const context = renderer.getContext();
       const stave = new Stave(10, 26, width - 20);
-      stave.addClef("percussion");
-      /* A measure shows its time signature. A single beat does not — a lone
-         quarter note is self-evidently one beat, and printing a signature over
-         a fragment would claim a bar the arithmetic denies. */
-      if (prompt.scope === "measure") {
-        stave.addTimeSignature(meter.label);
-      }
-      /* A single beat is a FRAGMENT, so it does not get a closing barline.
-         Without one it reads as an incipit — here is a beat — which is what it
-         is. With one it reads as a complete measure, which the prompt is not. */
-      if (prompt.scope === "beat") stave.setEndBarType(Barline.type.NONE);
+      /* What the staff carries — clef, time signature, closing barline — is
+         decided once, in src/rhythm/engraving.ts, where it is tested and
+         explained. This only draws it. */
+      const furniture = staffFurniture(prompt.scope);
+      stave.addClef(furniture.clef);
+      if (furniture.timeSignature) stave.addTimeSignature(meter.label);
+      if (!furniture.closingBarline) stave.setEndBarType(Barline.type.NONE);
       stave.setContext(context).draw();
 
       const beams: Beam[] = [];
