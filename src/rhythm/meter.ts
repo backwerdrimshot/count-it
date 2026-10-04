@@ -9,7 +9,18 @@
  *
  * WHAT A METER ACTUALLY VARIES, today: one thing.
  *
- *   beatsPerMeasure   how many beats a bar holds        4/4 → 4, 3/4 → 3
+ *   beatsPerMeasure   how many beats a bar holds   2/4 → 2 … 7/4 → 7
+ *
+ * Every meter here is a QUARTER-NOTE-BEAT meter: simple time, the beat divides
+ * into four sixteenth partials, and a bar is a whole number of those beats.
+ * That is the whole admission rule. A meter whose beat is an eighth (3/8), a
+ * half (2/2), or a dotted quarter (6/8) is a different counting problem — its
+ * own vocabulary, its own beaming, its own syllables — and does not belong
+ * here. 3/8 left for Eight Time on 2026-08-29 for exactly that reason.
+ *
+ * 5/4 and 7/4 are admitted on the same terms as 3/4: the count is 1–5 or 1–7
+ * and nothing else changes. Beaming stays inside each beat, so the 3+2 / 2+3
+ * grouping an odd meter is sometimes written with is not drawn or asked.
  *
  * The beat itself is a quarter note in every meter this app reads, and it
  * divides into four sixteenth partials. That used to be a second axis: 3/8
@@ -29,7 +40,7 @@ export interface Meter {
   readonly id: MeterId;
   /** How the meter is written and spoken. Also the VexFlow time signature. */
   readonly label: string;
-  readonly beatsPerMeasure: 3 | 4;
+  readonly beatsPerMeasure: 2 | 3 | 4 | 5 | 7;
   /** Counted positions inside one beat. Every beat here is a quarter note, so
    *  every beat holds four — the beat, e, &, and a. Kept on the meter rather
    *  than as a loose constant so the consumers that count, grid, and distract
@@ -39,7 +50,7 @@ export interface Meter {
   readonly vexBeatValue: 4;
 }
 
-function meter(id: MeterId, beatsPerMeasure: 3 | 4): Meter {
+function meter(id: MeterId, beatsPerMeasure: Meter["beatsPerMeasure"]): Meter {
   return Object.freeze({
     id,
     label: id.replace("-", "/"),
@@ -49,12 +60,23 @@ function meter(id: MeterId, beatsPerMeasure: 3 | 4): Meter {
   });
 }
 
+/* Listed in order of bar length, which is the order the setup panel offers
+   them in. Nothing keys off the position: seeds mix in the meter's id, not its
+   index, so reordering this list cannot move a round. */
 export const METERS: Readonly<Record<MeterId, Meter>> = Object.freeze({
-  "4-4": meter("4-4", 4),
+  "2-4": meter("2-4", 2),
   "3-4": meter("3-4", 3),
+  "4-4": meter("4-4", 4),
+  "5-4": meter("5-4", 5),
+  "7-4": meter("7-4", 7),
 });
 
 export const DEFAULT_METER: MeterId = "4-4";
+
+/** The longest bar any meter holds. A beat number above this cannot exist. */
+export const MAX_BEATS_PER_MEASURE: number = Math.max(
+  ...Object.values(METERS).map((entry) => entry.beatsPerMeasure),
+);
 
 export const METER_IDS: readonly MeterId[] = Object.freeze(
   Object.keys(METERS) as MeterId[],

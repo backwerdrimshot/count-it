@@ -1,6 +1,6 @@
 # Supported rhythm catalog
 
-Count It MVP contains 16 verified, one-beat rhythm cells. Each cell is represented as structured timing positions plus a VexFlow rendering recipe. The Standard answer below uses beat 1 as the example; measure prompts replace that beat number with 1, 2, 3, or 4.
+Count It MVP contains 16 verified, one-beat rhythm cells. Each cell is represented as structured timing positions plus a VexFlow rendering recipe. The Standard answer below uses beat 1 as the example; measure prompts replace that beat number with the beat the cell starts on, from 1 up to the bar's last beat (2 in 2/4, up to 7 in 7/4).
 
 Subdivision positions within a beat are:
 
@@ -47,7 +47,8 @@ They sound **once**, at the top of the span. The beats underneath are silent bec
 Three rules follow, all enforced:
 
 - **Measure scope only.** "How long does this last?" is not a question one beat can pose. The app drops them when a student picks beat scope; a *link* that names one with `scope=beat` is refused, because a teacher who wrote it meant something the round cannot deliver.
-- **A bar is filled by span, not by cell count.** A half note plus two quarters is three cells and four beats. A whole note needs four beats and so appears in 4/4 alone; a half note needs two and appears in 4/4 and 3/4.
+- **A bar is filled by span, not by cell count.** A half note plus two quarters is three cells and four beats. A whole note needs four beats and so appears in 4/4, 5/4 and 7/4; a half note needs two and appears in every meter, where in 2/4 it is the whole bar.
+- **A link may not name a rhythm the bar cannot hold.** `cells=whole,quarter,eighths` with `meter=3-4` is refused: the generator would discard every draw containing the whole note, and the link would say it taught something the round never asked.
 - **They are in no level.** Levels describe how a beat subdivides, and a note that lasts is not a subdivision. They are opt-in by `cells=` only — which is also what keeps every assignment link already posted in a classroom generating the round it always did.
 
 There is **no whole rest**. It fills the bar, so a measure containing one contains nothing else and has no count to ask for. The half rest is fine because the rest of the bar still sounds, and a bar that is silent throughout is refused.
@@ -56,10 +57,19 @@ There is **no whole rest**. It fills the bar, so a measure containing one contai
 
 | Meter | Beats per bar | The beat is | Vocabulary | Beaming |
 | --- | --- | --- | --- | --- |
-| `4-4` | 4 | quarter note | the 16 cells above | inside each beat |
+| `2-4` | 2 | quarter note | the 16 cells above | inside each beat |
 | `3-4` | 3 | quarter note | the 16 cells above | inside each beat |
+| `4-4` | 4 | quarter note | the 16 cells above | inside each beat |
+| `5-4` | 5 | quarter note | the 16 cells above | inside each beat |
+| `7-4` | 7 | quarter note | the 16 cells above | inside each beat |
 
 A link that names no meter means 4/4, and generates the identical round it always did.
+
+**The admission rule is that the beat is a quarter note.** A meter that passes it needs no new cells, no new syllables and no new beaming: the count is `1 e & a` repeated, numbered up to the bar's last beat, and a bar is a whole number of those beats. 5/4 and 7/4 pass it on the same terms as 3/4. Beams stay inside each beat, so the 3+2 / 2+3 grouping an odd meter is sometimes written with is not drawn or asked.
+
+**What the rule keeps out.** An eighth-note beat (3/8, 5/8), a half-note beat (2/2, cut time) and a dotted-quarter beat (6/8, 9/8, 12/8) each need their own vocabulary, beaming and syllables — see the retired 3/8 catalog below for what one of them cost. A link naming one is refused. Mixed or changing meters and pickup measures are not read either.
+
+**A short bar caps the round.** A full-measure round never repeats a measure, so two rhythms make 4 bars of 2/4, 8 of 3/4, 16 of 4/4, 32 of 5/4 and 128 of 7/4. Level 1 in 2/4 therefore gives the student a four-question Challenge rather than five; an assignment link asking for more than its pool can fill is refused rather than shortened.
 
 ### The retired eighth-beat catalog (3/8)
 

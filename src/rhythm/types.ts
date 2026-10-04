@@ -9,9 +9,11 @@
    exception, and a whole-bars-only rule, and the formatting and rule load it
    put on this app earned it an app of its own. See git history for the full
    shape of what left, should the two ever be recombined. */
-export type MeterId = "4-4" | "3-4";
+export type MeterId = "2-4" | "3-4" | "4-4" | "5-4" | "7-4";
 
-export type BeatNumber = 1 | 2 | 3 | 4;
+/* The largest bar any meter holds is seven beats (7/4). Every beat is a
+   quarter note, so a beat number is just how far into the bar a note starts. */
+export type BeatNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type PartialPosition = 0 | 1 | 2 | 3;
 export type LevelId = "level-1" | "level-2" | "level-3";
 export type CountingSystemId = "standard" | "eastman" | "takadimi";

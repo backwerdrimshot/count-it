@@ -207,3 +207,73 @@ describe("the sequence identity markers", () => {
     expect(b.ok && a.ok ? [...b.locked] : null).toEqual(a.ok ? [...a.locked] : null);
   });
 });
+
+/* The card states the meter it was played in.
+ *
+ * A score card is what a student hands in. "Level 2 · one measure" under a
+ * seven-beat bar describes a different round than the one answered, and the
+ * machine record carried the same gap: `settings` reproduces the link's
+ * pinned parameters, and `meter` was missing from it even though it changes how
+ * many beats a bar holds and which wrong answers exist.
+ *
+ * 4/4 is the default and stays unstated, so every card and record for a 4/4
+ * round is exactly what it was. */
+describe("the meter on the card and in the record", () => {
+  function measureReceipt(meter: "2-4" | "3-4" | "4-4" | "5-4" | "7-4" | undefined, search = "") {
+    const questions = generateQuestions({
+      level: "level-2", scope: "measure", count: 3, seed: 77, ...(meter ? { meter } : {}),
+    });
+    let session = createSession(questions);
+    for (let index = 0; index < questions.length; index += 1) {
+      const current = session.questions[session.currentIndex];
+      session = advanceSession(
+        answerSession(session, current.choices.find((choice) => choice.isCorrect)!.id),
+      );
+    }
+    const parsed = search ? parseAssignment(search) : null;
+    const assignment = parsed && parsed.ok ? parsed.assignment : null;
+    return createPraxisEvidenceResult({
+      session,
+      assignment,
+      sequenceStep: null,
+      level: assignment?.level ?? "level-2",
+      scope: assignment?.scope ?? "measure",
+      finishedAt: new Date("2026-10-04T00:00:00.000Z"),
+    });
+  }
+
+  it("says so for a free-play round in any meter but 4/4", () => {
+    for (const meter of ["2-4", "3-4", "5-4", "7-4"] as const) {
+      expect(measureReceipt(meter).conditions.stated, meter).toContain(`${meter.replace("-", "/")}`);
+    }
+    expect(measureReceipt("4-4").conditions.stated).not.toMatch(/\d\/4/);
+    expect(measureReceipt(undefined).conditions.stated).not.toMatch(/\d\/4/);
+  });
+
+  it("says so for an assigned round, and records the link's own parameter", () => {
+    const seven = measureReceipt("7-4", "?scope=measure&meter=7-4&level=2&n=5&pass=4&seed=a");
+    expect(seven.conditions.stated).toContain("7/4");
+    expect(seven.settings.meter).toBe("7-4");
+  });
+
+  it("leaves a 4/4 record exactly as it was", () => {
+    /* No meter in the link: nothing stated, nothing recorded. A link that NAMES
+       4/4 records it — it is the link's parameter — but still states nothing,
+       because 4/4 is what the app does anyway. */
+    const none = measureReceipt(undefined, "?scope=measure&level=2&n=5&pass=4&seed=a");
+    expect(none.settings).not.toHaveProperty("meter");
+    expect(none.conditions.stated).not.toMatch(/\d\/4/);
+    const named = measureReceipt("4-4", "?scope=measure&meter=4-4&level=2&n=5&pass=4&seed=a");
+    expect(named.settings.meter).toBe("4-4");
+    expect(named.conditions.stated).not.toMatch(/\d\/4/);
+  });
+
+  it("adds nothing to the envelope the sibling apps share", () => {
+    /* `praxis.result.v0_1` is shared with Scale Trail and Mallet Map. The meter
+       goes in the free-text sentence and the free-form `settings` map, never in
+       a new field of `conditions`. */
+    expect(Object.keys(measureReceipt("7-4").conditions)).toEqual([
+      "scope", "level", "cells", "guide", "countingSystem", "passing", "stated",
+    ]);
+  });
+});

@@ -4,10 +4,12 @@ import {
   ENGRAVING_EXPECTATIONS,
   ENGRAVING_STANDARD_VERSION,
   METERS,
+  METER_IDS,
   RHYTHM_CELLS,
   SPANNING_CELLS,
   createMeasurePrompt,
   getDottedTokenIndexes,
+  getMeter,
   measureBeamRuns,
   getRhythmCell,
   validateEngravingCatalog,
@@ -156,8 +158,8 @@ describe("measure beam runs", () => {
     /* Every meter beams inside its own beat, so a bar's runs are exactly the
        cells' reviewed groups — the renderer never invents a beam. (The one
        meter that beamed across its bar, 3/8, was removed 2026-08-29.) */
-    for (const meter of ["4-4", "3-4"] as const) {
-      const beats = meter === "4-4" ? 4 : 3;
+    for (const meter of METER_IDS) {
+      const { beatsPerMeasure: beats } = getMeter(meter);
       const bar = createMeasurePrompt(Array.from({ length: beats }, () => "sixteenths"), meter);
       expect(measureBeamRuns(bar)).toEqual(
         Array.from({ length: beats }, (_, cellIndex) =>
@@ -186,14 +188,18 @@ describe("audit scope", () => {
       .map((meter) => meter.label);
 
   it("keeps a whole note out of the meters it cannot fill", () => {
-    expect(fitsIn(getRhythmCell("whole"))).toEqual(["4/4"]);
+    /* Four beats or more: 4/4, and the odd meters that have room for it. Not
+       2/4 or 3/4, where the app refuses such a link. */
+    expect(fitsIn(getRhythmCell("whole"))).toEqual(["4/4", "5/4", "7/4"]);
   });
 
-  it("still offers both meters to everything that fits a 3-beat bar", () => {
-    /* A half note IS legitimate in 3/4 — two of its three beats — so this must
-       not over-correct into "spanning cells are 4/4 only". */
-    expect(fitsIn(getRhythmCell("half"))).toEqual(["4/4", "3/4"]);
-    expect(fitsIn(getRhythmCell("half-rest"))).toEqual(["4/4", "3/4"]);
-    expect(fitsIn(getRhythmCell("quarter"))).toEqual(["4/4", "3/4"]);
+  it("still offers every meter to everything that fits a 2-beat bar", () => {
+    /* A half note IS legitimate in 3/4 — two of its three beats — and in 2/4,
+       where it IS the bar, so this must not over-correct into "spanning cells
+       are 4/4 only". */
+    const everyMeter = METER_IDS.map((id) => METERS[id].label);
+    expect(fitsIn(getRhythmCell("half"))).toEqual(everyMeter);
+    expect(fitsIn(getRhythmCell("half-rest"))).toEqual(everyMeter);
+    expect(fitsIn(getRhythmCell("quarter"))).toEqual(everyMeter);
   });
 });
