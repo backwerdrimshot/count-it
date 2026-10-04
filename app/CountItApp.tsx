@@ -41,6 +41,7 @@ import {
   retakeSeed,
   roundLengthFor,
   serializeAssignment,
+  unavailableChoices,
   uniqueMeasures,
   verificationCode,
   type Assignment,
@@ -218,6 +219,15 @@ function SetupControls({
   onReferenceChange: (value: boolean) => void;
   onStudentIdChange: (value: string) => void;
 }) {
+  /* On an assignment, a control the link left open is still not free: a meter
+     or a question size the pinned rhythms cannot be asked in would quietly turn
+     the round into a different one (a whole note in 3/4 is never asked; two
+     rhythms in 2/4 make four bars, not twelve). The parser's own rule says
+     which choices those are, so they are greyed out rather than offered. */
+  const unavailable = assignment ? unavailableChoices(assignment, { scope, meter, level }) : null;
+  const metersOut = !locked.has("meter") && unavailable !== null && Object.keys(unavailable.meters).length > 0;
+  const scopesOut = !locked.has("scope") && unavailable !== null && Object.keys(unavailable.scopes).length > 0;
+  const levelsOut = !locked.has("level") && unavailable !== null && Object.keys(unavailable.levels).length > 0;
   return (
     <section className="setup-panel" aria-labelledby="setup-title">
       <div className="setup-heading">
@@ -249,10 +259,15 @@ function SetupControls({
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
           >
             {LEVELS.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
+              <option key={option.id} value={option.id} disabled={Boolean(unavailable?.levels[option.id])} title={unavailable?.levels[option.id]}>
+                {option.name}
+              </option>
             ))}
           </select>
-          <small>{getLevel(level).description}</small>
+          <small>
+            {getLevel(level).description}
+            {levelsOut && " Greyed-out levels can’t run this assignment as your teacher wrote it."}
+          </small>
         </label>
       )}
       <label className="level-control">
@@ -263,24 +278,27 @@ function SetupControls({
           onChange={(event) => onMeterChange(event.target.value as MeterId)}
         >
           {METER_IDS.map((id) => (
-            <option key={id} value={id}>{METERS[id].label}</option>
+            <option key={id} value={id} disabled={Boolean(unavailable?.meters[id])} title={unavailable?.meters[id]}>
+              {METERS[id].label}
+            </option>
           ))}
         </select>
         <small>
           {getMeter(meter).beatsPerMeasure} beats per bar, and the beat is a quarter note.
+          {metersOut && " Greyed-out meters can’t run this assignment as your teacher wrote it."}
         </small>
       </label>
       <fieldset className="scope-control">
         <legend>Question size</legend>
         <div className="scope-options">
           {(["beat", "measure"] as const).map((option) => (
-            <label className={scope === option ? "is-selected" : ""} key={option}>
+            <label className={`${scope === option ? "is-selected" : ""}${unavailable?.scopes[option] ? " is-unavailable" : ""}`} key={option} title={unavailable?.scopes[option]}>
               <input
                 type="radio"
                 name="question-scope"
                 value={option}
                 checked={scope === option}
-                disabled={locked.has("scope")}
+                disabled={locked.has("scope") || Boolean(unavailable?.scopes[option])}
                 onChange={() => onScopeChange(option)}
               />
               <ScopeIcon scope={option} beats={getMeter(meter).beatsPerMeasure} />
@@ -288,6 +306,11 @@ function SetupControls({
             </label>
           ))}
         </div>
+        {scopesOut && (
+          <small className="scope-note">
+            Greyed-out sizes can’t run this assignment as your teacher wrote it.
+          </small>
+        )}
       </fieldset>
       <label className="reference-toggle">
         <input

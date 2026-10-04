@@ -199,6 +199,157 @@ function integerParam(raw: string): number | null {
   return Number.parseInt(raw, 10);
 }
 
+/** Whether a round with these conditions can be built as the link wrote it.
+ *
+ *  This is the parser's "a round that cannot be built as written is refused, not
+ *  repaired" rule, lifted out so a second caller can ask the same question: the
+ *  setup panel asks it of every scope and meter a student could pick on an
+ *  assignment, because a link that leaves one open (the ten published Counting
+ *  Rhythms links leave the meter open) is otherwise a link whose round the
+ *  student can quietly change into a different one.
+ *
+ *  Null means the round can be built. Otherwise the same error, with the same
+ *  code and the same words, that opening a link with those conditions gives.
+ *
+ *  Three rules, in this order:
+ *    * a rhythm that lasts longer than a beat cannot be a one-beat question;
+ *    * a rhythm longer than the bar can never be asked, so the round would
+ *      silently teach a different step;
+ *    * a full-measure round never repeats a measure, so the pool sets a ceiling
+ *      on its length that a link author cannot see. */
+export function roundProblem({
+  scope,
+  meter,
+  cells,
+  level,
+  count,
+}: {
+  readonly scope: AssignmentScope;
+  readonly meter: MeterId | null;
+  readonly cells: readonly string[] | null;
+  readonly level: LevelId;
+  readonly count: number | null;
+}): AssignmentError | null {
+  const activeMeter = getMeter(meter ?? DEFAULT_METER);
+
+  /* A rhythm that lasts longer than a beat cannot be a one-beat question.
+     The generator drops such cells in beat scope, which is right for the app's
+     own controls — the student chose the scope and the vocabulary follows. It
+     is wrong for a LINK: a teacher who wrote `cells=half,quarter&scope=beat`
+     meant something the round cannot deliver, and silently handing the class a
+     quarter-note-only round is the "pool with a cell missing teaches a
+     different step" failure this file exists to refuse. */
+  if (scope === "beat" && cells) {
+    const spanning = cells.map((id) => getRhythmCell(id)).filter((cell) => cell.beats > 1);
+    if (spanning.length > 0) {
+      return {
+        code: "scope-cells",
+        entry: spanning[0].id,
+        message:
+          `${spanning.length === 1 ? "The rhythm" : "The rhythms"} ` +
+          `${spanning.map((cell) => `\u201c${cell.id}\u201d`).join(", ")} ` +
+          `${spanning.length === 1 ? "lasts" : "last"} longer than one beat, so ` +
+          "this practice link cannot ask for one-beat questions. Ask for full measures, " +
+          "or drop those rhythms.",
+      };
+    }
+  }
+
+  if (scope === "measure") {
+    const pool = cells ? cells.map((id) => getRhythmCell(id)) : getCellsForLevel(level);
+    /* A rhythm the bar cannot hold would be named by the link and never asked:
+       the generator discards any draw that overshoots the bar line, so
+       `cells=whole,quarter,eighths` in 3/4 builds a round of quarters and
+       eighths and the link says it taught the whole note. That is the same
+       "pool with a cell missing" failure the rest of this file refuses, and the
+       shorter the bar the likelier it is, so it is refused at the link. */
+    const tooLong = pool.filter((cell) => cell.beats > activeMeter.beatsPerMeasure);
+    if (tooLong.length > 0) {
+      return {
+        code: "meter-cells",
+        entry: tooLong[0].id,
+        message:
+          `${tooLong.length === 1 ? "The rhythm" : "The rhythms"} ` +
+          `${tooLong.map((cell) => `\u201c${cell.id}\u201d`).join(", ")} ` +
+          `${tooLong.length === 1 ? "lasts" : "last"} longer than a ${activeMeter.label} ` +
+          "measure holds, so this practice link could never ask for " +
+          `${tooLong.length === 1 ? "it" : "them"}. Choose a longer meter, or drop ` +
+          `${tooLong.length === 1 ? "that rhythm" : "those rhythms"}.`,
+      };
+    }
+    /* A measure round assembles whole bars and never repeats one, so the pool
+       sets a ceiling the link author cannot see: two rhythms make sixteen bars
+       of 4/4, and asking for twenty used to be ACCEPTED here and then throw
+       while the round was being built — after the banner, the level, the scope
+       and the pass mark had already applied. */
+    const available = uniqueMeasures(pool, activeMeter.beatsPerMeasure);
+    const wanted = count ?? DEFAULT_QUESTIONS;
+    if (available < wanted) {
+      return {
+        code: "measure-pool",
+        message:
+          `This practice link asks for ${wanted} full-measure questions, but ${pool.length} ` +
+          `rhythms can only make ${available} different ${activeMeter.label} measures. Ask for ` +
+          "fewer questions, or add rhythms to the link.",
+      };
+    }
+  }
+
+  return null;
+}
+
+/** The levels, scopes and meters a student can switch to on an assignment
+ *  WITHOUT changing what it asks, and why each of the others cannot be chosen.
+ *
+ *  `current` is where the STUDENT is now, not where the link started. A link
+ *  that leaves the level open lets them move it, and every other judgement here
+ *  is made against the pool they are actually in: judging against the link's own
+ *  level would say 2/4 was fine after the student had switched to a level whose
+ *  two rhythms make only four bars of it.
+ *
+ *  Each dimension is judged with the others held at their current values, so
+ *  from any valid state an allowed change lands on another valid state — there is
+ *  no sequence of allowed clicks that reaches a round the link could not have
+ *  described. A dimension the link pinned is never offered as a choice, so it is
+ *  not judged here. When the link names its rhythms the level does not matter,
+ *  and no level is ruled out.
+ *
+ *  The value is the reason in the parser's own words, for a tooltip or a note;
+ *  absence means the choice is fine. */
+export function unavailableChoices(
+  assignment: Assignment,
+  current: { readonly scope: AssignmentScope; readonly meter: MeterId; readonly level: LevelId },
+): {
+  readonly scopes: Readonly<Partial<Record<AssignmentScope, string>>>;
+  readonly meters: Readonly<Partial<Record<MeterId, string>>>;
+  readonly levels: Readonly<Partial<Record<LevelId, string>>>;
+} {
+  const base = { cells: assignment.cells, count: assignment.count };
+  const scopes: Partial<Record<AssignmentScope, string>> = {};
+  const meters: Partial<Record<MeterId, string>> = {};
+  const levels: Partial<Record<LevelId, string>> = {};
+  for (const scope of ["beat", "measure"] as const) {
+    if (scope === current.scope) continue;
+    const problem = roundProblem({ ...base, level: current.level, scope, meter: current.meter });
+    if (problem) scopes[scope] = problem.message;
+  }
+  for (const meter of METER_IDS) {
+    if (meter === current.meter) continue;
+    const problem = roundProblem({ ...base, level: current.level, scope: current.scope, meter });
+    if (problem) meters[meter] = problem.message;
+  }
+  for (const level of LEVEL_IDS) {
+    if (level === current.level) continue;
+    const problem = roundProblem({ ...base, level, scope: current.scope, meter: current.meter });
+    if (problem) levels[level] = problem.message;
+  }
+  return Object.freeze({
+    scopes: Object.freeze(scopes),
+    meters: Object.freeze(meters),
+    levels: Object.freeze(levels),
+  });
+}
+
 /**
  * Parse and validate an assignment link.
  *
@@ -405,84 +556,11 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("n");
   }
 
-  /* A measure round assembles four cells and never repeats a measure, so the
-     pool sets a ceiling the link author cannot see: two rhythms make sixteen
-     measures, and asking for twenty used to be ACCEPTED here and then throw
-     while the round was being built — after the banner, the level, the scope
-     and the pass mark had already applied. The student answered the default
-     round under the assignment's stated conditions. Rejecting the link is the
-     same rule as every other check in this file: a round that cannot be built
-     as written is not repaired into a different one. */
-  const activeMeter = getMeter(meter ?? DEFAULT_METER);
-
-  /* A rhythm that lasts longer than a beat cannot be a one-beat question.
-     The generator drops such cells in beat scope, which is right for the app's
-     own controls — the student chose the scope and the vocabulary follows. It
-     is wrong for a LINK: a teacher who wrote `cells=half,quarter&scope=beat`
-     meant something the round cannot deliver, and silently handing the class a
-     quarter-note-only round is the "pool with a cell missing teaches a
-     different step" failure this file exists to refuse. */
-  if (scope === "beat" && cells) {
-    const spanning = cells.map((id) => getRhythmCell(id)).filter((cell) => cell.beats > 1);
-    if (spanning.length > 0) {
-      return {
-        ok: false,
-        error: {
-          code: "scope-cells",
-          entry: spanning[0].id,
-          message:
-            `${spanning.length === 1 ? "The rhythm" : "The rhythms"} ` +
-            `${spanning.map((cell) => `\u201c${cell.id}\u201d`).join(", ")} ` +
-            `${spanning.length === 1 ? "lasts" : "last"} longer than one beat, so ` +
-            "this practice link cannot ask for one-beat questions. Ask for full measures, " +
-            "or drop those rhythms.",
-        },
-      };
-    }
-  }
-
-  if (scope === "measure") {
-    const pool = cells
-      ? cells.map((id) => getRhythmCell(id))
-      : getCellsForLevel(level);
-    /* A rhythm the bar cannot hold would be named by the link and never asked:
-       the generator discards any draw that overshoots the bar line, so
-       `cells=whole,quarter,eighths` in 3/4 builds a round of quarters and
-       eighths and the link says it taught the whole note. That is the same
-       "pool with a cell missing" failure the rest of this file refuses, and the
-       shorter the bar the likelier it is, so it is refused at the link. */
-    const tooLong = pool.filter((cell) => cell.beats > activeMeter.beatsPerMeasure);
-    if (tooLong.length > 0) {
-      return {
-        ok: false,
-        error: {
-          code: "meter-cells",
-          entry: tooLong[0].id,
-          message:
-            `${tooLong.length === 1 ? "The rhythm" : "The rhythms"} ` +
-            `${tooLong.map((cell) => `“${cell.id}”`).join(", ")} ` +
-            `${tooLong.length === 1 ? "lasts" : "last"} longer than a ${activeMeter.label} ` +
-            "measure holds, so this practice link could never ask for " +
-            `${tooLong.length === 1 ? "it" : "them"}. Choose a longer meter, or drop ` +
-            `${tooLong.length === 1 ? "that rhythm" : "those rhythms"}.`,
-        },
-      };
-    }
-    const available = uniqueMeasures(pool, activeMeter.beatsPerMeasure);
-    const wanted = count ?? DEFAULT_QUESTIONS;
-    if (available < wanted) {
-      return {
-        ok: false,
-        error: {
-          code: "measure-pool",
-          message:
-            `This practice link asks for ${wanted} full-measure questions, but ${pool.length} ` +
-            `rhythms can only make ${available} different ${activeMeter.label} measures. Ask for ` +
-            "fewer questions, or add rhythms to the link.",
-        },
-      };
-    }
-  }
+  /* Whether the round can be built as written. The rules live in roundProblem,
+     which the setup panel asks too, so what a student is allowed to choose and
+     what a link is allowed to say can never disagree. */
+  const roundError = roundProblem({ scope, meter, cells, level, count });
+  if (roundError) return { ok: false, error: roundError };
 
   let passing: number | null = null;
   const passRaw = params.get("pass");
