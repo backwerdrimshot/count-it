@@ -1332,6 +1332,8 @@ export default function CountItApp() {
         <div className="foot-links">
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
         <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
+          {/* A plain anchor: next/link throws on click in this vinext build. */}
+          <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
           <a className="foot-btn" href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Support%20request">Report a problem</a>
           <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>
