@@ -335,6 +335,10 @@ function SetupControls({
         <strong>Standard</strong>
         <code>1 e & a</code>
       </div>
+      <nav className="setup-help" aria-label="Help and more apps">
+        <a href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
+        <a href="https://apps.backwerdrhythmshop.com/">More apps</a>
+      </nav>
     </section>
   );
 }

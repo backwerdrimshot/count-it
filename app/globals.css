@@ -2160,6 +2160,13 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .setup-popover[hidden] { display: none; }
 .setup-popover .setup-panel { border: 1px solid var(--ink); border-radius: var(--radius-lg); }
 
+/* Quiet help row at the very bottom of the panel. */
+.setup-help { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 20px; border-top: 1px solid var(--line); margin-top: -4px; padding-top: 6px; }
+.setup-help a { display: inline-flex; align-items: center; min-height: 36px; color: var(--ink-soft); font-size: 0.86rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.setup-help a:hover { color: var(--ink); }
+@media (pointer: coarse) { .setup-help a { min-height: 44px; padding-inline: 4px; } }
+@media print { .setup-help { display: none; } }
+
 .link-error, .practice-locked-note { flex: none; margin-top: 8px; }
 
 /* The stage */
