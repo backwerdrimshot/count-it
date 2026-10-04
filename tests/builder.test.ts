@@ -335,7 +335,13 @@ describe("every combination of choices", () => {
     /* A loop that covered nothing would pass: both outcomes must be reached. */
     expect(accepted).toBeGreaterThan(300);
     expect(refused).toBeGreaterThan(300);
-  });
+    /* An explicit timeout, because this enumerates ~2,000 combinations and takes
+       about four seconds on a fast machine — against vitest's five-second
+       default. It passed in CI twice by a fraction of a second and then took
+       5.46s on a slower runner, failing the check and (correctly) stopping the
+       deploy that is gated on it. A test whose runtime sits next to its limit is
+       a flake waiting for a slow runner. */
+  }, 60_000);
 
   it("writes a link the parser reads back as the same assignment", () => {
     for (const vocabulary of vocabularies) {
