@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-04.3`
+- **Build:** `2026-10-04.4`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -26,6 +26,33 @@ documentation.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
+
+### Assignment builder
+
+Writing the link by hand is the hard part, so the app writes it: **`/build`** is a
+form where a teacher chooses a level or the exact rhythms, the meter, one beat or
+a measure, the guide, when answers show, what trying again means, the length, the
+pass mark and a seed, and gets the link to post.
+
+It never judges a link itself. The choices are composed into a query string and
+handed to `parseAssignment` — the function the student's browser runs — and
+whatever it says is what the form shows, in the same words. A link the builder
+calls valid is therefore one the app accepts, and there is no second copy of the
+rules to drift from the first. `tests/builder.test.ts` enumerates every
+combination of the choices and requires each to be either refused with a message
+or playable end to end.
+
+Three decisions worth knowing:
+
+- **It writes only what was pinned.** A control left on "Student chooses" is
+  absent from the link and stays the student's. The app's own canonical form
+  (`serializeAssignment`) always writes `scope=`, so the builder does not use it.
+- **A bad seed is refused, not written.** The parser silently ignores an invalid
+  seed, and a link that quietly lost its seed would give a class different
+  questions under one assignment name.
+- **Legal but questionable is a note, never an error.** No seed, no pass mark, or
+  leaving the question size to the student when full measures could not fill the
+  round are said plainly and do not block the link.
 
 ### Capability manifest
 
