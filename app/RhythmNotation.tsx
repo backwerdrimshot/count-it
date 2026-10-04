@@ -16,6 +16,9 @@ interface DrawnNote {
   readonly beamable: boolean;
 }
 
+const CROP_TOP = 30;
+const CROP_HEIGHT = 112;
+
 export default function RhythmNotation({
   prompt,
   label,
@@ -129,6 +132,15 @@ export default function RhythmNotation({
       beams.forEach((beam) => beam.setContext(context).draw());
 
       const svg = element.querySelector("svg");
+      /* The engraving sits in the middle of a 172px canvas with a lot of empty
+         paper above and below the staff. Crop to the staff and what hangs off
+         it (stems, beams, tuplet numbers, ledger-free percussion line), so the
+         question takes less of a short screen. The drawing is unchanged. */
+      if (svg) {
+        svg.setAttribute("viewBox", `0 ${CROP_TOP} ${width} ${CROP_HEIGHT}`);
+        svg.setAttribute("height", String(CROP_HEIGHT));
+        svg.style.height = `${CROP_HEIGHT}px`;
+      }
       svg?.setAttribute("role", "img");
       svg?.setAttribute("aria-label", label);
       svg?.setAttribute("focusable", "false");

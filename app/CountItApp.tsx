@@ -376,9 +376,6 @@ function PracticeMode({
       <div className={`reveal-panel ${revealed ? "is-revealed" : ""}`}>
         <span className="reveal-label">Correct count</span>
         <strong>{revealed ? answer : "Say it first, then check."}</strong>
-        <button type="button" className="secondary-button" onClick={onReveal}>
-          {revealed ? "Hide the count" : "Reveal the count"}
-        </button>
       </div>
       {revealed && (
         <div className="explanation" role="status">
@@ -386,9 +383,12 @@ function PracticeMode({
           <p><strong>Why it counts this way</strong>{explanation}</p>
         </div>
       )}
-      <div className="practice-actions">
+      <div className="dock practice-actions">
         <button type="button" className="quiet-button" onClick={onPrevious}>Back</button>
         <button type="button" className="quiet-button" onClick={onShuffle}>Mix examples</button>
+        <button type="button" className="secondary-button" onClick={onReveal} aria-pressed={revealed}>
+          {revealed ? "Hide the count" : "Reveal the count"}
+        </button>
         <button type="button" className="primary-button" onClick={onNext}>Next example <span aria-hidden="true">→</span></button>
       </div>
     </section>
@@ -675,7 +675,7 @@ function ChallengeMode({
           <CountReference prompt={question.prompt} revealSounding={!holdFeedback && Boolean(response)} />
         </div>
       )}
-      <div className="answer-grid" aria-label="Answer choices">
+      <div className={`answer-grid scope-${scope}`} aria-label="Answer choices">
         {question.choices.map((choice, index) => {
           const isSelected = response?.choiceId === choice.id;
           const classNames = [
@@ -703,6 +703,7 @@ function ChallengeMode({
           );
         })}
       </div>
+      <div className="dock">
       <div
         className={`feedback-panel ${
           !response ? "is-waiting" : holdFeedback ? "is-held" : response.correct ? "is-correct" : "is-incorrect"
@@ -735,6 +736,7 @@ function ChallengeMode({
             </button>
           </>
         )}
+      </div>
       </div>
     </section>
   );
@@ -828,6 +830,29 @@ export default function CountItApp() {
   const [deviceVariant, setDeviceVariant] = useState("");
   /** The assignment's canonical link, used to key its attempt tally. */
   const [attemptKey, setAttemptKey] = useState("");
+  /* The setup options live in a panel that floats over the page, so the
+     practice question and its action bar own the first screen at every width. */
+  const [setupOpen, setSetupOpen] = useState(false);
+  const focusBar = useRef<HTMLDivElement>(null);
+  const setupToggle = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!setupOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setSetupOpen(false);
+      setupToggle.current?.focus();
+    };
+    const onPointer = (event: PointerEvent) => {
+      if (focusBar.current && !focusBar.current.contains(event.target as Node)) setSetupOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [setupOpen]);
 
   const locked = useMemo(
     () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
@@ -1137,19 +1162,6 @@ export default function CountItApp() {
       </header>
 
       <main id="top">
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow">Rhythm counting trainer</p>
-            <h1 id="hero-title">See the rhythm.<br /><span>Say the count.</span></h1>
-            <p>Build the connection between notation and spoken subdivision counting - one clear example at a time.</p>
-          </div>
-          <div className="hero-lesson" aria-label="How Count It works">
-            <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
-            <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
-            <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
-          </div>
-        </section>
-
         <div className="mode-wrap" id="trainer">
           <div className="mode-tabs" role="tablist" aria-label="Learning mode">
             <button
@@ -1194,21 +1206,44 @@ export default function CountItApp() {
             </p>
           )}
 
-          <SetupControls
-            level={level}
-            scope={scope}
-            meter={meter}
-            showReference={showReference}
-            assignment={assignment}
-            locked={locked}
-            studentId={studentId}
-            identityLocked={identityLocked}
-            onLevelChange={changeLevel}
-            onScopeChange={changeScope}
-            onMeterChange={changeMeter}
-            onReferenceChange={setShowReference}
-            onStudentIdChange={changeStudentId}
-          />
+          <div className="focus-bar" ref={focusBar}>
+            <button
+              type="button"
+              ref={setupToggle}
+              className="focus-toggle"
+              aria-expanded={setupOpen}
+              aria-controls="setup-popover"
+              onClick={() => setSetupOpen((open) => !open)}
+            >
+              <span className="focus-label">{assignment ? "Assigned" : "Set your focus"}</span>
+              <span className="focus-summary">
+                {[
+                  assignment?.name ?? (assignment?.cells ? `${assignment.cells.length} rhythms` : getLevel(level).name),
+                  getMeter(meter).label,
+                  scope === "beat" ? "One beat" : "One measure",
+                  showReference ? "Guide on" : "Guide off",
+                ].join(" · ")}
+              </span>
+              <span className="focus-action" aria-hidden="true">{setupOpen ? "Close" : "Change"} <i>▾</i></span>
+            </button>
+            <div id="setup-popover" className="setup-popover" hidden={!setupOpen}>
+              <SetupControls
+                level={level}
+                scope={scope}
+                meter={meter}
+                showReference={showReference}
+                assignment={assignment}
+                locked={locked}
+                studentId={studentId}
+                identityLocked={identityLocked}
+                onLevelChange={changeLevel}
+                onScopeChange={changeScope}
+                onMeterChange={changeMeter}
+                onReferenceChange={setShowReference}
+                onStudentIdChange={changeStudentId}
+              />
+            </div>
+          </div>
 
           {mode === "practice" ? (
             <PracticeMode
@@ -1249,6 +1284,19 @@ export default function CountItApp() {
             />
           )}
         </div>
+
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <p className="eyebrow">About Count It</p>
+            <h1 id="hero-title">See the rhythm.<br /><span>Say the count.</span></h1>
+            <p>Build the connection between notation and spoken subdivision counting - one clear example at a time.</p>
+          </div>
+          <div className="hero-lesson" aria-label="How Count It works">
+            <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
+            <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
+            <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
+          </div>
+        </section>
 
         <section className="quick-lesson" aria-labelledby="lesson-title">
           <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
