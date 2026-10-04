@@ -15,6 +15,11 @@ import {
   type BuilderState,
   type Vocabulary,
 } from "../src/assignment/builder";
+import {
+  COUNTING_RHYTHMS_SEQUENCE_URL,
+  COUNTING_RHYTHMS_STEPS,
+  getPreset,
+} from "../src/assignment/presets";
 import type { MeterId } from "../src/rhythm";
 
 type VocabularyKind = Vocabulary["kind"];
@@ -59,6 +64,7 @@ export default function AssignmentBuilder() {
   const [countText, setCountText] = useState("10");
   const [passText, setPassText] = useState("8");
   const [seed, setSeed] = useState("");
+  const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
   const [copyMessage, setCopyMessage] = useState("");
   const linkField = useRef<HTMLInputElement>(null);
@@ -105,6 +111,31 @@ export default function AssignmentBuilder() {
   const result = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
 
   const heldNotesAllowed = scope === "measure";
+
+  /* Fill every field from a step of the Counting Rhythms sequence, exactly as
+     the sequence page publishes it (the presets' own test holds the published
+     links verbatim). Everything stays editable afterwards. Choosing "my own
+     choices" leaves the form as it is rather than wiping it. */
+  function applyPreset(id: string) {
+    setPresetId(id);
+    const preset = getPreset(id);
+    if (!preset) return;
+    const next = preset.state;
+    setName(next.name);
+    setVocabKind(next.vocabulary.kind);
+    if (next.vocabulary.kind === "level") setLevel(next.vocabulary.level);
+    if (next.vocabulary.kind === "cells") setCells(next.vocabulary.cells);
+    setScope(next.scope);
+    setMeter(next.meter);
+    setGuide(next.guide);
+    setFeedback(next.feedback);
+    setRetry(next.retry);
+    setCountText(next.count === null ? "" : String(next.count));
+    setPassText(next.passing === null ? "" : String(next.passing));
+    setSeed(next.seed);
+  }
+
+  const chosenPreset = getPreset(presetId);
 
   function changeScope(next: "beat" | "measure" | null) {
     setScope(next);
@@ -174,6 +205,35 @@ export default function AssignmentBuilder() {
             aria-label="Assignment settings"
             onSubmit={(event) => event.preventDefault()}
           >
+            <fieldset className="builder-group">
+              <legend>Start from a step <small>optional</small></legend>
+              <label className="level-control">
+                <span className="builder-visually-hidden">Counting Rhythms step to start from</span>
+                <select value={presetId} onChange={(event) => applyPreset(event.target.value)}>
+                  <option value="">My own choices</option>
+                  {COUNTING_RHYTHMS_STEPS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      Step {preset.step}: {preset.title}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  {chosenPreset
+                    ? `${chosenPreset.focus}. ${chosenPreset.state.count} questions, pass at ${chosenPreset.state.passing}. Change anything below.`
+                    : "The ten steps of the Counting Rhythms sequence, filled in as published. Change anything after."}
+                  {" "}
+                  <a href={COUNTING_RHYTHMS_SEQUENCE_URL} target="_blank" rel="noopener noreferrer">About the sequence</a>
+                </small>
+              </label>
+              {chosenPreset && (
+                <p className="builder-preset-note">
+                  This keeps the step&rsquo;s own seed, so your class runs the same questions as the published
+                  step and scores stay comparable. The meter is pinned to 4/4. Press &ldquo;New seed&rdquo; for
+                  different questions.
+                </p>
+              )}
+            </fieldset>
+
             <fieldset className="builder-group">
               <legend>Name <small>optional</small></legend>
               <label className="builder-field">

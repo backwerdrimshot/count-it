@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-04.4`
+- **Build:** `2026-10-04.5`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -53,6 +53,18 @@ Three decisions worth knowing:
 - **Legal but questionable is a note, never an error.** No seed, no pass mark, or
   leaving the question size to the student when full measures could not fill the
   round are said plainly and do not block the link.
+- **It can start from a Counting Rhythms step.** The "Start from a step" selector
+  fills the form from any of the ten steps of the
+  [Counting Rhythms sequence](https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/),
+  then everything stays editable. The steps are copied from the shop site's own
+  page, and `tests/presets.test.ts` holds that page's ten links verbatim and
+  requires each preset to run the **byte-identical round** its link runs — same
+  questions, same choices, same order — so "Step 3" here cannot quietly become a
+  different step from Step 3 there. Two deliberate differences, both asserted: the
+  meter is pinned to 4/4 (the published links leave it to the student, and a
+  student who switches a link naming a whole note to 2/4 gets a round that never
+  asks it), and the `seq`/`step` label is left off, because it stops being true
+  the moment a teacher changes anything.
 
 ### Capability manifest
 
