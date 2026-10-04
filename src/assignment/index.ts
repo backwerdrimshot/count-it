@@ -559,12 +559,19 @@ export function isAssigned(result: AssignmentResult): boolean {
   return result.ok && (result.locked.length > 0 || result.assignment.name !== null);
 }
 
-/** Canonical serialization, so a link round-trips losslessly. */
+/** Canonical serialization, so a link round-trips losslessly.
+ *
+ *  This is also the key a browser's attempt tally is stored under, so anything
+ *  the link pins that changes the round has to be in it. The meter was not, for
+ *  as long as 3/4 existed: a 3/4 assignment and its 4/4 twin counted attempts
+ *  together. A link that names no meter still serializes exactly as it always
+ *  did, so no existing tally is orphaned. */
 export function serializeAssignment(assignment: Assignment): string {
   const parts: string[] = [];
   if (assignment.name) parts.push(`a=${encodeURIComponent(assignment.name)}`);
   if (!assignment.cells) parts.push(`level=${assignment.level.slice(-1)}`);
   parts.push(`scope=${assignment.scope}`);
+  if (assignment.meter) parts.push(`meter=${assignment.meter}`);
   if (assignment.cells) parts.push(`cells=${assignment.cells.join(",")}`);
   if (assignment.guide) parts.push(`guide=${assignment.guide}`);
   if (assignment.feedback) parts.push(`fb=${assignment.feedback}`);

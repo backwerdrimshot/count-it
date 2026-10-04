@@ -59,6 +59,34 @@ describe("the assignment link", () => {
     expect(serializeAssignment(second.assignment)).toBe(url);
   });
 
+  it("round-trips the meter, which the canonical link used to drop", () => {
+    /* serializeAssignment is the key the attempt tally is stored under, so a
+       link that loses its meter in serialization shares a tally with every
+       other meter's version of the same round — a 7/4 and a 3/4 assignment
+       otherwise identical counted as one, and a retry in one raising the
+       attempt number on the other. It was also false to say a link round-trips
+       losslessly while this was true. */
+    for (const meter of METER_IDS) {
+      const first = ok(`?a=Odd&scope=measure&meter=${meter}&level=2&n=5&pass=4&seed=m1`);
+      const url = serializeAssignment(first.assignment);
+      expect(url, meter).toContain(`meter=${meter}`);
+      const second = ok(url);
+      expect(second.assignment, meter).toEqual(first.assignment);
+      expect(serializeAssignment(second.assignment), meter).toBe(url);
+    }
+  });
+
+  it("keeps two meters of the same round apart, and leaves a no-meter link alone", () => {
+    const base = "?scope=measure&level=2&n=5&pass=4&seed=m1";
+    const keys = new Set(
+      METER_IDS.map((meter) => serializeAssignment(ok(`${base}&meter=${meter}`).assignment)),
+    );
+    expect(keys.size).toBe(METER_IDS.length);
+    /* A link that names no meter serializes exactly as it always did, so no
+       existing attempt tally is orphaned by this. */
+    expect(serializeAssignment(ok(base).assignment)).toBe("?level=2&scope=measure&n=5&pass=4&seed=m1");
+  });
+
   it("collapses exact duplicate cells and keeps catalog order", () => {
     // Two links naming the same vocabulary in different orders are one round.
     const a = ok("?cells=sixteenths,quarter,quarter").assignment;
