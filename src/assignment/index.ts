@@ -26,6 +26,7 @@ import {
   ALL_RHYTHM_CELLS,
   DEFAULT_METER,
   METER_IDS,
+  getCellsByIds,
   getCellsForLevel,
   getLevel,
   getMeter,
@@ -98,6 +99,36 @@ export function uniqueMeasures(
   return arrangements(cells) - arrangements(silent);
 }
 
+/** How long a round can honestly be, given how long it was asked to be.
+ *
+ *  A one-beat round has no ceiling the controls can reach. A full-measure round
+ *  never repeats a measure, so the pool sets one — and the shorter the bar, the
+ *  lower it sits: two rhythms make 4 bars of 2/4, against 8 of 3/4 and 16 of
+ *  4/4. Level 1 in 2/4 is therefore shorter than the five-question default, and
+ *  asking the generator for five threw rather than returning four.
+ *
+ *  This is for the student's OWN controls, where a shorter round is a shorter
+ *  round. It is never the answer for an assignment link: a teacher who asked
+ *  for twelve meant twelve, and `parseAssignment` has already refused the link
+ *  if the pool cannot fill them, so for a link this returns `wanted` unchanged. */
+export function roundLengthFor({
+  level,
+  scope,
+  meter = DEFAULT_METER,
+  cells: cellIds,
+  wanted,
+}: {
+  readonly level: LevelId;
+  readonly scope: AssignmentScope;
+  readonly meter?: MeterId;
+  readonly cells?: readonly string[];
+  readonly wanted: number;
+}): number {
+  if (scope !== "measure") return wanted;
+  const pool = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level);
+  return Math.max(1, Math.min(wanted, uniqueMeasures(pool, getMeter(meter).beatsPerMeasure)));
+}
+
 export interface AssignmentError {
   readonly code:
     | "cell"
@@ -108,6 +139,7 @@ export interface AssignmentError {
     | "scope"
     | "meter"
     | "scope-cells"
+    | "meter-cells"
     | "system"
     | "feedback"
     | "retry"
@@ -413,6 +445,29 @@ export function parseAssignment(search: string): AssignmentResult {
     const pool = cells
       ? cells.map((id) => getRhythmCell(id))
       : getCellsForLevel(level);
+    /* A rhythm the bar cannot hold would be named by the link and never asked:
+       the generator discards any draw that overshoots the bar line, so
+       `cells=whole,quarter,eighths` in 3/4 builds a round of quarters and
+       eighths and the link says it taught the whole note. That is the same
+       "pool with a cell missing" failure the rest of this file refuses, and the
+       shorter the bar the likelier it is, so it is refused at the link. */
+    const tooLong = pool.filter((cell) => cell.beats > activeMeter.beatsPerMeasure);
+    if (tooLong.length > 0) {
+      return {
+        ok: false,
+        error: {
+          code: "meter-cells",
+          entry: tooLong[0].id,
+          message:
+            `${tooLong.length === 1 ? "The rhythm" : "The rhythms"} ` +
+            `${tooLong.map((cell) => `“${cell.id}”`).join(", ")} ` +
+            `${tooLong.length === 1 ? "lasts" : "last"} longer than a ${activeMeter.label} ` +
+            "measure holds, so this practice link could never ask for " +
+            `${tooLong.length === 1 ? "it" : "them"}. Choose a longer meter, or drop ` +
+            `${tooLong.length === 1 ? "that rhythm" : "those rhythms"}.`,
+        },
+      };
+    }
     const available = uniqueMeasures(pool, activeMeter.beatsPerMeasure);
     const wanted = count ?? DEFAULT_QUESTIONS;
     if (available < wanted) {

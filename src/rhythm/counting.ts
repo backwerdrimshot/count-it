@@ -1,4 +1,4 @@
-import { beatStarts, getMeter } from "./meter";
+import { beatStarts, getMeter, MAX_BEATS_PER_MEASURE } from "./meter";
 import type {
   BeatNumber,
   CountingSystemId,
@@ -36,8 +36,10 @@ export const COUNTING_SYSTEMS: Readonly<Record<CountingSystemId, CountingSystem>
   });
 
 function assertBeat(beat: number): asserts beat is BeatNumber {
-  if (!Number.isInteger(beat) || beat < 1 || beat > 4) {
-    throw new RangeError("Beat number must be between 1 and 4.");
+  /* The ceiling is the longest bar a meter holds, read off the meters rather
+     than written as a literal — which is how "4" got everywhere to begin with. */
+  if (!Number.isInteger(beat) || beat < 1 || beat > MAX_BEATS_PER_MEASURE) {
+    throw new RangeError(`Beat number must be between 1 and ${MAX_BEATS_PER_MEASURE}.`);
   }
 }
 

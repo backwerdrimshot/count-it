@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-04`
+- **Build:** `2026-10-04.2`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -21,8 +21,8 @@ documentation.
 - **Practice:** move through one-beat or full-measure prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
 - **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
-- **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4 alone.
-- **Two simple meters:** 4/4 and 3/4, chosen per assignment link. 3/4 reads the same quarter-note beat as 4/4 with one fewer of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned eight-time an app of its own (planned; the two may be recombined later). A link naming `meter=3-8` or a retired eighth-beat cell id is refused with a plain-language message, never repaired.
+- **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4, 5/4 and 7/4 only.
+- **Five quarter-note-beat meters:** 2/4, 3/4, 4/4, 5/4 and 7/4, chosen per assignment link or in the setup panel. Each reads the same quarter-note beat as 4/4 with a different number of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. In 5/4 and 7/4 beams stay inside each beat, so the 3+2 or 2+3 grouping an odd meter is sometimes written with is not drawn or asked. That is the whole admission rule: **the beat is a quarter note.** Eighth-beat (3/8), half-note-beat (2/2) and compound (6/8) meters are different counting problems and are not read here. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned [Eight Time](https://eight-time.backwerdrhythmshop.com/) an app of its own (the two share git ancestry and may be recombined later). A link naming `meter=3-8` or a retired eighth-beat cell id is refused with a plain-language message, never repaired.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
@@ -53,6 +53,7 @@ be a contract nobody signed up to.
 | `a` | Assignment name shown to the student. Display text only. |
 | `level` | `1`–`3`. Ignored when `cells` is present. |
 | `scope` | `beat` or `measure`. |
+| `meter` | `2-4`, `3-4`, `4-4`, `5-4` or `7-4`. Absent means 4/4. Anything else — including the retired `3-8` — is refused. A `cells` pool naming a rhythm the bar cannot hold (a whole note in 2/4 or 3/4) is refused too, rather than quietly never asked. |
 | `cells` | Explicit rhythm vocabulary by catalog id. Levels are cumulative, so this is the only way to assign a subset — "the rest-entry cells and nothing else" is not a level. |
 | `guide` | `on` or `off`. A support policy set by the assignment, not the learner. |
 | `fb` | `each` or `end`. When the correct answer appears. `end` also hides the running score and the guide's highlighting until the round is over. |
@@ -146,13 +147,14 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - The visible MVP uses the standard American `1 e & a` system. Eastman and Takadimi mappings remain internal compatibility data for later expansion.
 - Every catalog recipe fills exactly one quarter-note beat and is validated at startup/test time.
 - Every catalog recipe is checked against an independent engraving baseline for beams, dots, and partial-beam direction.
-- A four-beat prompt is assembled from four independently verified cells, so beat numbers are substituted consistently.
+- A full-measure prompt is assembled from independently verified cells whose spans fill the bar, and each cell is numbered by the beat it starts on, so beat numbers are substituted consistently in every meter.
 - Full-beat rests are excluded from scored prompts because an answer containing no spoken syllable would be ambiguous in a text-choice interaction.
 - Distractors are generated from other valid active-position patterns or a deliberate beat-number error and are rejected if they normalize to the correct answer.
 
 ## MVP limits
 
-- Straight quarter-, eighth-, and sixteenth-note subdivisions in 4/4 only.
+- Straight quarter-, eighth-, and sixteenth-note subdivisions in quarter-note-beat meters only (2/4, 3/4, 4/4, 5/4, 7/4).
+- A full-measure round never repeats a measure, so a short bar caps the round: two rhythms make only four bars of 2/4, so Level 1 in 2/4 is a four-question Challenge rather than five. An assignment link is refused instead of shortened.
 - No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, accounts, cloud sync, analytics, or backend.
 - Standard counting is the only user-selectable system in this release.
 - Progress is device-local and intentionally lightweight.

@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-10-04",
+  "version": "2026-10-04.2",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
@@ -38,9 +38,9 @@
     "pass",
     "seed"
   ],
-  "assignmentLink": "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 4/4 or 3/4, `guide` fixes the subdivision-guide policy, `fb` chooses whether the correct answer appears after each question or only at the end, `retry` chooses what trying again means, `n` and `pass` set the length and the goal, and `seed` makes every student's questions identical. `level` is a shorthand for a cumulative vocabulary and is superseded when `cells` is present. `a` is a display name and `sys` names the counting system.",
-  "assignmentValidation": "Rejects loudly and never repairs: an unknown rhythm id, fewer than 2 rhythms after duplicates collapse, a question count outside 1–20, a pass mark the round cannot reach (measured against the round's real length, 5 when the link sets none), a full-measure round longer than the pool can fill without repeating, a meter this app does not read, an unrecognized feedback or retry setting, or a counting system this app does not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm missing teaches a different step, so dropping one silently would produce evidence for an assignment nobody set.",
-  "roundLengthRule": "A full-measure round never repeats a measure, so a pool of k ONE-BEAT rhythms can fill at most k^(beats per bar) questions: two rhythms make 16 in 4/4 and 8 in 3/4. A pool holding a whole or half note makes FEWER, because one cell fills several beats, and the ceiling is computed from the pool's real spans rather than from its size. Asking for more is refused at the link rather than while the round is being built — the shape of failure that let a banner state one assignment while the student answered another.",
+  "assignmentLink": "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, 3/4, 4/4, 5/4 or 7/4, `guide` fixes the subdivision-guide policy, `fb` chooses whether the correct answer appears after each question or only at the end, `retry` chooses what trying again means, `n` and `pass` set the length and the goal, and `seed` makes every student's questions identical. `level` is a shorthand for a cumulative vocabulary and is superseded when `cells` is present. `a` is a display name and `sys` names the counting system.",
+  "assignmentValidation": "Rejects loudly and never repairs: an unknown rhythm id, fewer than 2 rhythms after duplicates collapse, a question count outside 1–20, a pass mark the round cannot reach (measured against the round's real length, 5 when the link sets none), a full-measure round longer than the pool can fill without repeating, a meter this app does not read, a rhythm too long for the named meter's measure (a whole note in 2/4 or 3/4), an unrecognized feedback or retry setting, or a counting system this app does not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm missing teaches a different step, so dropping one silently would produce evidence for an assignment nobody set.",
+  "roundLengthRule": "A full-measure round never repeats a measure, so a pool of k ONE-BEAT rhythms can fill at most k^(beats per bar) questions: two rhythms make 4 in 2/4, 8 in 3/4, 16 in 4/4, 32 in 5/4 and 128 in 7/4. A pool holding a whole or half note makes FEWER, because one cell fills several beats, and the ceiling is computed from the pool's real spans rather than from its size. Asking for more is refused at the link rather than while the round is being built — the shape of failure that let a banner state one assignment while the student answered another.",
   "rhythmCellIds": [
     "quarter",
     "eighths",
@@ -74,10 +74,13 @@
   },
   "spanningCellStatus": "Whole and half notes, and the half rest — the values the Notes & Rests poster teaches that a one-beat catalog could not express. They sound once, at the top of the span, and the beats underneath are silent because the note is held: this app counts the notes that sound, so a half note on beat one of 4/4 answers \"1\". They are measure-scope only, and a beat-scope link naming one is refused. There is no whole rest: it fills the bar, so a measure containing one contains nothing else and has no count to ask for.",
   "meters": [
+    "2-4",
+    "3-4",
     "4-4",
-    "3-4"
+    "5-4",
+    "7-4"
   ],
-  "meterStatus": "4/4 and 3/4. A meter is chosen per link and defaults to 4/4, so every assignment written before meters existed means what it meant and generates the identical round. 3/4 reuses the whole vocabulary unchanged — same quarter-note beat, one fewer of them per bar. 3/8 was supported from 2026-08-24.1 to 2026-08-29.1 and then removed toward an app of its own: a link naming meter=3-8, or any of the retired eighth-beat cell ids (eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a plain-language message rather than repaired.",
+  "meterStatus": "2/4, 3/4, 4/4, 5/4 and 7/4 — the simple meters whose beat is a quarter note. A meter is chosen per link and defaults to 4/4, so every assignment written before meters existed means what it meant and generates the identical round. Every meter reuses the whole vocabulary unchanged: same quarter-note beat, a different number of them per bar. In 5/4 and 7/4 beams stay inside each beat, so the 3+2 or 2+3 grouping an odd meter is sometimes written with is not drawn or asked. 3/8 was supported from 2026-08-24.1 to 2026-08-29.1 and then removed toward its own app, Eight Time, because an eighth-note beat is a different counting problem; the same is true of 2/2, 6/8 and 5/8, which this app does not read. A link naming meter=3-8, or any of the retired eighth-beat cell ids (eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a plain-language message rather than repaired.",
   "levels": [
     "level-1",
     "level-2",
@@ -116,9 +119,9 @@
   },
   "teachingSequence": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
   "limitations": [
-    "Whole, half, quarter, eighth and sixteenth values in 4/4 and 3/4. A whole note needs four beats and so appears in 4/4 only; a half note needs two and appears in 4/4 and 3/4.",
-    "No triplets, compound meter, or ties across beats.",
-    "No eighth-note-beat meters: 3/8 was removed in 2026-08-29.1 and is planned as its own app.",
+    "Whole, half, quarter, eighth and sixteenth values in 2/4, 3/4, 4/4, 5/4 and 7/4. A whole note needs four beats and so appears in 4/4, 5/4 and 7/4 only; a half note needs two and appears in every meter.",
+    "Quarter-note-beat meters only. No odd-meter grouping (3+2 vs 2+3), no mixed or changing meters, no pickup measures, no triplets, compound meter, or ties across beats.",
+    "No eighth-, half- or dotted-quarter-beat meters (3/8, 2/2, 6/8): 3/8 was removed in 2026-08-29.1 and lives in Eight Time.",
     "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Standard American counting only in this release.",

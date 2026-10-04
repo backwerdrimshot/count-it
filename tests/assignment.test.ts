@@ -10,7 +10,7 @@ import {
   uniqueMeasures,
   verificationCode,
 } from "../src/assignment";
-import { RHYTHM_CELLS, getCellsByIds, getCellsForLevel } from "../src/rhythm";
+import { METER_IDS, RHYTHM_CELLS, getCellsByIds, getCellsForLevel } from "../src/rhythm";
 import { generateQuestions } from "../src/question";
 
 function ok(search: string) {
@@ -398,7 +398,7 @@ describe("the retired 3/8 meter", () => {
     expect(result.error.entry).toBe("3-8");
     /* The message is read by a student on a phone, so it says what this app
        does read rather than only that something is wrong. */
-    expect(result.error.message).toMatch(/4\/4, 3\/4/);
+    expect(result.error.message).toContain("2/4, 3/4, 4/4, 5/4, 7/4");
   });
 
   it("refuses a link naming a retired eighth-beat cell id", () => {
@@ -407,8 +407,8 @@ describe("the retired 3/8 meter", () => {
     if (!result.ok) expect(result.error.code).toBe("cell");
   });
 
-  it("still allows one beat in both remaining meters", () => {
-    for (const meter of ["4-4", "3-4"] as const) {
+  it("still allows one beat in every quarter-beat meter", () => {
+    for (const meter of METER_IDS) {
       const result = parseAssignment(`?meter=${meter}&scope=beat&n=12&pass=10&seed=x`);
       expect(result.ok, meter).toBe(true);
     }

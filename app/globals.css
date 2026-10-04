@@ -518,6 +518,9 @@ a:focus-visible,
 .scope-icon i:nth-of-type(2) { height: 14px; }
 .scope-icon i:nth-of-type(3) { height: 10px; }
 .scope-icon i:nth-of-type(4) { height: 17px; }
+.scope-icon i:nth-of-type(5) { height: 12px; }
+.scope-icon i:nth-of-type(6) { height: 15px; }
+.scope-icon i:nth-of-type(7) { height: 10px; }
 .scope-icon b { margin-right: 1px; font-family: var(--display); font-size: 1rem; line-height: 1; }
 
 .reference-toggle {

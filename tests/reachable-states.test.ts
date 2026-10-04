@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_QUESTIONS,
+  roundLengthFor,
   uniqueMeasures,
 } from "../src/assignment";
 import { generateQuestions, type QuestionScope } from "../src/question";
@@ -104,19 +105,27 @@ describe("every state the setup panel can reach", () => {
        cheaper half. It is here anyway because "practice works" and "the scored
        round works" are two claims, and the app has two code paths. */
     const failures: string[] = [];
+    const shortRounds: string[] = [];
     for (const { meter, scope } of REACHABLE) {
       for (const level of LEVELS) {
         {
           const where = `${meter} · ${level.id} · ${scope}`;
           try {
+            /* The length the app builds: makeSession clamps to what the pool
+               can fill, because two rhythms make only four bars of 2/4 and the
+               generator throws rather than repeat one. */
+            const wanted = roundLengthFor({
+              level: level.id, scope, meter, wanted: DEFAULT_QUESTIONS,
+            });
+            if (wanted < DEFAULT_QUESTIONS) shortRounds.push(where);
             const questions = generateQuestions({
               level: level.id,
               scope,
               meter,
-              count: DEFAULT_QUESTIONS,
+              count: wanted,
               seed: `challenge-${where}`,
             });
-            expect(questions, where).toHaveLength(DEFAULT_QUESTIONS);
+            expect(questions, where).toHaveLength(wanted);
           } catch (error) {
             failures.push(`${where}: ${(error as Error).message}`);
           }
@@ -124,6 +133,11 @@ describe("every state the setup panel can reach", () => {
       }
     }
     expect(failures).toEqual([]);
+    /* Pinned rather than merely tolerated. A round shorter than the default is
+       a real change for a student — a four-question round has a different top
+       score — so a new meter or level that introduces another one should be a
+       decision somebody makes, not a clamp nobody noticed. */
+    expect(shortRounds).toEqual(["2-4 · level-1 · measure"]);
   });
 
   it("survives a student naming themselves, which rebuilds the round", () => {

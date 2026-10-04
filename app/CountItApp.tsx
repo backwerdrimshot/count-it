@@ -39,6 +39,7 @@ import {
   describeAssignment,
   parseAssignment,
   retakeSeed,
+  roundLengthFor,
   serializeAssignment,
   uniqueMeasures,
   verificationCode,
@@ -139,8 +140,15 @@ interface RoundSpec {
   readonly variant?: string;
 }
 
+/* The length is clamped to what the pool can fill without repeating a bar.
+   That only ever bites the student's own controls — two rhythms make four bars
+   of 2/4, one fewer than the default round. An assignment link cannot reach it:
+   parseAssignment refuses a link whose pool cannot fill the length it asked
+   for, so for a link this is the length the teacher set. */
 function makeSession(spec: RoundSpec): ChallengeSession {
-  return createSession(generateQuestions(spec));
+  return createSession(
+    generateQuestions({ ...spec, count: roundLengthFor({ ...spec, wanted: spec.count }) }),
+  );
 }
 
 function BrandMark() {
@@ -150,10 +158,16 @@ function BrandMark() {
   );
 }
 
-function ScopeIcon({ scope }: { scope: QuestionScope }) {
+/* A beat is drawn as its four subdivisions; a measure as the beats of the
+   meter in force — the numeral and the ticks both follow it, so "one measure"
+   under 2/4 does not wear a 4. Decorative: the label beside it carries the
+   meaning. */
+function ScopeIcon({ scope, beats }: { scope: QuestionScope; beats: number }) {
+  const ticks = scope === "beat" ? 4 : beats;
   return (
     <span className={`scope-icon ${scope}`} aria-hidden="true">
-      {scope === "beat" ? <><i /><i /><i /><i /></> : <><b>4</b><i /><i /><i /><i /></>}
+      {scope === "measure" && <b>{beats}</b>}
+      {Array.from({ length: ticks }, (_, index) => <i key={index} />)}
     </span>
   );
 }
@@ -269,7 +283,7 @@ function SetupControls({
                 disabled={locked.has("scope")}
                 onChange={() => onScopeChange(option)}
               />
-              <ScopeIcon scope={option} />
+              <ScopeIcon scope={option} beats={getMeter(meter).beatsPerMeasure} />
               <span>{option === "beat" ? "One beat" : "One measure"}</span>
             </label>
           ))}
@@ -982,9 +996,14 @@ export default function CountItApp() {
   // "level 2", and a best set on two rhythms must never be compared against one
   // set on the whole level. Keys written before assignments existed still match,
   // because the pool and guide parts are appended only when a link pinned them.
+  /* The meter is part of the achievement — a best on a two-beat bar is not a
+     best on a seven-beat one, and a short 2/4 round cannot even reach the score
+     a full 4/4 round can. Appended only when it is not 4/4, so every key
+     written before meters could be chosen still matches. */
   const bestKey = [
     assignment?.cells ? `cells:${assignment.cells.join(",")}` : level,
     scope,
+    meter === DEFAULT_METER ? "" : `meter:${meter}`,
     assignment?.guide ? `guide:${assignment.guide}` : "",
   ].filter(Boolean).join(":");
 
