@@ -584,6 +584,12 @@ export function describeAssignment(assignment: Assignment): string {
     ? `${assignment.cells.length} rhythms`
     : getLevel(assignment.level).shortName);
   parts.push(assignment.scope === "beat" ? "one beat" : "one measure");
+  /* Only when it is not 4/4, the same rule as the settings below: a card for a
+     seven-beat bar that does not say so describes a different round than the
+     one answered, and 4/4 cards stay exactly as they always were. */
+  if (assignment.meter && assignment.meter !== DEFAULT_METER) {
+    parts.push(getMeter(assignment.meter).label);
+  }
   if (assignment.guide) parts.push(assignment.guide === "on" ? "guide visible" : "guide hidden");
   if (assignment.feedback === "end") parts.push("answers at the end");
   /* Only when it deviates from what the app does anyway, the same rule `fb`

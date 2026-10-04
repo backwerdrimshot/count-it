@@ -22,7 +22,7 @@ import { COUNT_IT_BUILD } from "./capabilities";
 import type { CountQuestion } from "./question/generator";
 import type { ChallengeSession } from "./question/session";
 import { type SequenceStep, sequenceStepId } from "./sequence-step";
-import { getLevel } from "./rhythm";
+import { DEFAULT_METER, getLevel, getMeter } from "./rhythm";
 
 /** The contract this app now speaks, shared with Scale Trail and Mallet Map. */
 export const RESULT_SCHEMA_VERSION = "praxis.result.v0_1";
@@ -146,6 +146,15 @@ function summarizeErrors(session: ChallengeSession): ErrorSummaryEntry[] {
   return order.map((id) => ({ item: id, asked: tally.get(id)!.asked, wrong: tally.get(id)!.wrong }));
 }
 
+/* The meter a free-play round was actually asked in, read off its own questions
+   rather than passed in — the session already knows, and a second source could
+   disagree with it. Empty for 4/4, so a 4/4 card is byte-identical to one built
+   before the meter was ever stated. */
+function playedMeterNote(session: ChallengeSession): string {
+  const meter = session.questions[0]?.prompt.meter;
+  return meter && meter !== DEFAULT_METER ? ` · ${getMeter(meter).label}` : "";
+}
+
 export function createPraxisEvidenceResult(options: {
   session: ChallengeSession;
   assignment: Assignment | null;
@@ -180,6 +189,11 @@ export function createPraxisEvidenceResult(options: {
     if (assignment.name) settings.a = assignment.name;
     if (!assignment.cells) settings.level = String(level).slice(-1);
     settings.scope = assignment.scope;
+    /* The link's own parameter, so the record can reproduce the round: the
+       meter changes how many beats a bar holds and which wrong answers exist,
+       so seed plus settings without it described a different round. Present
+       only when the link named one, like every other entry here. */
+    if (assignment.meter) settings.meter = assignment.meter;
     if (assignment.cells) settings.cells = assignment.cells.join(",");
     if (assignment.guide) settings.guide = assignment.guide;
     if (assignment.feedback) settings.fb = assignment.feedback;
@@ -214,7 +228,7 @@ export function createPraxisEvidenceResult(options: {
          record cannot describe different rounds. */
       stated: assignment
         ? describeAssignment(assignment)
-        : `${getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}`,
+        : `${getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}${playedMeterNote(session)}`,
     },
     /* Null, deliberately, and the manifest says the same thing. This app has no
        reconciled Praxis skill vocabulary: candidate ids exist in the Sequence 2
