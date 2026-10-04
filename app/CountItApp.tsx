@@ -1180,6 +1180,10 @@ export default function CountItApp() {
       </header>
 
       <main id="top">
+        {/* The page's one <h1> used to sit in the hero, which now lives in the closed
+            Help dialog and so is not in the page outline. It stays here, visually
+            hidden, so the heading is there for screen readers and outline tools. */}
+        <h1 className="visually-hidden">Count It: see the rhythm, say the count</h1>
         <div className="mode-wrap" id="trainer">
           <div className="mode-tabs" role="tablist" aria-label="Learning mode">
             <button
@@ -1308,13 +1312,8 @@ export default function CountItApp() {
 
       </main>
 
-      <WorkspaceInfo name="Count It" guide="https://guides.backwerdrhythmshop.com/count-it/" help={<><section className="hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <p className="eyebrow">About Count It</p>
-            <h1 id="hero-title">See the rhythm.<br /><span>Say the count.</span></h1>
-            <p>Build the connection between notation and spoken subdivision counting - one clear example at a time.</p>
-          </div>
-          <div className="hero-lesson" aria-label="How Count It works">
+      <WorkspaceInfo name="Count It" guide="https://guides.backwerdrhythmshop.com/count-it/" help={<><section className="hero" aria-label="How Count It works">
+          <div className="hero-lesson">
             <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
             <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
             <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
