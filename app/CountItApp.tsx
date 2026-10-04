@@ -1,4 +1,5 @@
 "use client";
+import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import CountReference from "./CountReference";
@@ -440,6 +441,7 @@ function ChallengeMode({
   attempt: number;
   /** What the retry control offers, and whether it exists at all. */
   retryPolicy: RetryPolicy;
+  onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
@@ -1170,7 +1172,8 @@ export default function CountItApp() {
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
         </a>
         <p>Free percussion tools that teach.</p>
-        <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
+        <WorkspaceActions />
+          <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brs-monogram.svg" alt="" width="28" height="28" />
         </a>
@@ -1300,7 +1303,12 @@ export default function CountItApp() {
           )}
         </div>
 
-        <section className="hero" aria-labelledby="hero-title">
+
+
+
+      </main>
+
+      <WorkspaceInfo name="Count It" guide="https://guides.backwerdrhythmshop.com/count-it/" help={<><section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="eyebrow">About Count It</p>
             <h1 id="hero-title">See the rhythm.<br /><span>Say the count.</span></h1>
@@ -1312,14 +1320,10 @@ export default function CountItApp() {
             <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
           </div>
         </section>
-
-        <section className="quick-lesson" aria-labelledby="lesson-title">
+<section className="quick-lesson" aria-labelledby="lesson-title">
           <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
           <p>The complete grid keeps time underneath every rhythm. Your answer names only the positions where a note begins; rests and held space stay silent.</p>
-        </section>
-      </main>
-
-      <footer className="site-footer">
+        </section></>}><footer className="site-footer">
         <div><strong>Count It.</strong><span>by <a className="shop-link" href="https://backwerdrhythmshop.com">Backwerd Rhythm Shop</a></span></div>
         <div className="foot-links">
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
@@ -1338,7 +1342,7 @@ export default function CountItApp() {
         <p>Standard American counting · 4/4 and 3/4 · Quarter, eighth, and sixteenth-note cells</p>
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
         <BuildStamp />
-      </footer>
+      </footer></WorkspaceInfo>
       <SupportFallbackDialog />
     </div>
   );

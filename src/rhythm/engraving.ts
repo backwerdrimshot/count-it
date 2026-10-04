@@ -99,7 +99,9 @@ function normalizeDirections(
   value: Readonly<Partial<Record<number, PartialBeamDirection>>>,
 ): Record<string, PartialBeamDirection> {
   return Object.fromEntries(
-    Object.entries(value).sort(([left], [right]) => Number(left) - Number(right)),
+    Object.entries(value)
+      .filter((entry): entry is [string, PartialBeamDirection] => entry[1] !== undefined)
+      .sort(([left], [right]) => Number(left) - Number(right)),
   );
 }
 

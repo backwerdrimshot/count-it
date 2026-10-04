@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-04.7`
+- **Build:** `2026-10-04.8`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -390,3 +390,7 @@ These three links also appear as icon buttons in the app footer.
 ## Ownership
 
 © 2026 Backwerd Rimshot, LLC. All rights reserved.
+
+## Compact practice workspace
+
+The laptop view keeps the main instrument or exercise and its practice controls together. Help contains the instructions and About contains the app, support, and build information. Long reference material and exercise grids scroll inside their own panels; narrow and zoomed windows retain normal page scrolling.

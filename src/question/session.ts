@@ -19,7 +19,7 @@ function validateQuestions(questions: readonly CountQuestion[]): void {
     throw new TypeError("A challenge session requires at least one question.");
   }
   for (const question of questions) {
-    if (question.choices.filter((choice) => choice.isCorrect).length !== 1) {
+    if (question.choices.filter((choice: CountQuestion["choices"][number]) => choice.isCorrect).length !== 1) {
       throw new TypeError(`${question.id} must have exactly one correct choice.`);
     }
   }
