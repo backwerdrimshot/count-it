@@ -298,38 +298,56 @@ export function roundProblem({
   return null;
 }
 
-/** The scopes and meters a student can switch to on an assignment WITHOUT
- *  changing what it asks, and why each of the others cannot be chosen.
+/** The levels, scopes and meters a student can switch to on an assignment
+ *  WITHOUT changing what it asks, and why each of the others cannot be chosen.
  *
- *  Each dimension is judged with the other held at its current value, so from
- *  any valid state an allowed change lands on another valid state — there is no
- *  sequence of allowed clicks that reaches a round the link could not have
- *  described. A dimension the link pinned is never offered as a choice, so it
- *  is not judged here.
+ *  `current` is where the STUDENT is now, not where the link started. A link
+ *  that leaves the level open lets them move it, and every other judgement here
+ *  is made against the pool they are actually in: judging against the link's own
+ *  level would say 2/4 was fine after the student had switched to a level whose
+ *  two rhythms make only four bars of it.
+ *
+ *  Each dimension is judged with the others held at their current values, so
+ *  from any valid state an allowed change lands on another valid state — there is
+ *  no sequence of allowed clicks that reaches a round the link could not have
+ *  described. A dimension the link pinned is never offered as a choice, so it is
+ *  not judged here. When the link names its rhythms the level does not matter,
+ *  and no level is ruled out.
  *
  *  The value is the reason in the parser's own words, for a tooltip or a note;
  *  absence means the choice is fine. */
 export function unavailableChoices(
   assignment: Assignment,
-  current: { readonly scope: AssignmentScope; readonly meter: MeterId },
+  current: { readonly scope: AssignmentScope; readonly meter: MeterId; readonly level: LevelId },
 ): {
   readonly scopes: Readonly<Partial<Record<AssignmentScope, string>>>;
   readonly meters: Readonly<Partial<Record<MeterId, string>>>;
+  readonly levels: Readonly<Partial<Record<LevelId, string>>>;
 } {
-  const base = { cells: assignment.cells, level: assignment.level, count: assignment.count };
+  const base = { cells: assignment.cells, count: assignment.count };
   const scopes: Partial<Record<AssignmentScope, string>> = {};
   const meters: Partial<Record<MeterId, string>> = {};
+  const levels: Partial<Record<LevelId, string>> = {};
   for (const scope of ["beat", "measure"] as const) {
     if (scope === current.scope) continue;
-    const problem = roundProblem({ ...base, scope, meter: current.meter });
+    const problem = roundProblem({ ...base, level: current.level, scope, meter: current.meter });
     if (problem) scopes[scope] = problem.message;
   }
   for (const meter of METER_IDS) {
     if (meter === current.meter) continue;
-    const problem = roundProblem({ ...base, scope: current.scope, meter });
+    const problem = roundProblem({ ...base, level: current.level, scope: current.scope, meter });
     if (problem) meters[meter] = problem.message;
   }
-  return Object.freeze({ scopes: Object.freeze(scopes), meters: Object.freeze(meters) });
+  for (const level of LEVEL_IDS) {
+    if (level === current.level) continue;
+    const problem = roundProblem({ ...base, level, scope: current.scope, meter: current.meter });
+    if (problem) levels[level] = problem.message;
+  }
+  return Object.freeze({
+    scopes: Object.freeze(scopes),
+    meters: Object.freeze(meters),
+    levels: Object.freeze(levels),
+  });
 }
 
 /**

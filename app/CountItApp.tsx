@@ -224,9 +224,10 @@ function SetupControls({
      the round into a different one (a whole note in 3/4 is never asked; two
      rhythms in 2/4 make four bars, not twelve). The parser's own rule says
      which choices those are, so they are greyed out rather than offered. */
-  const unavailable = assignment ? unavailableChoices(assignment, { scope, meter }) : null;
+  const unavailable = assignment ? unavailableChoices(assignment, { scope, meter, level }) : null;
   const metersOut = !locked.has("meter") && unavailable !== null && Object.keys(unavailable.meters).length > 0;
   const scopesOut = !locked.has("scope") && unavailable !== null && Object.keys(unavailable.scopes).length > 0;
+  const levelsOut = !locked.has("level") && unavailable !== null && Object.keys(unavailable.levels).length > 0;
   return (
     <section className="setup-panel" aria-labelledby="setup-title">
       <div className="setup-heading">
@@ -258,10 +259,15 @@ function SetupControls({
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
           >
             {LEVELS.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
+              <option key={option.id} value={option.id} disabled={Boolean(unavailable?.levels[option.id])} title={unavailable?.levels[option.id]}>
+                {option.name}
+              </option>
             ))}
           </select>
-          <small>{getLevel(level).description}</small>
+          <small>
+            {getLevel(level).description}
+            {levelsOut && " Greyed-out levels can’t run this assignment as your teacher wrote it."}
+          </small>
         </label>
       )}
       <label className="level-control">

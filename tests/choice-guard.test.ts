@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseAssignment, roundProblem, unavailableChoices, uniqueMeasures, type Assignment } from "../src/assignment";
 import { evaluateBuilder, type BuilderState, type Vocabulary } from "../src/assignment/builder";
 import { generateQuestions } from "../src/question";
-import { METER_IDS, getCellsByIds, getCellsForLevel, getMeter, type MeterId } from "../src/rhythm";
+import { METER_IDS, getCellsByIds, getCellsForLevel, getMeter, type LevelId, type MeterId } from "../src/rhythm";
 
 /* A link that leaves the meter or the question size open is not a link that lets
  * the student choose anything. A whole note is never asked in 3/4; two rhythms
@@ -53,7 +53,7 @@ describe("roundProblem — the parser's rule, asked on its own", () => {
 describe("unavailableChoices on the published links", () => {
   it("greys out the meters Step 10 cannot be asked in, and only those", () => {
     const step10 = assignmentFrom(STEP_10);
-    const { meters } = unavailableChoices(step10, { scope: "measure", meter: "4-4" });
+    const { meters } = unavailableChoices(step10, { scope: "measure", meter: "4-4", level: step10.level });
     /* A whole note needs four beats, so 2/4 and 3/4 cannot hold the step. */
     expect(Object.keys(meters).sort()).toEqual(["2-4", "3-4"]);
     expect(meters["3-4"]).toMatch(/longer than a 3\/4 measure/);
@@ -61,12 +61,12 @@ describe("unavailableChoices on the published links", () => {
 
   it("leaves every meter open on a one-beat step, where the meter changes nothing about the rhythms", () => {
     const step1 = assignmentFrom(STEP_1);
-    expect(unavailableChoices(step1, { scope: "beat", meter: "4-4" }).meters).toEqual({});
+    expect(unavailableChoices(step1, { scope: "beat", meter: "4-4", level: step1.level }).meters).toEqual({});
   });
 
   it("never offers the choice already made as a problem", () => {
     const step10 = assignmentFrom(STEP_10);
-    const { meters, scopes } = unavailableChoices(step10, { scope: "measure", meter: "4-4" });
+    const { meters, scopes } = unavailableChoices(step10, { scope: "measure", meter: "4-4", level: step10.level });
     expect(meters).not.toHaveProperty("4-4");
     expect(scopes).not.toHaveProperty("measure");
   });
@@ -78,18 +78,48 @@ describe("a link that leaves both size and meter open", () => {
 
   it("lets the student pick full measures, then rules out the meters whose bars run out", () => {
     /* As written, the link is one-beat in 4/4. Measures at 4/4 make 16 bars. */
-    const start = unavailableChoices(open, { scope: "beat", meter: "4-4" });
+    const start = unavailableChoices(open, { scope: "beat", meter: "4-4", level: open.level });
     expect(start.scopes).toEqual({});
     expect(start.meters).toEqual({});
     /* Having picked full measures, 2/4 (4 bars) and 3/4 (8 bars) cannot fill 12. */
-    const measures = unavailableChoices(open, { scope: "measure", meter: "4-4" });
+    const measures = unavailableChoices(open, { scope: "measure", meter: "4-4", level: open.level });
     expect(Object.keys(measures.meters).sort()).toEqual(["2-4", "3-4"]);
     expect(measures.meters["2-4"]).toMatch(/only make 4 different 2\/4 measures/);
   });
 
   it("rules out full measures when the meter already chosen cannot fill the round", () => {
-    const inTwoFour = unavailableChoices(open, { scope: "beat", meter: "2-4" });
+    const inTwoFour = unavailableChoices(open, { scope: "beat", meter: "2-4", level: open.level });
     expect(inTwoFour.scopes.measure).toMatch(/only make 4 different 2\/4 measures/);
+  });
+});
+
+describe("a link that leaves the level open", () => {
+  /* Pins the size, meter, length and pass mark — and not the level, so the
+     student can move it. Found in a browser: switching this link to Level 1
+     turned the teacher's twelve questions into four. */
+  const levelOpen = assignmentFrom("?scope=measure&meter=2-4&n=12&pass=10&seed=lvl");
+
+  it("rules out the levels whose pool cannot fill the round in this meter", () => {
+    const verdict = unavailableChoices(levelOpen, { scope: "measure", meter: "2-4", level: levelOpen.level });
+    expect(levelOpen.level).toBe("level-2");
+    expect(Object.keys(verdict.levels)).toEqual(["level-1"]);
+    expect(verdict.levels["level-1"]).toMatch(/only make 4 different 2\/4 measures/);
+  });
+
+  it("judges meter and size against the level the student is AT, not the one the link started on", () => {
+    /* Same link, same meter and size, two different levels: the verdicts
+       differ, because the pools do. Judging against the link's own level would
+       give the same answer for both. */
+    const open = assignmentFrom("?n=12&seed=x");
+    const atLevelOne = unavailableChoices(open, { scope: "measure", meter: "4-4", level: "level-1" });
+    const atLevelThree = unavailableChoices(open, { scope: "measure", meter: "4-4", level: "level-3" });
+    expect(Object.keys(atLevelOne.meters).sort()).toEqual(["2-4", "3-4"]);
+    expect(atLevelThree.meters).toEqual({});
+  });
+
+  it("rules out no level when the link names its own rhythms, because the level changes nothing", () => {
+    const named = assignmentFrom("?scope=measure&meter=4-4&cells=quarter,eighths&n=12&seed=x");
+    expect(unavailableChoices(named, { scope: "measure", meter: "4-4", level: named.level }).levels).toEqual({});
   });
 });
 
@@ -100,6 +130,7 @@ describe("a link that leaves both size and meter open", () => {
  * guard that blocked too much or too little would both fail here. */
 describe("the guard against the generator", () => {
   const vocabularies: readonly Vocabulary[] = [
+    { kind: "student" },
     { kind: "level", level: 1 },
     { kind: "level", level: 3 },
     { kind: "cells", cells: ["quarter", "eighths"] },
@@ -118,18 +149,18 @@ describe("the guard against the generator", () => {
 
   /** The ids of every rhythm the generator ever asks, over several seeds and a
    *  long round, or null when it cannot build the round at all. */
-  function asked(assignment: Assignment, scope: "beat" | "measure", meter: MeterId): Set<string> | null {
+  function asked(assignment: Assignment, level: LevelId, scope: "beat" | "measure", meter: MeterId): Set<string> | null {
     const seen = new Set<string>();
     /* A measure round never repeats a bar, so how long a probe can be is the
        pool's own ceiling in this meter — asking for more would throw for a
        reason that has nothing to do with the choice being tested. */
-    const pool = assignment.cells ? getCellsByIds(assignment.cells) : getCellsForLevel(assignment.level);
+    const pool = assignment.cells ? getCellsByIds(assignment.cells) : getCellsForLevel(level);
     const ceiling = uniqueMeasures(pool, getMeter(meter).beatsPerMeasure);
     const probe = scope === "measure" ? Math.max(1, Math.min(8, ceiling)) : 20;
     try {
       for (const seed of SEEDS) {
         const questions = generateQuestions({
-          level: assignment.level,
+          level,
           scope,
           meter,
           ...(assignment.cells ? { cells: assignment.cells } : {}),
@@ -161,16 +192,23 @@ describe("the guard against the generator", () => {
             const result = evaluateBuilder(state);
             if (!result.ok) continue;
             const assignment = result.assignment;
-            const here = { scope: assignment.scope, meter: assignment.meter ?? ("4-4" as MeterId) };
+            const here = { scope: assignment.scope, meter: assignment.meter ?? ("4-4" as MeterId), level: assignment.level };
             const verdict = unavailableChoices(assignment, here);
             const wanted = assignment.count ?? 5;
 
-            const candidates: { scope: "beat" | "measure"; meter: MeterId; reason: string | undefined; label: string }[] = [];
+            const candidates: { scope: "beat" | "measure"; meter: MeterId; level: LevelId; reason: string | undefined; label: string }[] = [];
             for (const scope of ["beat", "measure"] as const) {
-              if (scope !== here.scope) candidates.push({ scope, meter: here.meter, reason: verdict.scopes[scope], label: `scope→${scope}` });
+              if (scope !== here.scope) candidates.push({ scope, meter: here.meter, level: here.level, reason: verdict.scopes[scope], label: `scope→${scope}` });
             }
             for (const meter of METER_IDS) {
-              if (meter !== here.meter) candidates.push({ scope: here.scope, meter, reason: verdict.meters[meter], label: `meter→${meter}` });
+              if (meter !== here.meter) candidates.push({ scope: here.scope, meter, level: here.level, reason: verdict.meters[meter], label: `meter→${meter}` });
+            }
+            /* The level is the student's to move only when the link pins neither
+               a level nor its own rhythms. */
+            if (vocabulary.kind === "student") {
+              for (const level of ["level-1", "level-2", "level-3"] as const) {
+                if (level !== here.level) candidates.push({ scope: here.scope, meter: here.meter, level, reason: verdict.levels[level], label: `level→${level}` });
+              }
             }
 
             for (const candidate of candidates) {
@@ -180,7 +218,7 @@ describe("the guard against the generator", () => {
                 /* Allowed: it must build exactly the round the teacher set. */
                 try {
                   const questions = generateQuestions({
-                    level: assignment.level, scope: candidate.scope, meter: candidate.meter,
+                    level: candidate.level, scope: candidate.scope, meter: candidate.meter,
                     ...(assignment.cells ? { cells: assignment.cells } : {}),
                     count: wanted, seed: assignment.seed ?? "none",
                   });
@@ -189,7 +227,7 @@ describe("the guard against the generator", () => {
                   wrongAllow.push(`${where}: threw — ${(error as Error).message}`);
                 }
                 /* And every rhythm the link names must still be askable. */
-                const seen = asked(assignment, candidate.scope, candidate.meter);
+                const seen = asked(assignment, candidate.level, candidate.scope, candidate.meter);
                 const missing = seen ? pinnedCells(assignment).filter((id) => !seen.has(id)) : ["(round cannot be built)"];
                 if (missing.length > 0) wrongAllow.push(`${where}: pinned rhythm never asked: ${missing.join(",")}`);
               } else {
@@ -200,14 +238,14 @@ describe("the guard against the generator", () => {
                 let cannotBuild = false;
                 try {
                   generateQuestions({
-                    level: assignment.level, scope: candidate.scope, meter: candidate.meter,
+                    level: candidate.level, scope: candidate.scope, meter: candidate.meter,
                     ...(assignment.cells ? { cells: assignment.cells } : {}),
                     count: wanted, seed: assignment.seed ?? "none",
                   });
                 } catch {
                   cannotBuild = true;
                 }
-                const seen = asked(assignment, candidate.scope, candidate.meter);
+                const seen = asked(assignment, candidate.level, candidate.scope, candidate.meter);
                 const neverAsked = seen ? pinnedCells(assignment).some((id) => !seen.has(id)) : true;
                 if (!cannotBuild && !neverAsked) wrongBlock.push(`${where}: blocked, but the round builds and every rhythm is asked`);
               }
@@ -222,5 +260,69 @@ describe("the guard against the generator", () => {
     /* A loop that exercised only one side would pass. */
     expect(allowed).toBeGreaterThan(100);
     expect(blocked).toBeGreaterThan(20);
+  }, 60_000);
+
+  it("never lets two allowed clicks in a row reach a round that cannot be built", () => {
+    /* One click is judged from where the link started. The claim the guard
+       makes is stronger — that NO SEQUENCE of allowed clicks gets somewhere bad —
+       and the way it can fail is by judging the second click against where the
+       student started instead of where they are now. So: take every allowed first
+       click, then every click the guard allows from THERE, and build the round. */
+    const failures: string[] = [];
+    let walks = 0;
+    for (const meterPin of meters) {
+      for (const scopePin of scopes) {
+        for (const count of counts) {
+          const state: BuilderState = {
+            name: "", vocabulary: { kind: "student" }, scope: scopePin, meter: meterPin, guide: null,
+            feedback: null, retry: null, count, passing: null, seed: "walk",
+          };
+          const result = evaluateBuilder(state);
+          if (!result.ok) continue;
+          const assignment = result.assignment;
+          const wanted = assignment.count ?? 5;
+          const start = { scope: assignment.scope, meter: assignment.meter ?? ("4-4" as MeterId), level: assignment.level };
+
+          const firstClicks: { scope: "beat" | "measure"; meter: MeterId; level: LevelId }[] = [];
+          const first = unavailableChoices(assignment, start);
+          for (const level of ["level-1", "level-2", "level-3"] as const) {
+            if (level !== start.level && first.levels[level] === undefined) firstClicks.push({ ...start, level });
+          }
+          for (const scope of ["beat", "measure"] as const) {
+            if (scope !== start.scope && first.scopes[scope] === undefined) firstClicks.push({ ...start, scope });
+          }
+          for (const meter of METER_IDS) {
+            if (meter !== start.meter && first.meters[meter] === undefined) firstClicks.push({ ...start, meter });
+          }
+
+          for (const here of firstClicks) {
+            const next = unavailableChoices(assignment, here);
+            const secondClicks: { scope: "beat" | "measure"; meter: MeterId; level: LevelId }[] = [];
+            for (const level of ["level-1", "level-2", "level-3"] as const) {
+              if (level !== here.level && next.levels[level] === undefined) secondClicks.push({ ...here, level });
+            }
+            for (const scope of ["beat", "measure"] as const) {
+              if (scope !== here.scope && next.scopes[scope] === undefined) secondClicks.push({ ...here, scope });
+            }
+            for (const meter of METER_IDS) {
+              if (meter !== here.meter && next.meters[meter] === undefined) secondClicks.push({ ...here, meter });
+            }
+            for (const landed of secondClicks) {
+              walks += 1;
+              try {
+                const questions = generateQuestions({
+                  level: landed.level, scope: landed.scope, meter: landed.meter, count: wanted, seed: "walk",
+                });
+                if (questions.length !== wanted) failures.push(`${JSON.stringify(start)} → ${JSON.stringify(here)} → ${JSON.stringify(landed)}: built ${questions.length}`);
+              } catch (error) {
+                failures.push(`${JSON.stringify(start)} → ${JSON.stringify(here)} → ${JSON.stringify(landed)}: ${(error as Error).message}`);
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+    expect(walks).toBeGreaterThan(50);
   }, 60_000);
 });

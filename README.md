@@ -113,13 +113,14 @@ identifier lives in session state only, and the verification code is a
 deterrent rather than proof.
 
 **A control the link leaves open is not entirely free.** A link that names no
-meter, or no question size, lets the student choose — but not into a round the
+meter, question size or level lets the student choose — but not into a round the
 link could never have described. A whole note is never asked in 3/4, and two
 rhythms make only four bars of 2/4, so a student who switched such a link would
 get a different round than the teacher set, with a pass mark that could no longer
 be reached. The setup panel asks the parser's own rule (`roundProblem`, the same
-function that refuses the link) about every scope and meter on offer and greys
-out the ones that cannot run the assignment as written. There is one copy of the
+function that refuses the link) about every scope, meter and level on offer and
+greys out the ones that cannot run the assignment as written, judging each against
+where the student is now rather than where the link started. There is one copy of the
 rule, so what a link may say and what a student may choose cannot disagree.
 `tests/choice-guard.test.ts` checks it against the generator in both directions:
 every choice it allows builds the teacher's round with every pinned rhythm still
