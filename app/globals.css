@@ -2483,3 +2483,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   .builder-grid { grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; }
   .builder-output { position: sticky; top: 16px; }
 }
+
+/* Under the question-size radios when an assignment rules one of them out. */
+.scope-note { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 0.76rem; }
+.scope-options label.is-unavailable { opacity: 0.55; cursor: not-allowed; }
