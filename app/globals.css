@@ -247,7 +247,6 @@ a:focus-visible,
   content: "";
 }
 
-.hero-copy,
 .hero-lesson {
   position: relative;
   z-index: 1;
@@ -260,26 +259,6 @@ a:focus-visible,
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-.hero h1 {
-  margin: 0;
-  font-family: var(--display);
-  font-size: clamp(2.55rem, 9vw, 5.5rem);
-  font-weight: 800;
-  letter-spacing: -0.055em;
-  line-height: 0.96;
-}
-
-.hero h1 span {
-  color: var(--on-ink-accent);
-}
-
-.hero-copy > p:last-child {
-  max-width: 590px;
-  margin: 24px 0 0;
-  color: var(--on-ink-muted);
-  font-size: clamp(1rem, 2vw, 1.16rem);
 }
 
 .hero-lesson {
@@ -1280,8 +1259,6 @@ a:focus-visible,
    applies at 700px and up, where the hero is a two-column panel with room. */
 @media (max-width: 699px) {
   .hero { padding: 20px 20px 22px; gap: 16px; }
-  .hero h1 { font-size: clamp(2rem, 8.5vw, 2.6rem); }
-  .hero-copy > p:last-child { display: none; }
   .hero-lesson { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .hero-lesson > div { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 6px; padding: 9px 6px; }
   .hero-lesson > div > span { width: 28px; height: 28px; font-size: 0.95rem; }
@@ -1292,10 +1269,6 @@ a:focus-visible,
 @media (min-width: 700px) {
   .site-header > p {
     display: block;
-  }
-
-  .hero {
-    grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.75fr);
   }
 
   .mode-tabs button {
@@ -1801,10 +1774,8 @@ a:focus-visible,
   }
 }
 
-/* The eyebrow is the one accent that has to work on both grounds. On the navy
-   hero and quick-lesson panels the deep orange would be too dark, so it goes
-   light instead of dark. */
-.hero .eyebrow,
+/* On the navy quick-lesson panel the deep orange eyebrow would be too dark, so
+   it goes light instead of dark. */
 .quick-lesson .eyebrow {
   color: var(--forest-light);
 }
@@ -2082,15 +2053,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   textarea { font-size: max(16px, 1em) !important; }
 }
 
-/* Phone in landscape: the hero was most of a ~390px-tall screen, so the trainer started below the fold.
-   Keep the name and headline, drop the description and the three-step panel, and tighten the hero. */
-@media (orientation: landscape) and (max-height: 500px) {
-  .hero { padding: 14px 20px; gap: 10px; }
-  .hero h1 { font-size: clamp(1.6rem, 5vw, 2.1rem); }
-  .hero-copy > p:last-child { display: none; }
-  .hero-lesson { display: none; }
-}
-
 /* ==========================================================================
    First screen at every width (2026-10-04).
    HEIGHT is the constraint, not width: the practice question, the mode tabs,
@@ -2298,6 +2260,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   padding: 8px 0 56px;
 }
 
+.visually-hidden,
 .builder-visually-hidden {
   position: absolute;
   width: 1px;
@@ -2638,7 +2601,8 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 .workspace-dialog footer{display:flex;flex-direction:column;align-items:stretch;gap:18px;min-height:0;background:transparent}
 .workspace-dialog footer :is(strong,span,p){color:inherit}
 .workspace-dialog .hero{width:100%;min-height:0;padding:18px;margin:0 0 20px}
-.workspace-dialog .hero h1{font-size:2rem}
+.workspace-dialog .hero-lesson{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.workspace-dialog .hero-lesson>div{grid-template-columns:1fr;justify-items:center;text-align:center;gap:6px;padding:12px 8px}
 .workspace-dialog .quick-lesson,.workspace-dialog .how-it-works{padding:16px 0;margin:0}
 
 /* Laptop practice workspace; smaller and zoomed windows keep the scrolling layout. */
