@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-05`
+- **Build:** `2026-10-05.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -231,6 +231,8 @@ pnpm test
 pnpm lint
 pnpm build
 ```
+
+`pnpm check` runs the unit tests and the rendered-HTML tests. Separately, `pnpm test:browser` drives a real Chromium against a running copy (layout at real widths, focus order, the clipboard, a round played to its result card, the published sequence links). It is opt-in and not part of CI; run it by hand before a release that changes a page or the header. See [`tests/browser/README.md`](tests/browser/README.md) for the variables, what each file covers and what it does not (real devices and screen readers).
 
 ## Architecture
 

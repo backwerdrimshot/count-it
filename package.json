@@ -12,7 +12,8 @@
     "test": "vitest run --config vitest.config.ts --configLoader runner",
     "check": "pnpm test && pnpm run test:render",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "test:render": "pnpm run build && node --test tests/rendered-html.test.mjs"
+    "test:render": "pnpm run build && node --test tests/rendered-html.test.mjs",
+    "test:browser": "node tests/browser/run.mjs"
   },
   "dependencies": {
     "next": "16.2.6",
@@ -30,6 +31,7 @@
     "@vitejs/plugin-rsc": "0.5.26",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
+    "playwright-core": "1.56.1",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
