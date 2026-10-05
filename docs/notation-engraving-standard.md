@@ -148,7 +148,7 @@ Catalog validation also calls `validateEngravingCatalog`, so the ordinary test a
 | Review | Reviewer | Date | Status | Notes |
 | --- | --- | --- | --- | --- |
 | Rules and implementation | Codex | 2026-07-20 | Complete | Structured expectations, explicit partial beams, tests, and audit route added. |
-| Spanning notes — half, whole, half rest | — | — | **Pending** | Three cells that last longer than a beat, which is new to this catalog. Automated gates pass. Two things need a human: that a whole note alone in a bar is placed acceptably (VexFlow left-aligns it; some engravers centre it), and that the half rest sits on the correct side of the middle line in percussion clef. |
+| Spanning notes — half, whole, half rest | — | — | **Pending** | Three cells that last longer than a beat, which is new to this catalog. Automated gates pass. Two things need a human: that a whole note alone in a bar is placed acceptably (VexFlow would left-align it, so `RhythmNotation.tsx` centres it, which its comment cites Gould for; the `/notation` page says only that engravers commonly centre it, and a human still has to confirm it looks right), and that the half rest sits on the correct side of the middle line in percussion clef. |
 | Eighth-beat family and the 3/8 whole-bar beam | Owner | 2026-08-24 | Superseded | Reviewed and approved on `/notation-audit`, then removed with the meter on 2026-08-29 — eight-time is planned as an app of its own, and this row travels with it as the record of what was signed off. |
 | Independent musician engraving review | — | — | Pending | Compare against a trusted engraved reference before public release. |
 | Real-device/classroom display review | — | — | Pending | Check phone, tablet, projector, and high zoom. |

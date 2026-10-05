@@ -114,8 +114,8 @@ export default function NotationPage() {
             when each note sounds.
           </p>
           <p>
-            It is always there. A five-line staff with notes and no clef is not something a student will meet in a
-            real part.
+            It is always there: every staff Count It draws starts with a clef, so a student never has to guess what
+            the staff means.
           </p>
           <Example prompt={barA} caption="One measure of 4/4 with the percussion clef" />
         </Topic>
@@ -163,8 +163,9 @@ export default function NotationPage() {
 
         <Topic id="beams" heading="Beams stay inside the beat">
           <p>
-            Notes shorter than a quarter are beamed together, and a <strong>beam never crosses a beat</strong>. That
-            keeps every beat visible on the page: a student can see where beat 2 begins by where its beam starts.
+            Notes shorter than a quarter that sound next to each other share a beam, and a{" "}
+            <strong>beam never crosses a beat</strong>. That keeps every beat visible on the page: a student can see
+            where beat 2 begins by where its beam starts.
           </p>
           <p>
             Beginner examples also do not beam across a rest. A rest breaks the group, which shows where the next
@@ -181,7 +182,7 @@ export default function NotationPage() {
           </p>
           <p>
             When you write counts on a page by hand, the Rhythm Shop&rsquo;s convention is to put the count for a rest
-            in parentheses, count the notes strongly, and whisper the rests or keep them silent.
+            in parentheses, and to say the rests quietly or keep them silent.
           </p>
           <Example prompt={rests} caption="Rests in 4/4: the count names only what sounds" grid />
         </Topic>
@@ -193,8 +194,9 @@ export default function NotationPage() {
           </p>
           <p>
             A <strong>half note</strong> lasts two beats and a <strong>whole note</strong> four, so they appear only in
-            a full measure with room for them. A whole note alone fills a 4/4 bar and is centered in it, as in printed
-            music. A bar of 3/4 has no room for one, so Count It never asks for it there.
+            a full measure with room for them. A whole note alone fills a 4/4 bar, and Count It centers it in the bar,
+            as engravers commonly do for a note that has the measure to itself. A bar of 3/4 has no room for one, so
+            Count It never asks for it there.
           </p>
           <Example prompt={dotted} caption="A dotted eighth and a sixteenth, then three quarters" grid />
           <div className="notation-pair">
