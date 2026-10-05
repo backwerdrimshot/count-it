@@ -1172,7 +1172,7 @@ export default function CountItApp() {
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
         </a>
         <p>Free percussion tools that teach.</p>
-        <WorkspaceActions />
+        <WorkspaceActions teachers={{ href: "/assignments", label: "For teachers" }} />
           <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brs-monogram.svg" alt="" width="28" height="28" />

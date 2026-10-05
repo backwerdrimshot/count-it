@@ -2,9 +2,14 @@
 
 import { useEffect, useRef, type ReactNode, type MouseEvent } from "react";
 
-export function WorkspaceActions() {
+/* `teachers` is a page worth one visible click from the practice screen, for an
+   audience that is not the student at the keyboard. Everything else a person might
+   look for lives in the Help and About dialogs, which is right for links nobody
+   needs to find in a hurry and wrong for the one a teacher has to find at all. */
+export function WorkspaceActions({ teachers }: { teachers?: { href: string; label: string } }) {
   const open = (id: string) => (document.getElementById(id) as HTMLDialogElement | null)?.showModal();
   return <nav className="workspace-actions" aria-label="Help and app information">
+    {teachers && <a href={teachers.href}>{teachers.label}</a>}
     <button type="button" onClick={() => open("workspace-help")}>Help</button>
     <button type="button" onClick={() => open("workspace-about")}>About</button>
   </nav>;

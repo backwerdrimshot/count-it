@@ -2613,3 +2613,13 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 @media (min-width:1000px) and (min-height:560px){.trainer-card{--card-pad:14px;margin-top:6px}.practice-card .reveal-panel{margin-top:6px}}
 
 @media (min-width:1000px) and (min-height:560px){.mode-wrap{min-height:calc(100dvh - var(--hdr))}}
+
+/* The "For teachers" link beside Help and About: it looks like the buttons next to it. */
+.workspace-actions a { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border:1px solid var(--line,var(--ink,#171717)); border-radius:8px; background:var(--card,var(--panel,var(--white,#fff))); color:var(--text,var(--ink,#171717)); font:600 1rem var(--body,system-ui); text-decoration:none; white-space:nowrap; }
+.workspace-actions a:hover { border-color: var(--forest-deep, #344d29); }
+.workspace-actions a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
+@media(max-width:700px) { .workspace-actions a {padding-inline:8px;font-size:.88rem;} }
+/* Below 480px the header has no room for a fourth item: with the link, the wordmark wraps
+   to two lines and spills out of the bar at 360, 375, 390 and 412px (measured; it fits from
+   440px up). A phone keeps the link in the About dialog, where it has always been. */
+@media(max-width:479px) { .workspace-actions a { display:none; } }

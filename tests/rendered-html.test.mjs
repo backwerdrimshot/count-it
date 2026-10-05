@@ -104,3 +104,14 @@ test("the internal audit page navigates with a plain anchor", async () => {
   const html = await (await render("/notation-audit")).text();
   assert.match(html, /<a href="\/">Back to Count It<\/a>/);
 });
+
+test("the practice screen links teachers to the assignments page, beside Help and About", async () => {
+  /* The links to /assignments, /build and /notation also sit in the About dialog, which
+     is closed until opened, so a teacher on the main screen sees none of them. This one
+     is in the page, in the same nav as the Help and About buttons. */
+  const html = await (await render("/")).text();
+  const nav = html.match(/<nav class="workspace-actions"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  assert.match(nav, /<a href="\/assignments">For teachers<\/a>/);
+  assert.match(nav, /<button[^>]*>Help<\/button>/);
+  assert.match(nav, /<button[^>]*>About<\/button>/);
+});
