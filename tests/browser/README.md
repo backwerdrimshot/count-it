@@ -23,6 +23,8 @@ Each file prints `PASS`/`FAIL` per check and a tally, and exits non-zero on any 
 
 Analytics (`counter.backwerdrhythmshop.com`, Cloudflare Insights) is blocked in every context, so a run never counts as a visitor, even against the live site.
 
+**Known limit of `ROUTE_VIA_NODE=1`.** Chromium re-requests a redirect's target outside the route, so a check that needs the browser to *follow* a redirect fails with `ERR_CERT_AUTHORITY_INVALID`. Today that is only the last check in `builder.mjs` (`/build/` with a trailing slash), and because it is last, every check before it still runs and reports. Run that file against a local build, where it passes, or against the live site from a machine whose browser trusts the connection. The redirect itself can be confirmed without a browser: `curl -sI https://count-it.backwerdrhythmshop.com/build/` answers `308` with `location: /build`.
+
 ## What each file checks
 
 | File | Covers |
