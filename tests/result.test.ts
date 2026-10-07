@@ -185,7 +185,7 @@ describe("the result envelope", () => {
     const asked = result.errorSummary.reduce((total, entry) => total + entry.asked, 0);
     expect(asked).toBe(3);
     expect(result.errorSummary.reduce((total, entry) => total + entry.wrong, 0)).toBe(2);
-    expect(result.recommendedNextActions[0]).toMatch(/Review these rhythms/);
+    expect(result.recommendedNextActions[0]).toBe("Review the 2 missed questions before another round.");
     /* A clean round recommends retention rather than remediation. */
     expect(receipt({ correct: [true, true, true] }).recommendedNextActions[0]).toMatch(/retention/);
   });
@@ -233,15 +233,22 @@ describe("the sequence identity markers", () => {
  * 4/4 is the default and stays unstated, so every card and record for a 4/4
  * round is exactly what it was. */
 describe("the meter on the card and in the record", () => {
-  function measureReceipt(meter: "2-4" | "3-4" | "4-4" | "5-4" | "7-4" | undefined, search = "") {
+  function measureReceipt(
+    meter: "2-4" | "3-4" | "4-4" | "5-4" | "7-4" | undefined,
+    search = "",
+    correct: readonly boolean[] = [true, true, true],
+  ) {
     const questions = generateQuestions({
       level: "level-2", scope: "measure", count: 3, seed: 77, ...(meter ? { meter } : {}),
     });
     let session = createSession(questions);
     for (let index = 0; index < questions.length; index += 1) {
       const current = session.questions[session.currentIndex];
+      const choice = correct[index]
+        ? current.choices.find((candidate) => candidate.isCorrect)!
+        : current.choices.find((candidate) => !candidate.isCorrect)!;
       session = advanceSession(
-        answerSession(session, current.choices.find((choice) => choice.isCorrect)!.id),
+        answerSession(session, choice.id),
       );
     }
     const parsed = search ? parseAssignment(search) : null;
@@ -268,6 +275,15 @@ describe("the meter on the card and in the record", () => {
     const seven = measureReceipt("7-4", "?scope=measure&meter=7-4&level=2&n=5&pass=4&seed=a");
     expect(seven.conditions.stated).toContain("7/4");
     expect(seven.settings.meter).toBe("7-4");
+  });
+
+  it("does not assign a missed measure to every cell inside it", () => {
+    const result = measureReceipt("4-4", "", [true, false, true]);
+    expect(result.errorSummary).toEqual([]);
+    expect(result.notMeasured).toContain("which individual rhythm cells were misread within a missed measure");
+    expect(result.recommendedNextActions).toEqual([
+      "Review the 1 missed question before another round.",
+    ]);
   });
 
   it("leaves a 4/4 record exactly as it was", () => {

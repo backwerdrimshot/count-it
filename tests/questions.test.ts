@@ -17,6 +17,7 @@ import {
   getAccuracy,
   getCurrentQuestion,
   getCurrentResponse,
+  getMissedQuestions,
   isGenuinelyIncorrect,
   resetSession,
 } from "../src/question";
@@ -150,6 +151,46 @@ describe("challenge session scoring", () => {
     expect(() => answerSession(answered, getCurrentQuestion(answered).correctChoiceId)).toThrow(
       /already been answered/,
     );
+  });
+
+  it("selects exact missed measure questions in original order, not their cells", () => {
+    const measureQuestions = generateQuestions({
+      level: "level-2", scope: "measure", count: 4, seed: "focused-measure-review",
+    });
+    let session = createSession(measureQuestions);
+    const firstMiss = getCurrentQuestion(session);
+    const wrongChoice = firstMiss.choices.find((choice) => !choice.isCorrect)!;
+    session = advanceSession(answerSession(session, wrongChoice.id));
+    const correct = getCurrentQuestion(session);
+    session = advanceSession(answerSession(session, correct.correctChoiceId));
+    const secondMiss = getCurrentQuestion(session);
+    const secondWrongChoice = secondMiss.choices.find((choice) => !choice.isCorrect)!;
+    session = advanceSession(answerSession(session, secondWrongChoice.id));
+
+    const selected = getMissedQuestions(session);
+    expect(selected).toHaveLength(2);
+    expect(selected[0]).toBe(firstMiss);
+    expect(selected[1]).toBe(secondMiss);
+    expect(selected[0].prompt.scope).toBe("measure");
+    expect(selected[0].prompt.cells.length).toBeGreaterThan(1);
+    expect(selected[0].choices).toBe(firstMiss.choices);
+
+    const focused = createSession(selected);
+    const focusedAnswered = advanceSession(answerSession(
+      focused,
+      getCurrentQuestion(focused).correctChoiceId,
+    ));
+    expect(focusedAnswered.status).toBe("active");
+    expect(session.responses).toHaveLength(3);
+    expect(session.score).toBe(1);
+  });
+
+  it("returns no missed questions for a clean session", () => {
+    let session = createSession(questions);
+    for (const question of questions) {
+      session = advanceSession(answerSession(session, question.correctChoiceId));
+    }
+    expect(getMissedQuestions(session)).toEqual([]);
   });
 });
 

@@ -35,7 +35,7 @@ Analytics (`counter.backwerdrhythmshop.com`, Cloudflare Insights) is blocked in 
 | `meter-guard.mjs` | A choice that cannot make a round is greyed out with the reason, never offered. |
 | `catalog.mjs` | `/assignments`: sixteen steps, their links, Copy, a step played from the catalog to its result, the finished count. |
 | `notation.mjs` | `/notation`: the seven topics, every example staff drawn, the one-beat example without a closing barline and every measure example with one (as the page says), the contents links, phone width. |
-| `teachers-link.mjs` | The **For teachers** link: visible, in the viewport, 44px tall, reachable by Tab before Help, absent below 480px. |
+| `teachers-link.mjs` | The **For teachers** entry: visible in the header on wide screens and in a dedicated phone row below 480px; 44px targets, keyboard access and routes to Assignments. |
 
 ## Keeping them true
 

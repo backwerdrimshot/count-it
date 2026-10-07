@@ -37,7 +37,17 @@ export default function RhythmNotation({
       const meter = getMeter(prompt.meter);
       const beats = prompt.scope === "measure" ? meter.beatsPerMeasure : 1;
       const naturalWidth = prompt.scope === "measure" ? 190 * beats : 390;
-      const width = Math.max(naturalWidth, element.clientWidth || naturalWidth);
+      const clientWidth = element.clientWidth || naturalWidth;
+      const noteCount = prompt.cells.reduce((count, cell) => count + cell.notation.tokens.length, 0);
+      const hasHeldNote = prompt.cells.some((cell) => cell.beats > 1);
+      /* Sparse measures with a held note do not need 190px for every beat.
+         A 5/4 prompt with one quarter and one whole note otherwise becomes
+         950px wide on a phone. Fit that small pattern to the available canvas;
+         dense measures retain their breathing room and horizontal scrolling. */
+      const sparseHeldNoteMeasure = prompt.scope === "measure" && hasHeldNote && noteCount <= 2;
+      const width = sparseHeldNoteMeasure
+        ? clientWidth
+        : Math.max(naturalWidth, clientWidth);
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(width, 172);
       const context = renderer.getContext();
