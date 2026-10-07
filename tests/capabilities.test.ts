@@ -15,6 +15,12 @@ if (process.env.UPDATE_CAPABILITIES_JSON === "1") {
 const served = JSON.parse(readFileSync(MANIFEST_FILE, "utf8"));
 
 describe("the published capability manifest", () => {
+  it("versions the additive counting-profile registry contract", () => {
+    expect(COUNT_IT_CAPABILITY_MANIFEST.schemaVersion).toBe("1.1.0");
+    expect(COUNT_IT_CAPABILITY_MANIFEST.countingProfileRegistryVersion).toBe(1);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.countingProfiles).toHaveLength(3);
+  });
+
   it("is a serialized copy of the manifest the app builds", () => {
     // The served file is what siblings and the shop site actually read. A
     // manifest that drifts from the app it describes is worse than none: it is
@@ -90,11 +96,11 @@ describe("the published capability manifest", () => {
     /* Was 1. The manifest itself named the condition — "Level 1 until the
        universal result envelope is adopted" — and 2026-08-08.4 adopted it, so
        the level moves with the criterion that was written down in advance.
-       What Level 2 does NOT assert is transmission: nothing leaves the device
-       here or in either sibling, and Scale Trail has claimed 2 on the same
-       terms throughout. */
+       What Level 2 does NOT assert is transmission of practice results:
+       answers and scores do not leave the device, and Scale Trail has claimed 2
+       on the same terms throughout. */
     expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevel).toBe(2);
-    expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevelRationale).toMatch(/nothing leaves the device/i);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevelRationale).toMatch(/no practice answers or scores leave the device/i);
     expect(COUNT_IT_CAPABILITY_MANIFEST.resultSchemaVersion).toBe("praxis.result.v0_1");
     const limitations = COUNT_IT_CAPABILITY_MANIFEST.limitations.join(" ");
     expect(limitations).toMatch(/no audio, no microphone, and no tempo engine/i);

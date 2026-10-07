@@ -23,7 +23,7 @@ import {
   RHYTHMS_IN_THREE_STEPS,
   getPreset,
 } from "../src/assignment/presets";
-import type { MeterId } from "../src/rhythm";
+import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
 
 type VocabularyKind = Vocabulary["kind"];
@@ -72,6 +72,7 @@ export default function AssignmentBuilder() {
   const [cells, setCells] = useState<readonly string[]>(() => cellsForLevel(2));
   const [scope, setScope] = useState<"beat" | "measure" | null>("beat");
   const [meter, setMeter] = useState<MeterId | null>("4-4");
+  const [system, setSystem] = useState<CountingProfileId | null>("standard");
   const [guide, setGuide] = useState<"on" | "off" | null>("on");
   const [feedback, setFeedback] = useState<"each" | "end" | null>(null);
   const [retry, setRetry] = useState<"free" | "reseed" | "off" | null>(null);
@@ -97,6 +98,7 @@ export default function AssignmentBuilder() {
       vocabulary,
       scope,
       meter,
+      system,
       guide,
       feedback,
       retry,
@@ -104,7 +106,7 @@ export default function AssignmentBuilder() {
       passing: numberOrNull(passText),
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, guide, feedback, retry, countText, passText, seed],
+    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -127,6 +129,7 @@ export default function AssignmentBuilder() {
     if (next.vocabulary.kind === "cells") setCells(next.vocabulary.cells);
     setScope(next.scope);
     setMeter(next.meter);
+    setSystem(next.system ?? null);
     setGuide(next.guide);
     setFeedback(next.feedback);
     setRetry(next.retry);
@@ -371,7 +374,9 @@ export default function AssignmentBuilder() {
                                 <span>
                                   <strong>{cell.label}</strong>
                                   <small>
-                                    {cell.count === "silent" ? "silent" : <>counts <code>{cell.count}</code></>}
+                                    {cell.counts[system ?? "standard"] === "silent"
+                                      ? "silent"
+                                      : <>counts <code>{cell.counts[system ?? "standard"]}</code></>}
                                     {cell.beats > 1 ? ` · ${cell.beats} beats` : ""}
                                   </small>
                                 </span>
@@ -415,6 +420,22 @@ export default function AssignmentBuilder() {
             </fieldset>
 
             <fieldset className="builder-group">
+              <legend>Counting profile</legend>
+              <label className="level-control">
+                <span>How should students count?</span>
+                <select value={system ?? ""} onChange={(event) => setSystem(orNull<CountingProfileId>(event.target.value))}>
+                  <option value="">Standard (leave the profile unpinned)</option>
+                  {Object.values(COUNTING_PROFILES).map((profile) => (
+                    <option key={profile.id} value={profile.id}>{profile.name}</option>
+                  ))}
+                </select>
+                <small>
+                  Preview: <code>{COUNTING_PROFILES[system ?? "standard"].preview}</code>. The link pins a profile when you choose one.
+                </small>
+              </label>
+            </fieldset>
+
+            <fieldset className="builder-group">
               <legend>Support and feedback</legend>
               <div className="builder-triple">
                 <label className="level-control">
@@ -424,7 +445,7 @@ export default function AssignmentBuilder() {
                     <option value="on">Visible</option>
                     <option value="off">Hidden</option>
                   </select>
-                  <small>The 1 e &amp; a grid under the notation.</small>
+                  <small>The count grid under the notation.</small>
                 </label>
                 <label className="level-control">
                   <span>Answers shown</span>

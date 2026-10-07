@@ -16,7 +16,13 @@ export type MeterId = "2-4" | "3-4" | "4-4" | "5-4" | "7-4";
 export type BeatNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export type PartialPosition = 0 | 1 | 2 | 3;
 export type LevelId = "level-1" | "level-2" | "level-3";
-export type CountingSystemId = "standard" | "eastman" | "takadimi";
+/** Stable, versioned options teachers and learners can select. */
+export type CountingProfileId =
+  | "standard"
+  | "eastman-ti-te-ta"
+  | "eastman-ta-te-ta";
+/** Internal compatibility mappings remain available to older catalog data. */
+export type CountingSystemId = CountingProfileId | "eastman" | "takadimi";
 export type DistractorCategory =
   | "omitted_sound"
   | "added_sound"

@@ -32,6 +32,8 @@ import {
   getMeter,
   getRhythmCell,
   isMeterId,
+  COUNTING_PROFILES,
+  type CountingProfileId,
   type LevelId,
   type MeterId,
 } from "../rhythm";
@@ -47,7 +49,7 @@ export type FeedbackPolicy = "each" | "end";
  *  `reseed` is the pedagogically honest retake — same conditions, new
  *  questions — and `off` withdraws the button. */
 export type RetryPolicy = "free" | "reseed" | "off";
-export type CountingSystemParam = "standard";
+export type CountingSystemParam = CountingProfileId;
 export type AssignmentScope = "beat" | "measure";
 
 /** Bounds. The engine accepts 1–20 questions; the pool needs at least two
@@ -174,6 +176,8 @@ export interface Assignment {
   readonly passing: number | null;
   readonly seed: string | null;
   readonly system: CountingSystemParam;
+  /** True only when the URL explicitly chose `sys`; links without it remain Standard. */
+  readonly systemPinned: boolean;
   /** True when `cells` superseded a `level` the link also carried. */
   readonly levelIgnored: boolean;
 }
@@ -359,18 +363,30 @@ export function unavailableChoices(
  */
 export function parseAssignment(search: string): AssignmentResult {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const systemRaw = params.get("sys");
   const locked: string[] = [];
+  if (systemRaw !== null) locked.push("sys");
 
-  const system = params.get("sys");
-  if (system !== null && system !== "standard") {
+  const systemAliases: Readonly<Record<string, CountingProfileId>> = {
+    standard: "standard",
+    eastman: "eastman-ti-te-ta",
+    "eastman-ti-te-ta": "eastman-ti-te-ta",
+    "eastman-ta-te-ta": "eastman-ta-te-ta",
+  };
+  const system = systemRaw === null
+    ? "standard"
+    : Object.prototype.hasOwnProperty.call(systemAliases, systemRaw)
+      ? systemAliases[systemRaw]
+      : undefined;
+  if (systemRaw !== null && !system) {
     return {
       ok: false,
       error: {
         code: "system",
-        entry: system,
+        entry: systemRaw,
         message:
-          `This practice link asks for “${system}” counting. Count It teaches Standard ` +
-          "American counting (1 e & a) today, so the link cannot be used as written.",
+          `This practice link asks for “${systemRaw}” counting. Choose Standard, ` +
+          "Eastman (ti-te-ta), or Eastman variant (ta-te-ta) in a supported link.",
       },
     };
   }
@@ -607,7 +623,8 @@ export function parseAssignment(search: string): AssignmentResult {
       count,
       passing,
       seed,
-      system: "standard" as const,
+      system: system as CountingProfileId,
+      systemPinned: systemRaw !== null,
       levelIgnored: cells !== null && levelRaw !== null,
     }),
     locked: Object.freeze(locked),
@@ -657,6 +674,7 @@ export function serializeAssignment(assignment: Assignment): string {
   if (assignment.count !== null) parts.push(`n=${assignment.count}`);
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
+  if (assignment.systemPinned) parts.push(`sys=${assignment.system}`);
   return parts.length ? `?${parts.join("&")}` : "";
 }
 
@@ -669,6 +687,9 @@ export function describeAssignment(assignment: Assignment): string {
     ? `${assignment.cells.length} rhythms`
     : getLevel(assignment.level).shortName);
   parts.push(assignment.scope === "beat" ? "one beat" : "one measure");
+  if (assignment.systemPinned) {
+    parts.push(`${COUNTING_PROFILES[assignment.system].name} counting`);
+  }
   /* Only when it is not 4/4, the same rule as the settings below: a card for a
      seven-beat bar that does not say so describes a different round than the
      one answered, and 4/4 cards stay exactly as they always were. */

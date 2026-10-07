@@ -2,7 +2,9 @@ import { formatCounts } from "./counting";
 import { validateEngravingCatalog } from "./engraving";
 import type { CountingSystemId, RhythmCell } from "./types";
 
-const systems: readonly CountingSystemId[] = ["standard", "eastman", "takadimi"];
+const systems: readonly CountingSystemId[] = [
+  "standard", "eastman-ti-te-ta", "eastman-ta-te-ta", "eastman", "takadimi",
+];
 
 export function validateRhythmCell(cell: RhythmCell): void {
   if (!cell || typeof cell !== "object") throw new TypeError("Rhythm cell data is required.");

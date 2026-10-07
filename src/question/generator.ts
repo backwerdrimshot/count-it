@@ -9,6 +9,7 @@ import {
   DEFAULT_METER,
   getMeter,
   type DistractorCategory,
+  type CountingProfileId,
   type LevelId,
   type MeterId,
   type RhythmCell,
@@ -41,6 +42,8 @@ export interface GenerateQuestionsOptions {
   /** The meter the round is read in. Absent, 4/4 — so every link, seed and
    *  saved round written before meters existed generates the same questions. */
   readonly meter?: MeterId;
+  /** A versioned syllable map. Absent, Standard keeps existing rounds identical. */
+  readonly system?: CountingProfileId;
   readonly count?: number;
   readonly seed: string | number;
   /** An explicit cell vocabulary, by id. When present it SUPERSEDES the level
@@ -127,10 +130,11 @@ function buildQuestion(
   index: number,
   random: RandomSource,
   presentation: RandomSource | null,
+  system: CountingProfileId,
 ): CountQuestion {
-  const correctAnswer = getPromptAnswer(prompt, "standard");
+  const correctAnswer = getPromptAnswer(prompt, system);
   const correctChoiceId = `q${index + 1}-correct`;
-  const distractors = generateDistractors(prompt, random, 3);
+  const distractors = generateDistractors(prompt, random, 3, system);
   const ordered = shuffle<QuestionChoice>(
     [
       Object.freeze({ id: correctChoiceId, label: correctAnswer, category: "correct" as const, isCorrect: true }),
@@ -163,7 +167,7 @@ function buildQuestion(
     correctAnswer,
     correctChoiceId,
     choices: Object.freeze(choices),
-    explanation: explainPrompt(prompt),
+    explanation: explainPrompt(prompt, system),
   });
 }
 
@@ -171,6 +175,7 @@ export function generateQuestions({
   level,
   scope,
   meter = DEFAULT_METER,
+  system = "standard",
   count = 5,
   seed,
   cells: cellIds,
@@ -208,6 +213,6 @@ export function generateQuestions({
     ? beatPrompts(cells, count, random, meter)
     : measurePrompts(cells, count, random, meter);
   return Object.freeze(
-    prompts.map((prompt, index) => buildQuestion(prompt, index, random, presentation)),
+    prompts.map((prompt, index) => buildQuestion(prompt, index, random, presentation, system)),
   );
 }

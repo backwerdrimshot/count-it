@@ -94,6 +94,7 @@ function makeStep(
       vocabulary: settings.vocabulary,
       scope: settings.scope,
       meter,
+      system: null,
       guide: settings.guide,
       feedback: null,
       retry: null,

@@ -1,7 +1,7 @@
 import { getPromptAnswer } from "./counting";
 import { getRhythmCell } from "./cells";
 import { beatSpan, beatStarts, DEFAULT_METER, getMeter } from "./meter";
-import type { MeterId, RhythmCell, RhythmPrompt } from "./types";
+import type { CountingProfileId, MeterId, RhythmCell, RhythmPrompt } from "./types";
 
 function resolve(cellOrId: RhythmCell | string): RhythmCell {
   return typeof cellOrId === "string" ? getRhythmCell(cellOrId) : cellOrId;
@@ -63,7 +63,10 @@ export function getPromptId(prompt: RhythmPrompt): string {
   return `${prompt.meter}:${prompt.scope}:${prompt.cells.map((cell) => cell.id).join("+")}`;
 }
 
-export function explainPrompt(prompt: RhythmPrompt): string {
+export function explainPrompt(
+  prompt: RhythmPrompt,
+  system: CountingProfileId = "standard",
+): string {
   if (prompt.scope === "beat") return prompt.cells[0].explanation;
   const starts = beatStarts(prompt.cells);
   const beatDetails = prompt.cells.map((cell, index) => {
@@ -75,7 +78,7 @@ export function explainPrompt(prompt: RhythmPrompt): string {
     if (cell.beats > 1) {
       return `Beats ${start}\u2013${start + cell.beats - 1}: ${cell.explanation}`;
     }
-    const answer = getPromptAnswer(createBeatPrompt(cell, prompt.meter)).replace(
+    const answer = getPromptAnswer(createBeatPrompt(cell, prompt.meter), system).replace(
       /^1/,
       String(start),
     );

@@ -22,7 +22,7 @@ import { COUNT_IT_BUILD } from "./capabilities";
 import type { CountQuestion } from "./question/generator";
 import type { ChallengeSession } from "./question/session";
 import { type SequenceStep, sequenceStepId } from "./sequence-step";
-import { DEFAULT_METER, getLevel, getMeter } from "./rhythm";
+import { COUNTING_PROFILES, DEFAULT_METER, getLevel, getMeter, type CountingProfileId } from "./rhythm";
 
 /** The contract this app now speaks, shared with Scale Trail and Mallet Map. */
 export const RESULT_SCHEMA_VERSION = "praxis.result.v0_1";
@@ -161,6 +161,7 @@ export function createPraxisEvidenceResult(options: {
   sequenceStep: SequenceStep | null;
   level: string;
   scope: "beat" | "measure";
+  countingSystem?: CountingProfileId;
   finishedAt: Date;
   /** Which run of this round this is, counting from 1.
    *
@@ -172,6 +173,7 @@ export function createPraxisEvidenceResult(options: {
   attempt?: number;
 }): PraxisEvidenceResult {
   const { session, assignment, sequenceStep, finishedAt, attempt = 1 } = options;
+  const countingSystem = assignment?.system ?? options.countingSystem ?? "standard";
   const possible = session.questions.length;
   const score = session.score;
   const timestamp = finishedAt.toISOString();
@@ -201,6 +203,7 @@ export function createPraxisEvidenceResult(options: {
     if (assignment.count !== null) settings.n = String(assignment.count);
     if (assignment.passing !== null) settings.pass = String(assignment.passing);
     if (assignment.seed) settings.seed = assignment.seed;
+    if (assignment.systemPinned) settings.sys = assignment.system;
   }
 
   return Object.freeze({
@@ -222,13 +225,13 @@ export function createPraxisEvidenceResult(options: {
       level,
       cells: assignment?.cells ?? null,
       guide: assignment?.guide ?? null,
-      countingSystem: assignment?.system ?? "standard",
+      countingSystem,
       passing: assignment?.passing ?? null,
       /* The same sentence the card shows, so the human record and the machine
          record cannot describe different rounds. */
       stated: assignment
         ? describeAssignment(assignment)
-        : `${getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}${playedMeterNote(session)}`,
+        : `${getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}${playedMeterNote(session)}${countingSystem === "standard" ? "" : ` · ${COUNTING_PROFILES[countingSystem].name} counting`}`,
     },
     /* Null, deliberately, and the manifest says the same thing. This app has no
        reconciled Praxis skill vocabulary: candidate ids exist in the Sequence 2

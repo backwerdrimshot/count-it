@@ -19,15 +19,22 @@
  *      worse than none: it is confidently wrong, and consumers act on it.
  */
 import { DEFAULT_QUESTIONS, MAX_QUESTIONS, MIN_POOL, MIN_QUESTIONS } from "./assignment";
-import { ALL_RHYTHM_CELLS, LEVELS, METER_IDS, SPANNING_CELLS } from "./rhythm";
+import {
+  ALL_RHYTHM_CELLS,
+  COUNTING_PROFILES,
+  COUNTING_PROFILE_REGISTRY_VERSION,
+  LEVELS,
+  METER_IDS,
+  SPANNING_CELLS,
+} from "./rhythm";
 
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-05.1";
+export const COUNT_IT_BUILD = "2026-10-07.1";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
-  schemaVersion: "1.0.0",
+  schemaVersion: "1.1.0",
   appId: "count-it",
   title: "Count It",
   version: COUNT_IT_BUILD,
@@ -43,14 +50,14 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Accepts a configured assignment link, scores objectively, and emits the universal result " +
     "envelope (praxis.result.v0_1) — the condition this manifest previously named for Level 2, " +
     "now met. Transmission is NOT part of the claim and never has been: the envelope is a format, " +
-    "the card renders from it, and nothing leaves the device. Scale Trail claims Level 2 on the " +
+    "the card renders from it, and no practice answers or scores leave the device. Scale Trail claims Level 2 on the " +
     "same terms.",
   pathway: "rhythm-reading-and-counting",
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
   configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "seed", "sys"],
-  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "seed"],
+  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "seed", "sys"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, " +
@@ -59,8 +66,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "question or only at the end, `retry` chooses what trying again means, `n` and `pass` set " +
     "the length and the goal, and `seed` makes " +
     "every student's questions identical. `level` is a shorthand for a cumulative vocabulary " +
-    "and is superseded when `cells` is present. `a` is a display name and `sys` names the " +
-    "counting system.",
+    "and is superseded when `cells` is present. `a` is a display name and `sys` pins one of " +
+    "the versioned counting profiles.",
   assignmentValidation:
     `Rejects loudly and never repairs: an unknown rhythm id, fewer than ${MIN_POOL} rhythms ` +
     `after duplicates collapse, a question count outside ${MIN_QUESTIONS}–${MAX_QUESTIONS}, a ` +
@@ -68,8 +75,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "when the link sets none), a full-measure round longer than the pool can fill without " +
     "repeating, a meter this app does not read, a rhythm too long for the named meter's " +
     "measure (a whole note in 2/4 or 3/4), " +
-    "an unrecognized feedback or retry setting, or a counting system this app does " +
-    "not teach each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
+    "an unrecognized feedback or retry setting, or a counting profile this app does " +
+    "not support each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
     "assignment nobody set.",
   roundLengthRule:
@@ -112,11 +119,16 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "(eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a " +
     "plain-language message rather than repaired.",
   levels: LEVELS.map((level) => level.id),
-  countingSystems: ["standard"],
+  countingProfileRegistryVersion: COUNTING_PROFILE_REGISTRY_VERSION,
+  countingProfiles: Object.values(COUNTING_PROFILES).map(({ id, name, mapping, preview, version }) => ({
+    id, name, mapping, preview, version,
+  })),
+  countingSystems: Object.keys(COUNTING_PROFILES),
   countingSystemStatus:
-    "Standard American counting (1 e & a) is the only system this release teaches. The data " +
-    "model carries Eastman and Takadimi, but a link asking for either is refused rather than " +
-    "graded against a system the app does not present.",
+    "Students and teachers can select Standard (1 e & a), Eastman (ti-te-ta), or Eastman " +
+    "variant (ta-te-ta). The latter two labels identify their exact subdivision mappings; " +
+    "naming varies across teaching materials. Assignments can pin one with `sys`; links " +
+    "without `sys` keep the historical Standard behavior. Takadimi remains internal data.",
   acceptedInputSources: ["touch", "mouse", "computer-keyboard"],
   evidenceTypes: ["A1_ANSWER_CORRECTNESS"],
   /* Deliberately empty, and said out loud rather than invented. Count It has
@@ -137,8 +149,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "`activity.contentVersion` is null because questions are generated from the conditions and a " +
     "seed, which already reproduce the round. In measure scope a miss is attributed to every cell " +
     "in the measure, because the question is answered as a whole — the finest attribution the " +
-    "format allows, not a claim that all four were misread. Emitting the shape is not " +
-    "transmitting it: nothing leaves the device.",
+    "format allows, not a claim that all four were misread. Emitting the shape does not " +
+    "send this result; site-traffic measurement is separate.",
   supportDimensions:
     "The subdivision guide is a support, not a preference: an assignment pins it, and a gate " +
     "counts the assignment's policy rather than the learner's own toggle. Question size (one " +
@@ -168,13 +180,14 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "non-color-status-cues",
   ],
   offlineBehavior:
-    "No account, backend, or network dependency. Preferences, personal bests, a per-assignment " +
-    "attempt tally and an opaque per-browser string used only to vary answer order stay in " +
-    "browser storage; the optional assignment identifier is session-only and never persisted. " +
-    "None of the stored values name a person: the attempt tally is keyed by the assignment's " +
-    "own canonical link, and the ordering string is random and meaningless outside this " +
-    "browser. The assignments page reads that tally to show, on this device only, how many " +
-    "times a step was finished. The visit counter is progressive enhancement and its absence " +
+    "No account or cross-device score sync. Preferences, the optional saved counting profile, " +
+    "personal bests, a per-assignment attempt tally and an opaque per-browser string used only " +
+    "to vary answer order use browser storage when available; browser settings may block it or " +
+    "clearing site data may remove it. The optional assignment identifier is session-only and " +
+    "never persisted. The assignments page reads the local tally to show how many times a step " +
+    "was finished on this device. Count It also loads Cloudflare Web Analytics and queries the " +
+    "shop's existing visit counter for site-traffic measurement; these requests do not carry " +
+    "practice answers or scores. The visit counter is progressive enhancement and its absence " +
     "changes nothing.",
   siblingApps: {
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
@@ -193,8 +206,11 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
       "2026-08-29.1 and lives in Eight Time.",
     "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
     "Does not measure live performance, tone, sticking, or physical technique.",
-    "Standard American counting only in this release.",
-    "Progress is device-local; no account, roster, or cross-device sync.",
+    "Selectable counting profiles: Standard, Eastman (ti-te-ta), and Eastman variant (ta-te-ta). " +
+      "Takadimi remains internal and is not selectable.",
+    "Progress is device-local; no account, roster, or cross-device score sync. Site-traffic " +
+      "measurement uses Cloudflare Web Analytics and the shop's existing visit counter; neither " +
+      "receives practice answers or scores.",
     "The assignment catalog, the builder and the notation reference are free and open: a named " +
       "assignment is a set of link settings anyone can rebuild, not a locked resource. A quiz " +
       "(guide hidden, answers held to the end, one attempt) is a knowledge check, not secure " +

@@ -20,7 +20,7 @@ const { note, results } = reporter();
 
   // A. Defaults
   const first = await link();
-  note("loads with a complete default assignment and a generated 6-character seed", /\?level=2&scope=beat&meter=4-4&guide=on&n=10&pass=8&seed=[a-z2-9]{6}$/.test(first), first.replace(BASE, ""));
+  note("loads with a complete default assignment and a generated 6-character seed", /\?level=2&scope=beat&meter=4-4&sys=standard&guide=on&n=10&pass=8&seed=[a-z2-9]{6}$/.test(first), first.replace(BASE, ""));
 
   // B. A combination the app would refuse
   await page.getByLabel(/^Question size/).selectOption("measure");

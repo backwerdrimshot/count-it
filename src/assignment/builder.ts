@@ -30,6 +30,7 @@
 import {
   ALL_RHYTHM_CELLS,
   DEFAULT_METER,
+  COUNTING_PROFILES,
   METER_IDS,
   getCellsByIds,
   getCellsForLevel,
@@ -37,6 +38,7 @@ import {
   getMeter,
   type LevelId,
   type MeterId,
+  type CountingProfileId,
   type RhythmCell,
 } from "../rhythm";
 import {
@@ -70,6 +72,8 @@ export interface BuilderState {
   readonly vocabulary: Vocabulary;
   readonly scope: "beat" | "measure" | null;
   readonly meter: MeterId | null;
+  /** Null leaves an older/preset link on its Standard default without pinning `sys`. */
+  readonly system?: CountingProfileId | null;
   readonly guide: GuidePolicy | null;
   readonly feedback: FeedbackPolicy | null;
   readonly retry: RetryPolicy | null;
@@ -96,6 +100,7 @@ export function defaultBuilderState(seed: string): BuilderState {
     vocabulary: Object.freeze({ kind: "level" as const, level: 2 as const }),
     scope: "beat" as const,
     meter: DEFAULT_METER,
+    system: "standard" as const,
     guide: "on" as const,
     feedback: null,
     retry: null,
@@ -123,6 +128,7 @@ export interface BuilderCell {
   readonly label: string;
   /** The Standard count with beat 1 as the example, or "silent". */
   readonly count: string;
+  readonly counts: Readonly<Record<CountingProfileId, string>>;
   readonly beats: number;
   /** 1–3 for a one-beat rhythm; 0 for one that lasts longer than a beat, which
    *  is in no level and is opt-in by `cells` only. */
@@ -135,6 +141,12 @@ export const BUILDER_CELLS: readonly BuilderCell[] = Object.freeze(
       id: cell.id,
       label: cell.label,
       count: cell.verifiedAnswers.standard || "silent",
+      counts: Object.freeze(Object.fromEntries(
+        Object.keys(COUNTING_PROFILES).map((id) => [
+          id,
+          cell.verifiedAnswers[id as CountingProfileId] || "silent",
+        ]),
+      ) as Record<CountingProfileId, string>),
       beats: cell.beats,
       level: cell.beats > 1 ? (0 as const) : (cell.difficulty as 1 | 2 | 3),
     }),
@@ -156,6 +168,7 @@ export function buildQuery(state: BuilderState): string {
   if (state.vocabulary.kind === "level") parts.push(`level=${state.vocabulary.level}`);
   if (state.scope) parts.push(`scope=${state.scope}`);
   if (state.meter) parts.push(`meter=${state.meter}`);
+  if (state.system) parts.push(`sys=${state.system}`);
   if (state.vocabulary.kind === "cells") {
     const chosen = new Set(state.vocabulary.cells);
     parts.push(`cells=${ALL_RHYTHM_CELLS.filter((cell) => chosen.has(cell.id)).map((cell) => cell.id).join(",")}`);

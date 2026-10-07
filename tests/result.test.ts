@@ -13,9 +13,10 @@ import { generateQuestions } from "../src/question/generator";
 import { advanceSession, answerSession, createSession, type ChallengeSession } from "../src/question/session";
 import { COUNT_IT_BUILD } from "../src/capabilities";
 
-function playedSession(options: { correct: boolean[]; seed?: number }): ChallengeSession {
+function playedSession(options: { correct: boolean[]; seed?: number; system?: "standard" | "eastman-ti-te-ta" | "eastman-ta-te-ta" }): ChallengeSession {
   const questions = generateQuestions({
     level: "level-1", scope: "beat", count: options.correct.length, seed: options.seed ?? 4242,
+    system: options.system,
   });
   let session = createSession(questions);
   for (const correct of options.correct) {
@@ -33,8 +34,9 @@ function receipt(over: {
   search?: string;
   finishedAt?: Date;
   attempt?: number;
+  system?: "standard" | "eastman-ti-te-ta" | "eastman-ta-te-ta";
 } = {}) {
-  const session = playedSession({ correct: over.correct ?? [true, true, false] });
+  const session = playedSession({ correct: over.correct ?? [true, true, false], system: over.system });
   const search = over.search ?? "";
   const parsed = search ? parseAssignment(search) : null;
   const assignment = parsed && parsed.ok ? parsed.assignment : null;
@@ -44,6 +46,7 @@ function receipt(over: {
     sequenceStep: parseSequenceStep(search),
     level: assignment?.level ?? "level-1",
     scope: assignment?.scope ?? "beat",
+    countingSystem: assignment?.system ?? over.system,
     finishedAt: over.finishedAt ?? new Date("2026-08-08T00:00:00.000Z"),
     ...(over.attempt === undefined ? {} : { attempt: over.attempt }),
   });
@@ -64,6 +67,17 @@ describe("the result envelope", () => {
        decision and an invented id is indistinguishable, to a consumer, from a
        real one. */
     expect(receipt().skillReferences).toBeNull();
+  });
+
+  it("records the chosen profile in conditions and keeps it in an explicit assignment", () => {
+    const assigned = receipt({ search: "?sys=eastman-ta-te-ta&level=1&scope=beat&n=3&seed=profile", system: "eastman-ta-te-ta" });
+    expect(assigned.conditions.countingSystem).toBe("eastman-ta-te-ta");
+    expect(assigned.conditions.stated).toContain("Eastman variant (ta-te-ta)");
+    expect(assigned.settings.sys).toBe("eastman-ta-te-ta");
+
+    const free = receipt({ system: "eastman-ti-te-ta" });
+    expect(free.conditions.countingSystem).toBe("eastman-ti-te-ta");
+    expect(free.conditions.stated).toContain("Eastman (ti-te-ta)");
   });
 
   it("states the boundary on the evidence, not only in the manifest", () => {

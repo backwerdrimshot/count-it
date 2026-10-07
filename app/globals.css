@@ -561,22 +561,34 @@ a:focus-visible,
 
 .system-note {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 240px;
   border-radius: 12px;
   background: var(--tan-soft);
   padding: 12px;
   font-size: 0.78rem;
 }
 
-.system-note span {
+.counting-profile-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--ink-soft);
-  text-transform: uppercase;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
-.system-note strong {
-  color: var(--ink);
+.counting-profile-save input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--forest);
+}
+
+.counting-profile-status {
+  color: var(--ink-soft);
+  line-height: 1.4;
 }
 
 .system-note code {
