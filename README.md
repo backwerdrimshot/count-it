@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-05.1`
+- **Build:** `2026-10-07.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -148,7 +148,7 @@ be a contract nobody signed up to.
 | `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
 | `seed` | Same questions for every student who opens the link. |
-| `sys` | Counting system. `standard` only today; anything else is refused rather than silently graded against the wrong system. |
+| `sys` | Optional versioned counting profile: `standard`, `eastman-ti-te-ta`, or `eastman-ta-te-ta`. Absent means historical Standard. The legacy alias `eastman` is accepted and canonicalized to `eastman-ti-te-ta`. |
 
 An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
 under two, an impossible pass mark, a full-measure round longer than the pool
@@ -247,7 +247,7 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 
 ## Correctness decisions
 
-- The visible MVP uses the standard American `1 e & a` system. Eastman and Takadimi mappings remain internal compatibility data for later expansion.
+- The selectable profiles are Standard (`1 e & a`), Eastman (`1 ti te ta`) and Eastman variant (`1 ta te ta`). Labels identify the exact mapping because Eastman naming differs across teaching materials; Takadimi remains internal compatibility data.
 - Every catalog recipe fills exactly one quarter-note beat and is validated at startup/test time.
 - Every catalog recipe is checked against an independent engraving baseline for beams, dots, and partial-beam direction.
 - A full-measure prompt is assembled from independently verified cells whose spans fill the bar, and each cell is numbered by the beat it starts on, so beat numbers are substituted consistently in every meter.
@@ -258,28 +258,26 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 
 - Straight quarter-, eighth-, and sixteenth-note subdivisions in quarter-note-beat meters only (2/4, 3/4, 4/4, 5/4, 7/4).
 - A full-measure round never repeats a measure, so a short bar caps the round: two rhythms make only four bars of 2/4, so Level 1 in 2/4 is a four-question Challenge rather than five. An assignment link is refused instead of shortened.
-- No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, accounts, cloud sync, analytics, or backend.
-- Standard counting is the only user-selectable system in this release.
+- No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, student accounts, cloud sync, or score syncing. Cloudflare Web Analytics and the shop's existing visit counter measure site traffic; neither receives practice answers or scores.
+- A profile can be saved optionally on this device for free practice when browser storage is available and retained. A teacher's assignment profile takes precedence and does not overwrite the saved preference.
 - Progress is device-local and intentionally lightweight.
 - Assignment results are copied out by the student; there is no download-as-image yet, and no submission to any LMS.
 - Nothing is timed and no duration is recorded, so a score says what was answered but not how long it took.
-- Level, question size and guide preferences are written to `localStorage` and never read back, so a returning visitor always starts at Level 2 / one beat. Whether they should resume or start fresh is an open product decision, not an oversight to route around.
+- Level, question size and guide preferences are written to `localStorage` and never read back, so a returning visitor starts at Level 2 / one beat. The counting profile is a separate optional preference and is read back only when the student chooses to save it.
 
 ## Privacy and accessibility
 
-Count It requires no account or backend and does not send practice progress or scores
+Count It requires no student account and does not sync practice answers or scores
 off-device. Lightweight preferences, the personal best, a per-assignment attempt tally
-and an opaque random string used only to vary answer order stay in `localStorage`.
-None of them names a person: the tally is keyed by the assignment's own link, and the
-ordering string is meaningless outside the browser that minted it.
+and an opaque random string used only to vary answer order use browser storage when
+available. Browser settings may block storage, and clearing site data may remove it.
 
-One script does load: a Cloudflare Web Analytics beacon, in `app/layout.tsx`. It counts
-page views and nothing else — no cookies, no fingerprinting, no following anyone to
-another site. It carries the same site token as the rest of backwerdrhythmshop.com so
-this app's numbers land beside the page that describes it. It is not a route out for
-anything above: what a student answers still never leaves the device, which is exactly
-what `integrationLevelRationale` in `src/capabilities.ts` claims. The shop site's
-`/privacy/` describes the beacon for visitors.
+Count It loads a Cloudflare Web Analytics beacon from `app/layout.tsx` and uses the
+shop's existing visit counter, described below, for site-traffic measurement. These
+traffic requests do not carry practice answers or scores; answers and scores are not
+synced off-device. The Cloudflare beacon carries the same site token as the rest of
+backwerdrhythmshop.com so this app's page views land beside the page that describes it.
+The shop site's `/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
 layouts support phone, tablet, and desktop use.
 

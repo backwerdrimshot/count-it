@@ -1,6 +1,7 @@
 import { beatStarts, getMeter, MAX_BEATS_PER_MEASURE } from "./meter";
 import type {
   BeatNumber,
+  CountingProfileId,
   CountingSystemId,
   MeterId,
   PartialPosition,
@@ -13,19 +14,52 @@ export interface CountingSystem {
   readonly labelsForBeat: (beat: BeatNumber) => readonly [string, string, string, string];
 }
 
+export const COUNTING_PROFILE_REGISTRY_VERSION = 1 as const;
+
+export interface CountingProfile extends CountingSystem {
+  readonly preview: string;
+  readonly mapping: readonly ["beat", string, string, string];
+  readonly version: typeof COUNTING_PROFILE_REGISTRY_VERSION;
+}
+
+const labels = (beat: BeatNumber, mapping: readonly [string, string, string, string]) =>
+  Object.freeze([String(beat), ...mapping.slice(1)]) as readonly [string, string, string, string];
+
+/** User-facing profiles. IDs are durable: changing a mapping requires a new ID. */
+export const COUNTING_PROFILES: Readonly<Record<CountingProfileId, CountingProfile>> = Object.freeze({
+  standard: Object.freeze({
+    id: "standard",
+    name: "Standard",
+    mapping: ["beat", "e", "&", "a"] as const,
+    labelsForBeat: (beat: BeatNumber) => labels(beat, [String(beat), "e", "&", "a"]),
+    preview: "1 e & a",
+    version: COUNTING_PROFILE_REGISTRY_VERSION,
+  }),
+  "eastman-ti-te-ta": Object.freeze({
+    id: "eastman-ti-te-ta",
+    name: "Eastman (ti-te-ta)",
+    mapping: ["beat", "ti", "te", "ta"] as const,
+    labelsForBeat: (beat: BeatNumber) => labels(beat, [String(beat), "ti", "te", "ta"]),
+    preview: "1 ti te ta",
+    version: COUNTING_PROFILE_REGISTRY_VERSION,
+  }),
+  "eastman-ta-te-ta": Object.freeze({
+    id: "eastman-ta-te-ta",
+    name: "Eastman variant (ta-te-ta)",
+    mapping: ["beat", "ta", "te", "ta"] as const,
+    labelsForBeat: (beat: BeatNumber) => labels(beat, [String(beat), "ta", "te", "ta"]),
+    preview: "1 ta te ta",
+    version: COUNTING_PROFILE_REGISTRY_VERSION,
+  }),
+});
+
 export const COUNTING_SYSTEMS: Readonly<Record<CountingSystemId, CountingSystem>> =
   Object.freeze({
-    standard: Object.freeze({
-      id: "standard" as const,
-      name: "Standard American subdivision counting",
-      labelsForBeat: (beat: BeatNumber) =>
-        Object.freeze([String(beat), "e", "&", "a"]) as readonly [string, string, string, string],
-    }),
+    ...COUNTING_PROFILES,
     eastman: Object.freeze({
       id: "eastman" as const,
       name: "Eastman counting",
-      labelsForBeat: (beat: BeatNumber) =>
-        Object.freeze([String(beat), "ti", "te", "ta"]) as readonly [string, string, string, string],
+      labelsForBeat: (beat: BeatNumber) => COUNTING_PROFILES["eastman-ti-te-ta"].labelsForBeat(beat),
     }),
     takadimi: Object.freeze({
       id: "takadimi" as const,
@@ -64,7 +98,8 @@ export function countLabelsForBeat(
   system: CountingSystemId = "standard",
 ): readonly string[] {
   assertBeat(beat);
-  const mapping = COUNTING_SYSTEMS[system];
+  const resolved = system === "eastman" ? "eastman-ti-te-ta" : system;
+  const mapping = COUNTING_SYSTEMS[resolved];
   if (!mapping) throw new RangeError(`Unsupported counting system: ${String(system)}`);
   return mapping.labelsForBeat(beat);
 }

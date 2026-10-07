@@ -63,7 +63,7 @@ describe("what the builder writes", () => {
   it("writes the full default assignment in the app's own parameter order", () => {
     const state = { ...defaultBuilderState("k7m2xq"), name: "Warm-up" };
     expect(buildQuery(state)).toBe(
-      "?a=Warm-up&level=2&scope=beat&meter=4-4&guide=on&n=10&pass=8&seed=k7m2xq",
+      "?a=Warm-up&level=2&scope=beat&meter=4-4&sys=standard&guide=on&n=10&pass=8&seed=k7m2xq",
     );
     const result = ok(state);
     expect(result.link).toBe(`${PRODUCTION_ORIGIN}/${buildQuery(state)}`);
@@ -77,6 +77,16 @@ describe("what the builder writes", () => {
     const backward = buildQuery({ ...blank, vocabulary: { kind: "cells", cells: ["half", "eighths", "quarter"] } });
     expect(forward).toBe(backward);
     expect(forward).toBe("?cells=quarter,eighths,half");
+  });
+
+  it("writes the selected syllable mapping into a shareable setup link", () => {
+    const result = ok({
+      ...defaultBuilderState("eastman1"),
+      system: "eastman-ta-te-ta",
+    });
+    expect(result.query).toContain("sys=eastman-ta-te-ta");
+    expect(result.assignment.system).toBe("eastman-ta-te-ta");
+    expect(result.summary).toContain("Eastman variant (ta-te-ta) counting");
   });
 
   it("encodes a name so it survives the URL and reads back the same", () => {
@@ -317,6 +327,7 @@ describe("every combination of choices", () => {
                   level: assignment.level,
                   scope: assignment.scope,
                   ...(assignment.meter ? { meter: assignment.meter } : {}),
+                  system: assignment.system,
                   ...(assignment.cells ? { cells: assignment.cells } : {}),
                   count: assignment.count ?? 5,
                   seed: assignment.seed ?? "none",

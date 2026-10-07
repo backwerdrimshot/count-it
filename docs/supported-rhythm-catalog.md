@@ -1,15 +1,17 @@
 # Supported rhythm catalog
 
-Count It MVP contains 16 verified, one-beat rhythm cells. Each cell is represented as structured timing positions plus a VexFlow rendering recipe. The Standard answer below uses beat 1 as the example; measure prompts replace that beat number with the beat the cell starts on, from 1 up to the bar's last beat (2 in 2/4, up to 7 in 7/4).
+Count It contains 16 verified, one-beat rhythm cells. Each cell is represented as structured timing positions plus a VexFlow rendering recipe. The Standard answers below use beat 1 as the example; measure prompts replace that beat number with the beat the cell starts on, from 1 up to the bar's last beat (2 in 2/4, up to 7 in 7/4).
 
 Subdivision positions within a beat are:
 
-| Position | Standard | Eastman (internal) | Takadimi (internal) |
-| --- | --- | --- | --- |
-| 0 | beat number | beat number | ta |
-| 1 | e | ta | ka |
-| 2 | & | te | di |
-| 3 | a | ti | mi |
+| Position | Standard | Eastman (ti-te-ta) | Eastman variant (ta-te-ta) | Takadimi (internal) |
+| --- | --- | --- | --- | --- |
+| 0 | beat number | beat number | beat number | ta |
+| 1 | e | ti | ta | ka |
+| 2 | & | te | te | di |
+| 3 | a | ta | ta | mi |
+
+The two Eastman labels intentionally describe the exact syllable mapping rather than assert a universal name. Teaching materials use Eastman names differently: [Wayland Baptist University](https://www.wbu.edu/news-and-events/2021/02/3-great-things-about-eastman-counting-system.html) teaches `1 ti te ta`, while [West Texas A&M University](https://www.wtamu.edu/_files/docs/academics/college-fine-arts-humanities/school-of-music/Week%202%20notes.pdf) teaches `1 ta te ta`. The [UNT Trumpet Manual](https://s3.amazonaws.com/mirror.facultyinfo.unt.edu/rhr0003%2Fschteach%2FUNT%20Trumpet%20Manual_24-25-9.pdf) calls the latter Eastman Simplified. The [Pulse Pocket guide](https://guides.backwerdrhythmshop.com/pulse-pocket/) presents both sixteenth-note mappings and advises matching the ensemble convention. For paired eighth notes, both mappings use `1 te`. Match the profile to the convention a teacher or ensemble uses. The syllable-to-position mapping is stable once selected; rests stay silent and do not shift later syllables.
 
 ## Catalog
 
@@ -63,9 +65,9 @@ There is **no whole rest**. It fills the bar, so a measure containing one contai
 | `5-4` | 5 | quarter note | the 16 cells above | inside each beat |
 | `7-4` | 7 | quarter note | the 16 cells above | inside each beat |
 
-A link that names no meter means 4/4, and generates the identical round it always did.
+A link that names no meter means 4/4, and generates the identical round it always did. A link without `sys` also keeps the historical Standard profile; assignment profiles are explicit and override a browser's saved free-practice default.
 
-**The admission rule is that the beat is a quarter note.** A meter that passes it needs no new cells, no new syllables and no new beaming: the count is `1 e & a` repeated, numbered up to the bar's last beat, and a bar is a whole number of those beats. 5/4 and 7/4 pass it on the same terms as 3/4. Beams stay inside each beat, so the 3+2 / 2+3 grouping an odd meter is sometimes written with is not drawn or asked.
+**The admission rule is that the beat is a quarter note.** A meter that passes it needs no new cells or beaming: the selected profile's four-position count is repeated, numbered up to the bar's last beat, and a bar is a whole number of those beats. 5/4 and 7/4 pass it on the same terms as 3/4. Beams stay inside each beat, so the 3+2 / 2+3 grouping an odd meter is sometimes written with is not drawn or asked.
 
 **What the rule keeps out.** An eighth-note beat (3/8, 5/8), a half-note beat (2/2, cut time) and a dotted-quarter beat (6/8, 9/8, 12/8) each need their own vocabulary, beaming and syllables — see the retired 3/8 catalog below for what one of them cost. A link naming one is refused. Mixed or changing meters and pickup measures are not read either.
 

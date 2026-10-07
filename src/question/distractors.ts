@@ -2,6 +2,7 @@ import { formatCounts, getPromptAnswer } from "../rhythm/counting";
 import { getMeter } from "../rhythm/meter";
 import type {
   DistractorCategory,
+  CountingProfileId,
   PartialPosition,
   RhythmPrompt,
 } from "../rhythm/types";
@@ -41,13 +42,13 @@ function promptGrid(prompt: RhythmPrompt, partials: number): Grid {
   );
 }
 
-function answerForGrid(grid: Grid): string {
+function answerForGrid(grid: Grid, system: CountingProfileId): string {
   return grid
     .map((beat, index) => {
       const positions = beat.flatMap((active, partial) =>
         active ? [partial as PartialPosition] : [],
       );
-      return formatCounts(positions, index + 1, "standard");
+      return formatCounts(positions, index + 1, system);
     })
     .filter(Boolean)
     .join(" | ");
@@ -117,10 +118,11 @@ export function generateDistractors(
   prompt: RhythmPrompt,
   random: RandomSource,
   count = 3,
+  system: CountingProfileId = "standard",
 ): readonly Distractor[] {
   if (!Number.isInteger(count) || count < 1) throw new RangeError("Distractor count must be positive.");
   const { partialsPerBeat, beatsPerMeasure } = getMeter(prompt.meter);
-  const correctAnswer = getPromptAnswer(prompt, "standard");
+  const correctAnswer = getPromptAnswer(prompt, system);
   const correctGrid = promptGrid(prompt, partialsPerBeat);
   const allowed = new Set(prompt.cells.flatMap((cell) => cell.permittedDistractors));
   const candidates = new Map<string, Distractor>();
@@ -133,7 +135,7 @@ export function generateDistractors(
     for (let mask = 1; mask < 2 ** partialsPerBeat; mask += 1) {
       if (mask === currentMask) continue;
       const candidateGrid = withMask(correctGrid, beatIndex, mask, partialsPerBeat);
-      const label = answerForGrid(candidateGrid);
+      const label = answerForGrid(candidateGrid, system);
       if (!label || label === correctAnswer || candidates.has(label)) continue;
       const category = classifyGrid(correctGrid, candidateGrid);
       if (!allowed.has(category)) continue;
@@ -177,6 +179,10 @@ export function generateDistractors(
   return Object.freeze(selected.map((candidate) => Object.freeze(candidate)));
 }
 
-export function isGenuinelyIncorrect(prompt: RhythmPrompt, distractor: Distractor): boolean {
-  return distractor.label !== getPromptAnswer(prompt, "standard");
+export function isGenuinelyIncorrect(
+  prompt: RhythmPrompt,
+  distractor: Distractor,
+  system: CountingProfileId = "standard",
+): boolean {
+  return distractor.label !== getPromptAnswer(prompt, system);
 }

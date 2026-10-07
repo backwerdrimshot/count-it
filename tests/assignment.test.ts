@@ -224,12 +224,24 @@ describe("the assignment link", () => {
     expect(describeAssignment(ok("?fb=end&cells=quarter,eighths").assignment)).toContain("answers at the end");
   });
 
-  it("names the counting system in the link, because the graded answer depends on it", () => {
-    // Standard American only today. When Eastman and Takadimi become visible,
-    // this is where the link starts carrying them — refusing now is what keeps
-    // a link from silently grading against a different system later.
+  it("pins versioned counting profiles and preserves legacy Standard links", () => {
     expect(ok("?sys=standard").assignment.system).toBe("standard");
-    expect(bad("?sys=eastman").message).toContain("Standard");
+    expect(ok("?sys=standard").assignment.systemPinned).toBe(true);
+    expect(ok("?sys=eastman-ti-te-ta").assignment.system).toBe("eastman-ti-te-ta");
+    expect(ok("?sys=eastman-ta-te-ta").assignment.system).toBe("eastman-ta-te-ta");
+    expect(ok("?sys=eastman").assignment.system).toBe("eastman-ti-te-ta");
+    expect(ok("?sys=eastman").locked).toContain("sys");
+    expect(serializeAssignment(ok("?sys=eastman").assignment)).toContain("sys=eastman-ti-te-ta");
+    expect(ok(serializeAssignment(ok("?sys=eastman").assignment)).assignment.system).toBe("eastman-ti-te-ta");
+    expect(ok("?a=old-link").assignment.system).toBe("standard");
+    expect(ok("?a=old-link").assignment.systemPinned).toBe(false);
+    expect(serializeAssignment(ok("?a=old-link").assignment)).not.toContain("sys=");
+    for (const unsupported of ["takadimi", "constructor", "toString", "__proto__", "unknown"]) {
+      const error = bad(`?sys=${encodeURIComponent(unsupported)}`);
+      expect(error.code).toBe("system");
+      expect(error.entry).toBe(unsupported);
+      expect(error.message).toContain("Eastman variant");
+    }
   });
 
   it("treats an assignment name as display text, never as markup", () => {

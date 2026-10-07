@@ -18,6 +18,8 @@ import {
   getLevel,
   getPromptAnswer,
   type LevelId,
+  COUNTING_PROFILES,
+  type CountingProfileId,
   type MeterId,
   type RhythmPrompt,
 } from "../src/rhythm";
@@ -50,6 +52,13 @@ import {
   type RetryPolicy,
 } from "../src/assignment";
 import { createPraxisEvidenceResult } from "../src/result";
+import {
+  clearCountingPreference,
+  readCountingPreference,
+  resolveCountingProfile,
+  writeCountingPreference,
+} from "../src/counting-preference";
+import { copyTextOrFallback } from "../src/copy-text";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 import { readAttempts, writeAttempts } from "../src/attempt-tally";
 
@@ -98,6 +107,9 @@ function assignmentLocks(assignment: Assignment, pinned: readonly string[]): str
   const locks = new Set<string>(pinned);
   if (assignment.cells) locks.add("cells");
   if (assignment.guide) locks.add("guide");
+  /* An unversioned historical assignment means Standard. It must not be
+     silently changed by this device's free-practice preference. */
+  locks.add("sys");
   return [...locks];
 }
 
@@ -107,6 +119,7 @@ interface RoundSpec {
   readonly meter?: MeterId;
   readonly seed: string | number;
   readonly count: number;
+  readonly system?: CountingProfileId;
   readonly cells?: readonly string[];
   readonly variant?: string;
 }
@@ -152,7 +165,7 @@ function misconceptionMessage(choice: QuestionChoice | undefined): string {
     case "shifted_subdivision":
       return "That choice shifts a note to a different subdivision.";
     case "eighth_sixteenth_confusion":
-      return "Check whether the note belongs on &, e, or a.";
+      return "Check which subdivision position the note belongs on.";
     case "wrong_beat_number":
       return "The subdivision shape is close, but the beat number is not.";
     default:
@@ -164,6 +177,9 @@ function SetupControls({
   level,
   scope,
   meter,
+  system,
+  savedSystem,
+  systemSaveMessage,
   showReference,
   assignment,
   locked,
@@ -172,12 +188,17 @@ function SetupControls({
   onLevelChange,
   onScopeChange,
   onMeterChange,
+  onSystemChange,
+  onSaveSystemChange,
   onReferenceChange,
   onStudentIdChange,
 }: {
   level: LevelId;
   scope: QuestionScope;
   meter: MeterId;
+  system: CountingProfileId;
+  savedSystem: CountingProfileId | null;
+  systemSaveMessage: string;
   showReference: boolean;
   assignment: Assignment | null;
   locked: ReadonlySet<string>;
@@ -186,6 +207,8 @@ function SetupControls({
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onMeterChange: (value: MeterId) => void;
+  onSystemChange: (value: CountingProfileId) => void;
+  onSaveSystemChange: (value: boolean) => void;
   onReferenceChange: (value: boolean) => void;
   onStudentIdChange: (value: string) => void;
 }) {
@@ -296,7 +319,7 @@ function SetupControls({
             // The guide is a support, not a preference: the gate counts the
             // assignment's policy, never the learner's own toggle.
             ? `The assignment keeps the guide ${showReference ? "visible" : "hidden"}.`
-            : `Show the complete ${scope === "beat" ? countLabelsForBeat(1, "standard").join(" ") : "measure grid"}.`}
+            : `Show the complete ${scope === "beat" ? countLabelsForBeat(1, system).join(" ") : "measure grid"}.`}
         </small>
       </label>
       {assignment && (
@@ -324,9 +347,37 @@ function SetupControls({
         </label>
       )}
       <div className="system-note" aria-label="Counting system">
-        <span>System</span>
-        <strong>Standard</strong>
-        <code>1 e & a</code>
+        <label className="level-control">
+          <span>Counting profile</span>
+          <select
+            aria-label="Counting profile"
+            value={system}
+            disabled={Boolean(assignment)}
+            onChange={(event) => onSystemChange(event.target.value as CountingProfileId)}
+          >
+            {Object.values(COUNTING_PROFILES).map((profile) => (
+              <option key={profile.id} value={profile.id}>{profile.name}</option>
+            ))}
+          </select>
+          <small>Preview: <code>{COUNTING_PROFILES[system].preview}</code></small>
+        </label>
+        {assignment ? (
+          <small className="counting-profile-status" role="status">
+            {savedSystem
+              ? `Saved on this device: ${COUNTING_PROFILES[savedSystem].name}. This assignment uses ${COUNTING_PROFILES[system].name}; your saved default is unchanged.`
+              : `This assignment uses ${COUNTING_PROFILES[system].name}. Your free-practice default is unchanged.`}
+          </small>
+        ) : (
+          <label className="counting-profile-save">
+            <input
+              type="checkbox"
+              checked={savedSystem === system}
+              onChange={(event) => onSaveSystemChange(event.target.checked)}
+            />
+            <span>Save this profile on this device</span>
+          </label>
+        )}
+        {systemSaveMessage && <small className="counting-profile-status" role="status">{systemSaveMessage}</small>}
       </div>
       <nav className="setup-help" aria-label="Help and more apps">
         <a href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
@@ -338,6 +389,7 @@ function SetupControls({
 
 function PracticeMode({
   prompt,
+  system,
   explanation,
   index,
   total,
@@ -349,6 +401,7 @@ function PracticeMode({
   onShuffle,
 }: {
   prompt: RhythmPrompt;
+  system: CountingProfileId;
   explanation: string;
   index: number;
   total: number;
@@ -359,7 +412,7 @@ function PracticeMode({
   onNext: () => void;
   onShuffle: () => void;
 }) {
-  const answer = getPromptAnswer(prompt);
+  const answer = getPromptAnswer(prompt, system);
   const notationLabel = `${
     prompt.scope === "beat" ? "One beat" : `One ${getMeter(prompt.meter).label} measure`
   } rhythm for practice.`;
@@ -381,7 +434,7 @@ function PracticeMode({
             <span>Complete subdivision</span>
             <small>{revealed ? "Green counts match sounding notes." : "Use the guide to locate each note."}</small>
           </div>
-          <CountReference prompt={prompt} revealSounding={revealed} />
+          <CountReference prompt={prompt} revealSounding={revealed} system={system} />
         </div>
       )}
       <div className={`reveal-panel ${revealed ? "is-revealed" : ""}`}>
@@ -410,6 +463,7 @@ function ChallengeMode({
   session,
   level,
   scope,
+  system,
   showReference,
   personalBest,
   assignment,
@@ -428,6 +482,7 @@ function ChallengeMode({
   session: ChallengeSession;
   level: LevelId;
   scope: QuestionScope;
+  system: CountingProfileId;
   showReference: boolean;
   personalBest: number;
   assignment: Assignment | null;
@@ -483,7 +538,7 @@ function ChallengeMode({
        migrate — and why the human record and any machine record could have
        described different rounds without anything noticing. */
     const result = createPraxisEvidenceResult({
-      session, assignment, sequenceStep, level, scope, finishedAt: stamped, attempt,
+      session, assignment, sequenceStep, level, scope, countingSystem: system, finishedAt: stamped, attempt,
     });
     /* Separate from result.attemptReference on purpose: this is the
        teacher-facing code with its own published format and its own stated
@@ -505,7 +560,9 @@ function ChallengeMode({
        rhythms went wrong. Labels for the student, catalog ids for the summary a
        teacher reads — the ids are what a follow-up link is written against. */
     const missed = result.errorSummary.filter((entry) => entry.wrong > 0);
-    const missedLabels = getCellsByIds(missed.map((entry) => entry.item)).map((cell) => cell.shortLabel);
+    const missedLabels = getCellsByIds(missed.map((entry) => entry.item)).map((cell) =>
+      system === "standard" ? cell.shortLabel : cell.label,
+    );
     const summary = [
       `Count It — Choose the Count`,
       assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
@@ -570,11 +627,11 @@ function ChallengeMode({
             type="button"
             className="secondary-button"
             onClick={() => {
-              // Clipboard first, selectable text as the fallback — a student on
-              // a locked-down device must still be able to submit something.
-              navigator.clipboard?.writeText(summary).catch(() => {
-                window.prompt("Copy your result summary:", summary);
-              });
+              void copyTextOrFallback(
+                summary,
+                () => navigator.clipboard,
+                (text) => { window.prompt("Copy your result summary:", text); },
+              );
             }}
           >
             Copy summary
@@ -679,12 +736,12 @@ function ChallengeMode({
                 /* From the PROMPT's own meter rather than a prop: a 3/4 grid
                    has three beats, and the question already knows which meter
                    it was built in. */
-                : getCompleteReference(scope, "standard", question.prompt.meter)}
+                : getCompleteReference(scope, system, question.prompt.meter)}
             </small>
           </div>
           {/* Highlighting the sounding positions IS the answer, so a held round
               leaves the grid unmarked. */}
-          <CountReference prompt={question.prompt} revealSounding={!holdFeedback && Boolean(response)} />
+          <CountReference prompt={question.prompt} revealSounding={!holdFeedback && Boolean(response)} system={system} />
         </div>
       )}
       <div className={`answer-grid scope-${scope}`} aria-label="Answer choices">
@@ -812,13 +869,16 @@ export default function CountItApp() {
   const [level, setLevel] = useState<LevelId>("level-2");
   const [scope, setScope] = useState<QuestionScope>("beat");
   const [meter, setMeter] = useState<MeterId>(DEFAULT_METER);
+  const [system, setSystem] = useState<CountingProfileId>("standard");
+  const [savedSystem, setSavedSystem] = useState<CountingProfileId | null>(null);
+  const [systemSaveMessage, setSystemSaveMessage] = useState("");
   const [showReference, setShowReference] = useState(true);
   const [practiceSeed, setPracticeSeed] = useState(INITIAL_SEED);
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [challengeSeed, setChallengeSeed] = useState<string | number>(INITIAL_SEED + 100);
   const [session, setSession] = useState(() =>
-    makeSession({ level: "level-2", scope: "beat", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
+    makeSession({ level: "level-2", scope: "beat", system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
@@ -893,6 +953,16 @@ export default function CountItApp() {
     // an effect is guarding against cascading renders, and an assignment sets
     // several pieces of state at once.
     const applyLink = window.setTimeout(() => {
+      const savedProfile = readCountingPreference(() => window.localStorage);
+      setSavedSystem(savedProfile);
+      const freePlayProfile = resolveCountingProfile(null, savedProfile);
+      if (savedProfile) {
+        setSystem(freePlayProfile);
+        setSession(makeSession({
+          level: "level-2", scope: "beat", system: freePlayProfile,
+          seed: INITIAL_SEED + 100, count: SESSION_LENGTH,
+        }));
+      }
       /* Read before the assignment is validated: a link that names a step and
          then fails validation is still evidence of which step was attempted,
          and refusing the round does not make the marker untrue. */
@@ -919,6 +989,7 @@ export default function CountItApp() {
         round = makeSession({
           level: pinned.level,
           scope: pinned.scope,
+          system: resolveCountingProfile(pinned.system, savedProfile),
           /* Null means the link named no meter, which means 4/4 — the meter it
              meant before this parameter existed. Spread rather than passed as
              `?? DEFAULT_METER` so the option is genuinely absent, which is what
@@ -952,6 +1023,7 @@ export default function CountItApp() {
       setLevel(pinned.level);
       setScope(pinned.scope);
       setMeter(pinned.meter ?? DEFAULT_METER);
+      setSystem(resolveCountingProfile(pinned.system, savedProfile));
       if (pinned.guide) setShowReference(pinned.guide === "on");
       // An assignment is a scored round by definition, so it opens in the
       // challenge rather than making a student find the tab.
@@ -986,8 +1058,8 @@ export default function CountItApp() {
     return Math.max(1, Math.min(12, uniqueMeasures(pool, getMeter(meter).beatsPerMeasure)));
   }, [assignedCells, level, meter, scope]);
   const practiceQuestions = useMemo(
-    () => generateQuestions({ level, scope, meter, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
-    [assignedCells, level, meter, practiceCount, practiceSeed, scope],
+    () => generateQuestions({ level, scope, meter, system, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
+    [assignedCells, level, meter, system, practiceCount, practiceSeed, scope],
   );
   const practiceQuestion = practiceQuestions[practiceIndex % practiceQuestions.length];
   // A pooled round is its own achievement: "the rest-entry cells" is not
@@ -1002,6 +1074,7 @@ export default function CountItApp() {
     assignment?.cells ? `cells:${assignment.cells.join(",")}` : level,
     scope,
     meter === DEFAULT_METER ? "" : `meter:${meter}`,
+    system === "standard" ? "" : `sys:${system}`,
     assignment?.guide ? `guide:${assignment.guide}` : "",
   ].filter(Boolean).join(":");
 
@@ -1050,7 +1123,12 @@ export default function CountItApp() {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
   }
 
-  function resetForSettings(nextLevel: LevelId, nextScope: QuestionScope, nextMeter: MeterId) {
+  function resetForSettings(
+    nextLevel: LevelId,
+    nextScope: QuestionScope,
+    nextMeter: MeterId,
+    nextSystem: CountingProfileId = system,
+  ) {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setPracticeSeed((seed) => seed + 1);
@@ -1062,6 +1140,7 @@ export default function CountItApp() {
       level: nextLevel,
       scope: nextScope,
       meter: nextMeter,
+      system: nextSystem,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -1086,6 +1165,38 @@ export default function CountItApp() {
     resetForSettings(level, scope, nextMeter);
   }
 
+  function changeSystem(nextSystem: CountingProfileId) {
+    if (assignment) return;
+    setSystem(nextSystem);
+    setSystemSaveMessage("");
+    resetForSettings(level, scope, meter, nextSystem);
+    if (savedSystem && !writeCountingPreference(nextSystem, () => window.localStorage)) {
+      setSystemSaveMessage("Could not update the saved profile in this browser.");
+    } else if (savedSystem) {
+      setSavedSystem(nextSystem);
+      setSystemSaveMessage("Saved on this device.");
+    }
+  }
+
+  function saveSystemPreference(checked: boolean) {
+    setSystemSaveMessage("");
+    if (checked) {
+      if (writeCountingPreference(system, () => window.localStorage)) {
+        setSavedSystem(system);
+        setSystemSaveMessage("Saved on this device.");
+      } else {
+        setSystemSaveMessage("This browser could not save the profile. You can still use it for this visit.");
+      }
+      return;
+    }
+    if (clearCountingPreference(() => window.localStorage)) {
+      setSavedSystem(null);
+      setSystemSaveMessage("Saved profile cleared from this device.");
+    } else {
+      setSystemSaveMessage("This browser could not clear the saved profile.");
+    }
+  }
+
   function nextPractice(direction: 1 | -1) {
     setPracticeIndex((index) => (index + direction + practiceQuestions.length) % practiceQuestions.length);
     setRevealed(false);
@@ -1100,6 +1211,7 @@ export default function CountItApp() {
       level,
       scope,
       meter,
+      system,
       seed: nextSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -1129,6 +1241,7 @@ export default function CountItApp() {
         level,
         scope,
         meter,
+        system,
         // Derived from the ORIGINAL seed, so attempts never chain.
         seed: retakeSeed(challengeSeed, nextAttempt),
         count: sessionLength,
@@ -1152,6 +1265,7 @@ export default function CountItApp() {
       level,
       scope,
       meter,
+      system,
       seed: challengeSeed,
       count: sessionLength,
       ...(assignedCells ? { cells: assignedCells } : {}),
@@ -1243,6 +1357,7 @@ export default function CountItApp() {
                   assignment?.name ?? (assignment?.cells ? `${assignment.cells.length} rhythms` : getLevel(level).name),
                   getMeter(meter).label,
                   scope === "beat" ? "One beat" : "One measure",
+                  COUNTING_PROFILES[system].name,
                   showReference ? "Guide on" : "Guide off",
                 ].join(" · ")}
               </span>
@@ -1253,6 +1368,9 @@ export default function CountItApp() {
                 level={level}
                 scope={scope}
                 meter={meter}
+                system={system}
+                savedSystem={savedSystem}
+                systemSaveMessage={systemSaveMessage}
                 showReference={showReference}
                 assignment={assignment}
                 locked={locked}
@@ -1261,6 +1379,8 @@ export default function CountItApp() {
                 onLevelChange={changeLevel}
                 onScopeChange={changeScope}
                 onMeterChange={changeMeter}
+                onSystemChange={changeSystem}
+                onSaveSystemChange={saveSystemPreference}
                 onReferenceChange={setShowReference}
                 onStudentIdChange={changeStudentId}
               />
@@ -1270,6 +1390,7 @@ export default function CountItApp() {
           {mode === "practice" ? (
             <PracticeMode
               prompt={practiceQuestion.prompt}
+              system={system}
               explanation={practiceQuestion.explanation}
               index={practiceIndex}
               total={practiceQuestions.length}
@@ -1289,6 +1410,7 @@ export default function CountItApp() {
               session={session}
               level={level}
               scope={scope}
+              system={system}
               showReference={showReference}
               personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
               assignment={assignment}
@@ -1338,7 +1460,7 @@ export default function CountItApp() {
           <a className="foot-btn foot-ico" href="https://www.instagram.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Instagram" title="Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm7.846-10.405a1.441 1.441 0 01-2.88 0 1.44 1.44 0 012.88 0z"/></svg></a>
           <a className="foot-btn foot-ico" href="https://www.youtube.com/@backwerdrhythmshop" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on YouTube" title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
         </div>
-        <p>Standard American counting · 4/4 and 3/4 · Quarter, eighth, and sixteenth-note cells</p>
+        <p>Standard, Eastman, and Eastman variant counts · quarter-note beats · Quarter, eighth, and sixteenth-note cells</p>
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
         <BuildStamp />
       </footer></WorkspaceInfo>

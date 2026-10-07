@@ -43,7 +43,7 @@ const off = (state) => Object.keys(state).filter((k) => state[k] === "off").sort
     for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowUp");
     await page.waitForTimeout(300);
     const landed = await meterSelect(page).inputValue();
-    note("…and arrowing up the list from 5/4 stops at 4/4: 3/4 and 2/4 cannot be reached", landed === "4-4", `landed on ${landed}`);
+    note("…and arrowing up the list from 5/4 stops at 4/4: 3/4 and 2/4 cannot be reached", landed === "4-4", `expected 4-4; actual ${landed}`);
     await page.close();
   }
 
@@ -102,7 +102,7 @@ const off = (state) => Object.keys(state).filter((k) => state[k] === "off").sort
     for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowUp");
     await page.waitForTimeout(250);
     const landed = await levelSelect.inputValue();
-    note("…and arrowing up from Level 3 stops at Level 2: Level 1 cannot be reached", landed === "level-2", `landed on ${landed}`);
+    note("…and arrowing up from Level 3 stops at Level 2: Level 1 cannot be reached", landed === "level-2", `expected level-2; actual ${landed}`);
     await page.close();
   }
 

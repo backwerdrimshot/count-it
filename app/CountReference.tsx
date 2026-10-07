@@ -2,15 +2,18 @@ import {
   beatStarts,
   countLabelsForBeat,
   getMeter,
+  type CountingProfileId,
   type RhythmPrompt,
 } from "../src/rhythm";
 
 export default function CountReference({
   prompt,
   revealSounding,
+  system = "standard",
 }: {
   prompt: RhythmPrompt;
   revealSounding: boolean;
+  system?: CountingProfileId;
 }) {
   /* One block per BEAT of the bar, numbered by the beat it is.
    *
@@ -33,7 +36,7 @@ export default function CountReference({
           <div className="reference-beat" key={`beat-${beat}`}>
             <span className="beat-label">Beat {beat}</span>
             <div className="reference-counts">
-              {countLabelsForBeat(beat, "standard").map((label, partial) => {
+              {countLabelsForBeat(beat, system).map((label, partial) => {
                 const active = Boolean(cell?.activePositions.includes(partial as 0 | 1 | 2 | 3));
                 const className = revealSounding ? (active ? "sounds" : "silent") : "unmarked";
                 return (
