@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-07.2";
+export const COUNT_IT_BUILD = "2026-10-07.3";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -113,11 +113,13 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "vocabulary unchanged: same quarter-note beat, a different number of them per bar. In " +
     "5/4 and 7/4 beams stay inside each beat, so the 3+2 or 2+3 grouping an odd meter is " +
     "sometimes written with is not drawn or asked. 3/8 was supported from 2026-08-24.1 to " +
-    "2026-08-29.1 and then removed toward its own app, Eight Time, because an eighth-note " +
-    "beat is a different counting problem; the same is true of 2/2, 6/8 and 5/8, which this " +
-    "app does not read. A link naming meter=3-8, or any of the retired eighth-beat cell ids " +
-    "(eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth), is refused with a " +
-    "plain-language message rather than repaired.",
+    "2026-08-29.1, then moved to its own sibling app, Eight Time, live at " +
+    "https://eight-time.backwerdrhythmshop.com/ since 2026-09-02. Eight Time keeps the " +
+    "four-cell 3/8 vocabulary, accepts legacy Count It 3/8 assignment links, and generates " +
+    "byte-identical rounds. Count It still refuses meter=3-8 and the retired eighth-beat " +
+    "cell ids (eighth-beat, two-sixteenths, sixteenth-rest, rest-sixteenth) here with a " +
+    "plain-language message rather than repairing them. This app also does not read 2/2, " +
+    "6/8 or 5/8, which require different beat definitions.",
   levels: LEVELS.map((level) => level.id),
   countingProfileRegistryVersion: COUNTING_PROFILE_REGISTRY_VERSION,
   countingProfiles: Object.values(COUNTING_PROFILES).map(({ id, name, mapping, preview, version }) => ({
@@ -190,6 +192,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "practice answers or scores. The visit counter is progressive enhancement and its absence " +
     "changes nothing.",
   siblingApps: {
+    "eight-time": "https://eight-time.backwerdrhythmshop.com/",
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
     "scale-trail": "https://scale-trail.backwerdrhythmshop.com/",
   },
@@ -203,7 +206,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Quarter-note-beat meters only. No odd-meter grouping (3+2 vs 2+3), no mixed or changing " +
       "meters, no pickup measures, no triplets, compound meter, or ties across beats.",
     "No eighth-, half- or dotted-quarter-beat meters (3/8, 2/2, 6/8): 3/8 was removed in " +
-      "2026-08-29.1 and lives in Eight Time.",
+      "2026-08-29.1 and now lives in Eight Time, where legacy Count It 3/8 assignment links " +
+      "generate byte-identical rounds.",
     "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Selectable counting profiles: Standard, Eastman (ti-te-ta), and Eastman variant (ta-te-ta). " +

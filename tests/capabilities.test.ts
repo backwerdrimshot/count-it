@@ -85,6 +85,17 @@ describe("the published capability manifest", () => {
     expect(readme).toContain(`- **Build:** \`${COUNT_IT_BUILD}\``);
   });
 
+  it("identifies Eight Time as the live home for compatible legacy 3/8 links", () => {
+    expect(COUNT_IT_CAPABILITY_MANIFEST.siblingApps["eight-time"]).toBe(
+      "https://eight-time.backwerdrhythmshop.com/",
+    );
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meterStatus).toMatch(/2\/4, 3\/4, 4\/4, 5\/4 and 7\/4/);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meterStatus).toMatch(/live at https:\/\/eight-time\.backwerdrhythmshop\.com\//i);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meterStatus).toMatch(/legacy Count It 3\/8 assignment links.*byte-identical rounds/i);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meterStatus).toMatch(/Count It still refuses meter=3-8/i);
+    expect(COUNT_IT_CAPABILITY_MANIFEST.meterStatus).not.toMatch(/planned/i);
+  });
+
   it("claims no skill vocabulary, because none has been agreed", () => {
     // An invented skill id is a contract nobody agreed to, and it would be
     // consumed as though someone had.

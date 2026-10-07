@@ -23,6 +23,9 @@ async function playRound(page, { keyboard = false } = {}) {
   return answered;
 }
 
+const exactlyOneModeSelected = async (page) =>
+  (await page.locator('[role="tab"][aria-selected="true"]').count()) === 1;
+
 (async () => {
   const browser = await launch();
   const errors = [];
@@ -37,6 +40,7 @@ async function playRound(page, { keyboard = false } = {}) {
     watch(page, "free-2/4");
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
     const modeTabs = page.getByRole("tab");
+    note("initial Practice state selects exactly one mode tab", await exactlyOneModeSelected(page));
     note("learning tabs are programmatically connected to their panel",
       await modeTabs.nth(0).getAttribute("aria-controls") === await page.locator("[role=tabpanel]").getAttribute("id")
       && await page.locator("[role=tabpanel]").getAttribute("aria-labelledby") === "practice-tab");
@@ -45,11 +49,13 @@ async function playRound(page, { keyboard = false } = {}) {
       await modeTabs.nth(1).getAttribute("aria-selected") === "true"
       && await modeTabs.nth(1).getAttribute("tabindex") === "0"
       && await modeTabs.nth(1).evaluate((element) => document.activeElement === element)
-      && await page.locator("[role=tabpanel]").getAttribute("aria-labelledby") === "challenge-tab");
+      && await page.locator("[role=tabpanel]").getAttribute("aria-labelledby") === "challenge-tab"
+      && await exactlyOneModeSelected(page));
     await modeTabs.nth(1).press("ArrowLeft");
     note("learning tabs: ArrowLeft returns to Practice",
       await modeTabs.nth(0).getAttribute("aria-selected") === "true"
-      && await modeTabs.nth(0).evaluate((element) => document.activeElement === element));
+      && await modeTabs.nth(0).evaluate((element) => document.activeElement === element)
+      && await exactlyOneModeSelected(page));
     await page.locator(".focus-toggle").click();
     await page.locator("select").filter({ has: page.locator('option[value="7-4"]') }).selectOption("2-4");
     await page.locator("select").filter({ has: page.locator('option[value="level-1"]') }).selectOption("level-1");
@@ -59,6 +65,9 @@ async function playRound(page, { keyboard = false } = {}) {
     note("Challenge tab count matches the clamped Level 1 round", challengeLabel === "4-question challenge", challengeLabel);
     await page.getByText("Choose the Count").first().click();
     await page.waitForTimeout(400);
+    note("clicking Challenge selects only the challenge mode",
+      await modeTabs.nth(1).getAttribute("aria-selected") === "true"
+        && await exactlyOneModeSelected(page));
     const progress = await page.locator("text=/Question 1 of \\d+/").first().textContent().catch(() => "");
     note("2/4 · Level 1 · measure Challenge builds, and is clamped to 4 questions", /of 4/.test(progress), progress);
     const answered = await playRound(page, { keyboard: true });
@@ -163,6 +172,7 @@ async function playRound(page, { keyboard = false } = {}) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     watch(page, "assigned-7/4");
     await page.goto(BASE + "/?a=Odd%20meters&scope=measure&meter=7-4&level=2&n=5&pass=4&seed=e2e1&guide=on", { waitUntil: "networkidle" });
+    note("assigned round initializes with exactly one mode tab selected", await exactlyOneModeSelected(page));
     const banner = (await page.locator(".focus-toggle").textContent()) || "";
     note("assigned 7/4 link shows the conditions, meter included", /7\/4/.test(banner), banner.replace(/\s+/g, " ").trim());
     const answered = await playRound(page);
