@@ -1,4 +1,4 @@
-/* The For teachers link beside Help and About: visible, inside the viewport, 44px, reachable by Tab, absent below 480px.
+/* The For teachers entry: in the header on wide screens and in a dedicated row on phones; visible, 44px, keyboard reachable.
    Run with `pnpm test:browser` (see README.md in this folder). */
 import { launch, BASE, reporter, shot } from "./harness.mjs";
 const { note, finish } = reporter();
@@ -11,14 +11,40 @@ const sizes = [["laptop 1366x768", 1366, 768], ["laptop 1280x720", 1280, 720], [
     const p = await ctx.newPage();
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(BASE + "/", { waitUntil: "networkidle" });
-    const link = p.getByRole("link", { name: "For teachers" });
+    const link = p.getByRole("link", { name: "For teachers", exact: true });
     const visible = await link.isVisible();
     const phone = w < 480;
     const overflow = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     const lines = await p.evaluate(() => Math.round(document.querySelector(".site-header strong").getBoundingClientRect().height / 31));
     if (phone) {
-      // Too narrow for a fourth header item: it must be absent, the wordmark intact, and the links still reachable through About.
-      note(`${label}: link is not squeezed into the header; wordmark stays on one line; no overflow`, !visible && lines === 1 && overflow <= 0, `lines ${lines}, overflow ${overflow}px`);
+      const mobileLink = p.getByRole("link", { name: "For teachers: assignments", exact: true });
+      const mobileVisible = await mobileLink.isVisible();
+      const box = mobileVisible ? await mobileLink.boundingBox() : null;
+      const inView = !!box && box.x >= 0 && box.y >= 0 && box.x + box.width <= w && box.y + box.height <= h;
+      note(`${label}: dedicated assignments entry is visible, in view and does not crowd the header`,
+        !visible && mobileVisible && inView && lines === 1 && overflow <= 0,
+        box ? `${Math.round(box.width)}x${Math.round(box.height)} at (${Math.round(box.x)},${Math.round(box.y)}); ${lines} wordmark lines; ${overflow}px overflow` : `lines ${lines}, overflow ${overflow}px`);
+      if (box) note(`${label}: mobile assignments tap target is at least 44px tall`, box.height >= 43.5, `${Math.round(box.height)}px`);
+      if (label.startsWith("phone 390")) await shot(p, `teachers-${w}.png`, { clip: { x: 0, y: 0, width: w, height: 150 } });
+      if (label.startsWith("phone 390")) {
+        await p.keyboard.press("Tab"); // skip link
+        let reachedByTab = false;
+        for (let i = 0; i < 10; i++) {
+          await p.keyboard.press("Tab");
+          if (await mobileLink.evaluate((element) => document.activeElement === element)) {
+            reachedByTab = true;
+            break;
+          }
+        }
+        note("phone: assignments entry is reachable by Tab", reachedByTab);
+        if (reachedByTab) {
+          await p.keyboard.press("Enter");
+          await p.waitForURL((u) => u.pathname === "/assignments", { timeout: 10000 }).catch(() => {});
+          note("phone: keyboard activation opens the assignments page",
+            new URL(p.url()).pathname === "/assignments" && (await p.locator("h1").textContent()) === "Assignments", p.url());
+          await p.goto(BASE + "/", { waitUntil: "networkidle" });
+        }
+      }
       await p.getByRole("button", { name: "About", exact: true }).click();
       const inAbout = await p.locator("#workspace-about a", { hasText: /^Assignments$/ }).isVisible();
       note(`${label}: the assignments link is still reachable through About`, inAbout);
@@ -30,7 +56,7 @@ const sizes = [["laptop 1366x768", 1366, 768], ["laptop 1280x720", 1280, 720], [
       note(`${label}: visible, inside the viewport, not overlapping Help/About, wordmark on one line, no overflow`, visible && inView && !overlaps && lines === 1 && overflow <= 0, box ? `${Math.round(box.width)}x${Math.round(box.height)} at (${Math.round(box.x)},${Math.round(box.y)})` : "not visible");
       if (box) note(`${label}: tap target at least 44px tall`, box.height >= 43.5, `${Math.round(box.height)}px`);
     }
-    if (label.startsWith("laptop 1366") || label.startsWith("phone 390")) await shot(p, `teachers-${w}.png`, { clip: { x: 0, y: 0, width: w, height: 130 } });
+    if (label.startsWith("laptop 1366")) await shot(p, `teachers-${w}.png`, { clip: { x: 0, y: 0, width: w, height: 130 } });
     if (label.startsWith("laptop 1366")) {
       await link.click();
       await p.waitForURL((u) => u.pathname === "/assignments", { timeout: 10000 }).catch(() => {});

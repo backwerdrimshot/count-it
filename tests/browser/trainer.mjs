@@ -36,11 +36,27 @@ async function playRound(page, { keyboard = false } = {}) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     watch(page, "free-2/4");
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    const modeTabs = page.getByRole("tab");
+    note("learning tabs are programmatically connected to their panel",
+      await modeTabs.nth(0).getAttribute("aria-controls") === await page.locator("[role=tabpanel]").getAttribute("id")
+      && await page.locator("[role=tabpanel]").getAttribute("aria-labelledby") === "practice-tab");
+    await modeTabs.nth(0).press("ArrowRight");
+    note("learning tabs: ArrowRight selects and focuses the next tab",
+      await modeTabs.nth(1).getAttribute("aria-selected") === "true"
+      && await modeTabs.nth(1).getAttribute("tabindex") === "0"
+      && await modeTabs.nth(1).evaluate((element) => document.activeElement === element)
+      && await page.locator("[role=tabpanel]").getAttribute("aria-labelledby") === "challenge-tab");
+    await modeTabs.nth(1).press("ArrowLeft");
+    note("learning tabs: ArrowLeft returns to Practice",
+      await modeTabs.nth(0).getAttribute("aria-selected") === "true"
+      && await modeTabs.nth(0).evaluate((element) => document.activeElement === element));
     await page.locator(".focus-toggle").click();
     await page.locator("select").filter({ has: page.locator('option[value="7-4"]') }).selectOption("2-4");
     await page.locator("select").filter({ has: page.locator('option[value="level-1"]') }).selectOption("level-1");
     await page.getByRole("radio", { name: /one measure/i }).check({ force: true });
     await page.locator(".focus-toggle").click();
+    const challengeLabel = await page.getByRole("tab", { name: /Choose the Count/ }).locator("small").innerText();
+    note("Challenge tab count matches the clamped Level 1 round", challengeLabel === "4-question challenge", challengeLabel);
     await page.getByText("Choose the Count").first().click();
     await page.waitForTimeout(400);
     const progress = await page.locator("text=/Question 1 of \\d+/").first().textContent().catch(() => "");
@@ -56,7 +72,93 @@ async function playRound(page, { keyboard = false } = {}) {
     await page.close();
   }
 
-  // 2. Assigned 7/4 link, full round.
+  // 2. Free-play results can start a question-level review without changing the original result.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    watch(page, "focused-practice");
+    await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    await page.getByText("Choose the Count").first().click();
+    let hasMissedQuestion = false;
+    for (let round = 0; round < 3; round++) {
+      await playRound(page);
+      if (await page.locator(".focused-practice").count()) {
+        hasMissedQuestion = true;
+        break;
+      }
+      await page.getByRole("button", { name: /New randomized session/ }).click();
+    }
+    note("free-play results offer focused practice after a missed question", hasMissedQuestion);
+    if (hasMissedQuestion) {
+      const originalHeading = await page.locator(".result-card > h2").innerText();
+      const start = page.getByRole("button", { name: /Practice \d+ missed questions?/ });
+      const targetLabel = await start.innerText();
+      note("focused practice states its question count", /Practice \d+ missed questions?/.test(targetLabel), targetLabel);
+      await start.click();
+      await shot(page, "e2e-focused-practice.png");
+      await page.locator(".focused-practice").getByRole("button", { name: "Return to session results" }).click();
+      note("active focused practice can exit and restore focus to session results",
+        await page.locator(".focused-practice .answer-grid").count() === 0
+          && await page.getByRole("heading", { name: "Practice the questions you missed" }).isVisible()
+          && await page.evaluate(() => document.activeElement?.id) === "result-title");
+      await start.click();
+      for (let question = 0; question < 10; question++) {
+        if (await page.getByText("Focused practice complete").count()) break;
+        const answer = page.locator(".focused-practice .answer-grid button").first();
+        if (await answer.isEnabled().catch(() => false)) await page.keyboard.press("1");
+        const next = page.getByRole("button", { name: /Next question|Finish focused practice/ });
+        if (await next.count()) await next.click();
+      }
+      const completed = await page.locator(".focused-practice").innerText();
+      note("focused practice completes and leaves the original score unchanged",
+        /Focused practice complete/i.test(completed)
+          && /original session score and result are unchanged/i.test(completed)
+          && (await page.locator(".result-card > h2").innerText()) === originalHeading,
+        completed.replace(/\s+/g, " ").trim().slice(0, 120));
+      await page.getByRole("button", { name: /Return to session results/ }).click();
+      note("returning from focused practice restores focus to session results",
+        await page.evaluate(() => document.activeElement?.id) === "result-title");
+    }
+    await page.close();
+  }
+
+  // 2b. Locked Eastman settings use neutral rhythm names while their count stays profile-specific.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    watch(page, "locked-eastman-profile");
+    await page.addInitScript(() => {
+      localStorage.setItem("count-it-counting-profile-v1", JSON.stringify({ version: 1, profile: "standard" }));
+    });
+    await page.goto(BASE + "/?a=QA%20Synthetic%20%E2%80%94%20Eastman%20Ti&scope=beat&meter=4-4&sys=eastman-ti-te-ta&cells=rest-two-rest,dotted-eighth-sixteenth,sixteenth-eighth-sixteenth,sixteenths&guide=off&fb=end&retry=off&n=4&pass=3&seed=qa1006", { waitUntil: "networkidle" });
+    const banner = (await page.locator(".focus-toggle").textContent()) || "";
+    note("locked profile: assignment keeps Eastman Ti", /Eastman \(ti-te-ta\)/.test(banner), banner.replace(/\s+/g, " ").trim());
+    note("challenge tab reflects the configured question count", /4-question challenge/.test(await page.getByRole("tab", { name: /Choose the Count/ }).innerText()));
+    await page.locator(".focus-toggle").click();
+    note("locked profile: conflicting saved Standard default stays unchanged", await page.getByLabel("Counting profile").isDisabled()
+      && /Saved on this device: Standard/.test((await page.locator(".system-note").innerText()) || ""));
+    const rhythmLabels = await page.locator('[aria-label="Rhythms in this assignment"]').innerText();
+    const neutralRhythmNames = ["Rest, two notes, rest", "Dotted eighth, sixteenth", "Sixteenth, eighth, sixteenth", "Four sixteenth notes"];
+    note("locked Eastman Rhythms list uses neutral note-value names", neutralRhythmNames.every((label) => rhythmLabels.includes(label))
+      && !["e and &", "Beat and a", "Beat, e and a"].some((label) => rhythmLabels.includes(label)), rhythmLabels.replace(/\s+/g, " ").trim());
+    await page.locator(".focus-toggle").click();
+    await playRound(page);
+    const resultMessage = (await page.locator(".result-message").textContent()) || "";
+    const reviewSummary = await page.locator(".result-review summary").innerText();
+    note("one-attempt result directs students to review the answers without suggesting a retry",
+      /Review the questions below and compare each answer with the correct count/i.test(resultMessage)
+        && !/try again/i.test(resultMessage)
+        && /Review all 4 questions/.test(reviewSummary), resultMessage);
+    note("one-attempt assignment does not offer a retry control", await page.getByRole("button", { name: /Try again|Retry this set/ }).count() === 0);
+    await page.goto(BASE + "/?a=QA%20Synthetic%20%E2%80%94%20Eastman%20Ta&scope=beat&meter=4-4&sys=eastman-ta-te-ta&cells=rest-two-rest,dotted-eighth-sixteenth,sixteenth-eighth-sixteenth,sixteenths&guide=off&fb=end&retry=off&n=4&pass=3&seed=qa1006", { waitUntil: "networkidle" });
+    await page.locator(".focus-toggle").click();
+    const eastmanTaRhythmLabels = await page.locator('[aria-label="Rhythms in this assignment"]').innerText();
+    note("locked Eastman Ta Rhythms list also uses neutral note-value names",
+      neutralRhythmNames.every((label) => eastmanTaRhythmLabels.includes(label))
+        && !["e and &", "Beat and a", "Beat, e and a"].some((label) => eastmanTaRhythmLabels.includes(label)),
+      eastmanTaRhythmLabels.replace(/\s+/g, " ").trim());
+    await page.close();
+  }
+
+  // 3. Assigned 7/4 link, full round.
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     watch(page, "assigned-7/4");
@@ -67,11 +169,17 @@ async function playRound(page, { keyboard = false } = {}) {
     const cond = (await page.locator(".result-footnote").first().textContent().catch(() => "")) || "";
     note("assigned 7/4 round completes (5 answered)", (await page.locator(".result-card").count()) === 1 && answered === 5, `answered ${answered}`);
     note("…card conditions state 7/4 and the pass mark", /7\/4/.test(cond) && /pass at 4/.test(cond), cond);
+    const assignmentResult = (await page.locator(".result-card").innerText()) || "";
+    note("assigned measure results do not attribute a miss to every cell",
+      !/Worth another look|Missed: [^\n]+/.test(assignmentResult),
+      assignmentResult.replace(/\s+/g, " ").trim().slice(0, 120));
+    note("assigned retry controls remain governed by the link", await page.locator(".focused-practice").count() === 0
+      && await page.getByRole("button", { name: /Retry this set/ }).count() === 1);
     await shot(page, "e2e-assigned-7-4-result.png");
     await page.close();
   }
 
-  // 3. A link naming a rhythm the bar cannot hold is refused, and the app still works.
+  // 4. A link naming a rhythm the bar cannot hold is refused, and the app still works.
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     watch(page, "refused");
@@ -84,7 +192,7 @@ async function playRound(page, { keyboard = false } = {}) {
     await page.close();
   }
 
-  // 4. Old links: no meter named, and 3/4, still behave.
+  // 5. Old links: no meter named, and 3/4, still behave.
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     watch(page, "legacy");
@@ -97,11 +205,12 @@ async function playRound(page, { keyboard = false } = {}) {
     await page.close();
   }
 
-  // 5. Phone width, 5/4, practice + challenge: no page overflow, no errors.
+  // 6. Phone width, 5/4, practice + challenge: no page overflow, no errors.
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     watch(page, "phone-5/4");
     await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    note("phone practice includes the reading scaffold", await page.locator(".reading-scaffold").count() === 1);
     await page.locator(".focus-toggle").click();
     await page.locator("select").filter({ has: page.locator('option[value="7-4"]') }).selectOption("5-4");
     await page.getByRole("radio", { name: /one measure/i }).check({ force: true });
@@ -116,6 +225,20 @@ async function playRound(page, { keyboard = false } = {}) {
     const overflow2 = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     note("phone · result card has no page-level horizontal overflow", overflow2 <= 0, `${overflow2}px`);
     await shot(page, "e2e-phone-5-4-result.png");
+    await page.close();
+  }
+
+  // A single held note fills the bar; at phone widths the sparse notation should fit without scrolling.
+  for (const width of [390, 320]) {
+    const page = await browser.newPage({ viewport: { width, height: 740 }, hasTouch: true, isMobile: true });
+    watch(page, `phone-whole-note-${width}`);
+    await page.goto(BASE + "/?scope=measure&meter=5-4&cells=whole,quarter&n=1&seed=whole-phone", { waitUntil: "networkidle" });
+    const dimensions = await page.locator(".notation-scroll").evaluate((element) => ({
+      client: element.clientWidth,
+      scroll: element.scrollWidth,
+    }));
+    note(`phone ${width}px · whole-note measure fits the notation panel`, dimensions.scroll <= dimensions.client + 1, `${dimensions.scroll}px inside ${dimensions.client}px`);
+    if (width === 390) await shot(page, "e2e-phone-whole-note.png");
     await page.close();
   }
 

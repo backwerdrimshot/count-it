@@ -115,3 +115,12 @@ test("the practice screen links teachers to the assignments page, beside Help an
   assert.match(nav, /<button[^>]*>Help<\/button>/);
   assert.match(nav, /<button[^>]*>About<\/button>/);
 });
+
+test("the free-practice screen includes a concise, profile-aware reading scaffold", async () => {
+  const html = await (await render("/")).text();
+  assert.match(html, /A way to work it out/);
+  assert.match(html, /Find the beat groups/);
+  assert.match(html, /Rests and held notes do not begin a new count/);
+  assert.match(html, /Use (?:<!--.*?-->)?Standard(?:<!--.*?-->)? counting/);
+  assert.match(html, /before revealing it/);
+});

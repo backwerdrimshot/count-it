@@ -2631,7 +2631,108 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 .workspace-actions a:hover { border-color: var(--forest-deep, #344d29); }
 .workspace-actions a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
 @media(max-width:700px) { .workspace-actions a {padding-inline:8px;font-size:.88rem;} }
-/* Below 480px the header has no room for a fourth item: with the link, the wordmark wraps
-   to two lines and spills out of the bar at 360, 375, 390 and 412px (measured; it fits from
-   440px up). A phone keeps the link in the About dialog, where it has always been. */
+/* The full teacher link stays in the header where it fits; phones get a dedicated
+   entry below the header so the wordmark and Help/About controls keep their space. */
+.mobile-teacher-entry { display:none; }
+.mobile-teacher-entry a {
+  display:flex;
+  width:100%;
+  min-height:44px;
+  align-items:center;
+  justify-content:center;
+  padding:8px 12px;
+  border:1px solid var(--line,var(--ink,#171717));
+  border-radius:8px;
+  background:var(--card,var(--panel,var(--white,#fff)));
+  color:var(--text,var(--ink,#171717));
+  font:600 .9rem var(--body,system-ui);
+  text-decoration:none;
+}
+.mobile-teacher-entry a:hover { border-color:var(--forest-deep,#344d29); }
+.mobile-teacher-entry a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
 @media(max-width:479px) { .workspace-actions a { display:none; } }
+@media(max-width:479px) {
+  .mobile-teacher-entry {
+    display:flex;
+    width:min(calc(100% - 20px),1180px);
+    margin:0 auto 8px;
+  }
+}
+
+/* Reading support and optional question-level practice stay in the learner's
+   work area. They use the same paper, ink and forest tokens as the guide. */
+.reading-scaffold {
+  margin-top: 14px;
+  border: 1px solid var(--tan-line);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--warm-white);
+  padding: 14px 16px;
+  text-align: left;
+}
+.reading-scaffold h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 1rem;
+}
+.reading-scaffold ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 18px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--ink-soft);
+  font-size: 0.87rem;
+}
+.reading-scaffold li { padding-left: 2px; }
+.reading-scaffold li strong { color: var(--ink); }
+
+.focused-practice {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--warm-white);
+  padding: 18px;
+  text-align: left;
+}
+.focused-practice > .eyebrow { margin: 0 0 5px; }
+.focused-practice h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.15rem, 4vw, 1.55rem);
+}
+.focused-practice > p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 8px 0 14px;
+  color: var(--ink-soft);
+}
+.focused-practice button { min-height: 44px; }
+.focused-practice-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.focused-practice-heading progress {
+  width: min(180px, 35%);
+  accent-color: var(--accent);
+}
+.focused-practice .reading-scaffold { margin-top: 12px; }
+.focused-practice .notation-panel { margin-top: 12px; }
+.focused-practice .answer-grid { margin-top: 12px; }
+.focused-practice .feedback-panel { text-align: left; }
+.focused-practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 700px) {
+  .reading-scaffold ol { grid-template-columns: 1fr; gap: 6px; }
+  .focused-practice { padding: 14px; }
+}
+@media (max-width: 479px) {
+  .focused-practice-heading { align-items: flex-start; flex-direction: column; }
+  .focused-practice-heading progress { width: 100%; }
+  .focused-practice-actions { align-items: stretch; flex-direction: column; }
+}

@@ -1,7 +1,7 @@
 "use client";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import CountReference from "./CountReference";
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
@@ -31,7 +31,9 @@ import {
   getAccuracy,
   getCurrentQuestion,
   getCurrentResponse,
+  getMissedQuestions,
   resetSession,
+  type CountQuestion,
   type ChallengeSession,
   type QuestionChoice,
   type QuestionScope,
@@ -156,6 +158,30 @@ function ScopeIcon({ scope, beats }: { scope: QuestionScope; beats: number }) {
   );
 }
 
+function ReadingScaffold({ prompt, system }: { prompt: RhythmPrompt; system: CountingProfileId }) {
+  return (
+    <section className="reading-scaffold" aria-labelledby="reading-scaffold-title">
+      <h3 id="reading-scaffold-title">A way to work it out</h3>
+      <ol>
+        <li>
+          <strong>Find the beat groups.</strong>
+          {prompt.scope === "measure"
+            ? " Keep them in order from beat 1."
+            : " Stay with this beat."}
+        </li>
+        <li>
+          <strong>Track new notes.</strong>
+          {" Read from left to right. Rests and held notes do not begin a new count."}
+        </li>
+        <li>
+          <strong>Use {COUNTING_PROFILES[system].name} counting.</strong>
+          {" Match each note start to the subdivision guide if it is visible, say the count out loud, and work out the full answer before revealing it."}
+        </li>
+      </ol>
+    </section>
+  );
+}
+
 function misconceptionMessage(choice: QuestionChoice | undefined): string {
   switch (choice?.category) {
     case "omitted_sound":
@@ -241,7 +267,11 @@ function SetupControls({
         <p className="level-control" aria-label="Rhythms in this assignment">
           <span>Rhythms</span>
           <strong>{assignment.cells.length} chosen by your teacher</strong>
-          <small>{getCellsByIds(assignment.cells).map((cell) => cell.shortLabel).join(" · ")}</small>
+          <small>
+            {getCellsByIds(assignment.cells)
+              .map((cell) => system === "standard" ? cell.shortLabel : cell.label)
+              .join(" · ")}
+          </small>
         </p>
       ) : (
         <label className="level-control">
@@ -425,6 +455,7 @@ function PracticeMode({
         </div>
         <span className="example-count">Example {index + 1} of {total}</span>
       </div>
+      <ReadingScaffold prompt={prompt} system={system} />
       <div className="notation-panel">
         <RhythmNotation prompt={prompt} label={notationLabel} />
       </div>
@@ -454,6 +485,163 @@ function PracticeMode({
           {revealed ? "Hide the count" : "Reveal the count"}
         </button>
         <button type="button" className="primary-button" onClick={onNext}>Next example <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+  );
+}
+
+function FocusedQuestionPractice({
+  questions,
+  system,
+  showReference,
+  onReturn,
+}: {
+  questions: readonly CountQuestion[];
+  system: CountingProfileId;
+  showReference: boolean;
+  onReturn: () => void;
+}) {
+  const [session, setSession] = useState<ChallengeSession | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const missedLabel = questions.length === 1 ? "missed question" : "missed questions";
+  const sessionIndex = session?.currentIndex;
+  const sessionStatus = session?.status;
+
+  useEffect(() => {
+    if (sessionStatus) heading.current?.focus();
+  }, [sessionIndex, sessionStatus]);
+
+  useEffect(() => {
+    if (!session || session.status !== "active") return;
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.matches("input, select, textarea") || getCurrentResponse(session)) return;
+      if (!/^[1-4]$/.test(event.key)) return;
+      const choice = getCurrentQuestion(session).choices[Number(event.key) - 1];
+      if (!choice) return;
+      event.preventDefault();
+      setSession((current) => current ? answerSession(current, choice.id) : current);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [session]);
+
+  if (!session) {
+    return (
+      <section className="focused-practice" aria-labelledby="focused-practice-title">
+        <p className="eyebrow">Optional free practice</p>
+        <h3 id="focused-practice-title">Practice the questions you missed</h3>
+        <p>These are the same questions and answer choices. This practice does not change the score above.</p>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => setSession(createSession(questions))}
+        >
+          Practice {questions.length} {missedLabel}
+        </button>
+      </section>
+    );
+  }
+
+  if (session.status === "complete") {
+    return (
+      <section className="focused-practice" aria-labelledby="focused-practice-title">
+        <p className="eyebrow">Focused practice complete</p>
+        <h3 id="focused-practice-title" tabIndex={-1} ref={heading}>You revisited {questions.length} {missedLabel}.</h3>
+        <p>The original session score and result are unchanged.</p>
+        <div className="focused-practice-actions">
+          <button type="button" className="secondary-button" onClick={() => setSession(createSession(questions))}>
+            Practice these questions again
+          </button>
+          <button type="button" className="quiet-button" onClick={() => { setSession(null); onReturn(); }}>
+            Return to session results
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  const question = getCurrentQuestion(session);
+  const response = getCurrentResponse(session);
+  return (
+    <section className="focused-practice" aria-labelledby="focused-question-title">
+      <div className="focused-practice-heading">
+        <div>
+          <p className="eyebrow">Focused practice</p>
+          <h3 id="focused-question-title" tabIndex={-1} ref={heading}>
+            Question {session.currentIndex + 1} of {session.questions.length}
+          </h3>
+        </div>
+        <progress
+          value={session.currentIndex + (response ? 1 : 0)}
+          max={session.questions.length}
+          aria-label={`Question ${session.currentIndex + 1} of ${session.questions.length}`}
+        >
+          {session.currentIndex + 1} of {session.questions.length}
+        </progress>
+      </div>
+      <ReadingScaffold prompt={question.prompt} system={system} />
+      <div className="notation-panel">
+        <RhythmNotation prompt={question.prompt} label="Rhythm for focused practice." />
+      </div>
+      {showReference && (
+        <div className="reference-panel compact">
+          <div className="mini-heading">
+            <span>Complete subdivision</span>
+            <small>{response ? "Compare the note starts with the count." : getCompleteReference(question.prompt.scope, system, question.prompt.meter)}</small>
+          </div>
+          <CountReference prompt={question.prompt} revealSounding={Boolean(response)} system={system} />
+        </div>
+      )}
+      <div className={`answer-grid scope-${question.prompt.scope}`} aria-label="Answer choices">
+        {question.choices.map((choice, index) => {
+          const isSelected = response?.choiceId === choice.id;
+          const classNames = [
+            "answer-choice",
+            response && choice.isCorrect ? "is-correct" : "",
+            response && isSelected && !choice.isCorrect ? "is-incorrect" : "",
+          ].filter(Boolean).join(" ");
+          return (
+            <button
+              type="button"
+              className={classNames}
+              key={choice.id}
+              disabled={Boolean(response)}
+              onClick={() => setSession((current) => current ? answerSession(current, choice.id) : current)}
+              aria-pressed={isSelected}
+            >
+              <span className="choice-key" aria-hidden="true">{index + 1}</span>
+              <strong>{choice.label}</strong>
+              {response && choice.isCorrect && <span className="choice-result">Correct</span>}
+              {response && isSelected && !choice.isCorrect && <span className="choice-result">Your choice</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className={`feedback-panel ${response ? response.correct ? "is-correct" : "is-incorrect" : "is-waiting"}`} role="status" aria-live="polite">
+        {!response ? (
+          <p><strong>Choose one answer.</strong>You can also press 1, 2, 3, or 4.</p>
+        ) : (
+          <>
+            <p>
+              <strong>{response.correct ? "That is it." : `The correct count is ${question.correctAnswer}.`}</strong>
+              {question.explanation}
+            </p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setSession((current) => current ? advanceSession(current) : current)}
+            >
+              {session.currentIndex === session.questions.length - 1 ? "Finish focused practice" : "Next question"}
+              <span aria-hidden="true"> →</span>
+            </button>
+          </>
+        )}
+      </div>
+      <div className="focused-practice-actions">
+        <button type="button" className="quiet-button" onClick={() => { setSession(null); onReturn(); }}>
+          Return to session results
+        </button>
       </div>
     </section>
   );
@@ -527,11 +715,13 @@ function ChallengeMode({
 
   if (session.status === "complete") {
     const accuracy = getAccuracy(session);
-    const resultMessage = accuracy >= 80
-      ? "Strong reading. You are placing the counts with confidence."
-      : accuracy >= 60
-        ? "Good work. Review the highlighted subdivisions, then try again."
-        : "Keep the guide visible and work beat by beat. Accuracy will follow.";
+    const resultMessage = assignment && retryPolicy === "off"
+      ? "Review the questions below and compare each answer with the correct count."
+      : accuracy >= 80
+        ? "Strong reading. You are placing the counts with confidence."
+        : accuracy >= 60
+          ? "Good work. Review the highlighted subdivisions and take another careful look."
+          : "Keep the guide visible and work beat by beat. Accuracy will follow.";
     const stamped = finishedAt ?? new Date(0);
     /* The evidence, built once and rendered from. Before this the card assembled
        its own facts inline, which is why this app had no result object to
@@ -563,6 +753,8 @@ function ChallengeMode({
     const missedLabels = getCellsByIds(missed.map((entry) => entry.item)).map((cell) =>
       system === "standard" ? cell.shortLabel : cell.label,
     );
+    const missedQuestions = getMissedQuestions(session);
+    const missedQuestionCount = missedQuestions.length;
     const summary = [
       `Count It — Choose the Count`,
       assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
@@ -573,6 +765,9 @@ function ChallengeMode({
       `Conditions: ${conditions}`,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
       missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
+      scope === "measure" && missedQuestionCount > 0
+        ? `Measure questions to revisit: ${missedQuestionCount}`
+        : null,
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
@@ -607,6 +802,12 @@ function ChallengeMode({
           <p className="result-missed">
             <strong>Worth another look</strong>
             <span>{missedLabels.join(" · ")}</span>
+          </p>
+        )}
+        {scope === "measure" && missedQuestionCount > 0 && (
+          <p className="result-missed">
+            <strong>Measure questions to revisit</strong>
+            <span>{missedQuestionCount}</span>
           </p>
         )}
         {assignment && (
@@ -648,6 +849,14 @@ function ChallengeMode({
             <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {!assignment && missedQuestions.length > 0 && (
+          <FocusedQuestionPractice
+            questions={missedQuestions}
+            system={system}
+            showReference={showReference}
+            onReturn={() => resultHeading.current?.focus()}
+          />
+        )}
         {assignment && retryPolicy === "off" && (
           // Said, rather than left as an absence a student has to notice. The
           // claim is deliberately about what the assignment asks for, not about
@@ -866,6 +1075,11 @@ function BuildStamp() {
 
 export default function CountItApp() {
   const [mode, setMode] = useState<AppMode>("practice");
+  const modeTabRefs = useRef<Record<AppMode, HTMLButtonElement | null>>({
+    practice: null,
+    challenge: null,
+  });
+  const focusModeTabAfterCommit = useRef<AppMode | null>(null);
   const [level, setLevel] = useState<LevelId>("level-2");
   const [scope, setScope] = useState<QuestionScope>("beat");
   const [meter, setMeter] = useState<MeterId>(DEFAULT_METER);
@@ -946,6 +1160,36 @@ export default function CountItApp() {
   /* The order is fixed once the first answer lands: changing it later would
      rebuild the round underneath a student who had already started it. */
   const identityLocked = Boolean(assignment) && session.responses.length > 0;
+
+  useEffect(() => {
+    const nextMode = focusModeTabAfterCommit.current;
+    if (!nextMode) return;
+    modeTabRefs.current[nextMode]?.focus();
+    focusModeTabAfterCommit.current = null;
+  }, [mode]);
+
+  function activateModeTab(nextMode: AppMode) {
+    if (nextMode === mode) {
+      modeTabRefs.current[nextMode]?.focus();
+      return;
+    }
+    focusModeTabAfterCommit.current = nextMode;
+    setMode(nextMode);
+  }
+
+  function moveModeTab(event: ReactKeyboardEvent<HTMLButtonElement>, currentMode: AppMode) {
+    if (!(["ArrowLeft", "ArrowRight", "Home", "End"] as string[]).includes(event.key)) return;
+    event.preventDefault();
+    const available: AppMode[] = practiceLocked ? ["challenge"] : ["practice", "challenge"];
+    const currentIndex = available.indexOf(currentMode);
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? available.length - 1
+        : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + available.length) % available.length;
+    const nextMode = available[nextIndex];
+    activateModeTab(nextMode);
+  }
 
   useEffect(() => {
     // Deferred rather than applied inline, matching how this file already
@@ -1293,6 +1537,10 @@ export default function CountItApp() {
         </a>
       </header>
 
+      <nav className="mobile-teacher-entry" aria-label="Teacher navigation">
+        <a href="/assignments">For teachers: assignments</a>
+      </nav>
+
       <main id="top">
         {/* The page's one <h1> used to sit in the hero, which now lives in the closed
             Help dialog and so is not in the page outline. It stays here, visually
@@ -1302,11 +1550,16 @@ export default function CountItApp() {
           <div className="mode-tabs" role="tablist" aria-label="Learning mode">
             <button
               type="button"
+              id="practice-tab"
+              ref={(element) => { modeTabRefs.current.practice = element; }}
               role="tab"
+              aria-controls="learning-mode-panel"
+              tabIndex={mode === "practice" ? 0 : -1}
               aria-selected={mode === "practice"}
               className={`${mode === "practice" ? "is-active" : ""}${practiceLocked ? " is-locked" : ""}`}
               disabled={practiceLocked}
-              onClick={() => setMode("practice")}
+              onKeyDown={(event) => moveModeTab(event, "practice")}
+              onClick={() => activateModeTab("practice")}
             >
               <span aria-hidden="true">◎</span>
               <strong>Practice</strong>
@@ -1314,12 +1567,18 @@ export default function CountItApp() {
             </button>
             <button
               type="button"
+              id="challenge-tab"
+              ref={(element) => { modeTabRefs.current.challenge = element; }}
               role="tab"
+              aria-controls="learning-mode-panel"
+              tabIndex={mode === "challenge" ? 0 : -1}
               aria-selected={mode === "challenge"}
               className={mode === "challenge" ? "is-active" : ""}
-              onClick={() => setMode("challenge")}
+              onKeyDown={(event) => moveModeTab(event, "challenge")}
+              onClick={() => activateModeTab("challenge")}
             >
-              <span aria-hidden="true">◆</span><strong>Choose the Count</strong><small>Five-question challenge</small>
+              <span aria-hidden="true">◆</span><strong>Choose the Count</strong>
+              <small>{session.questions.length === 1 ? "1-question challenge" : `${session.questions.length}-question challenge`}</small>
             </button>
           </div>
 
@@ -1387,46 +1646,53 @@ export default function CountItApp() {
             </div>
           </div>
 
-          {mode === "practice" ? (
-            <PracticeMode
-              prompt={practiceQuestion.prompt}
-              system={system}
-              explanation={practiceQuestion.explanation}
-              index={practiceIndex}
-              total={practiceQuestions.length}
-              revealed={revealed}
-              showReference={showReference}
-              onReveal={() => setRevealed((value) => !value)}
-              onPrevious={() => nextPractice(-1)}
-              onNext={() => nextPractice(1)}
-              onShuffle={() => {
-                setPracticeSeed((seed) => seed + 1);
-                setPracticeIndex(0);
-                setRevealed(false);
-              }}
-            />
-          ) : (
-            <ChallengeMode
-              session={session}
-              level={level}
-              scope={scope}
-              system={system}
-              showReference={showReference}
-              personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
-              assignment={assignment}
-              sequenceStep={sequenceStep}
-              studentId={studentId}
-              finishedAt={finishedAt}
-              holdFeedback={holdFeedback}
-              attempt={attempt}
-              retryPolicy={retryPolicy}
-              onStudentIdChange={changeStudentId}
-              onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
-              onAdvance={advanceChallenge}
-              onRetry={retryChallenge}
-              onNewSession={newChallenge}
-            />
-          )}
+          <div
+            id="learning-mode-panel"
+            role="tabpanel"
+            aria-labelledby={mode === "practice" ? "practice-tab" : "challenge-tab"}
+            tabIndex={0}
+          >
+            {mode === "practice" ? (
+              <PracticeMode
+                prompt={practiceQuestion.prompt}
+                system={system}
+                explanation={practiceQuestion.explanation}
+                index={practiceIndex}
+                total={practiceQuestions.length}
+                revealed={revealed}
+                showReference={showReference}
+                onReveal={() => setRevealed((value) => !value)}
+                onPrevious={() => nextPractice(-1)}
+                onNext={() => nextPractice(1)}
+                onShuffle={() => {
+                  setPracticeSeed((seed) => seed + 1);
+                  setPracticeIndex(0);
+                  setRevealed(false);
+                }}
+              />
+            ) : (
+              <ChallengeMode
+                session={session}
+                level={level}
+                scope={scope}
+                system={system}
+                showReference={showReference}
+                personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
+                assignment={assignment}
+                sequenceStep={sequenceStep}
+                studentId={studentId}
+                finishedAt={finishedAt}
+                holdFeedback={holdFeedback}
+                attempt={attempt}
+                retryPolicy={retryPolicy}
+                onStudentIdChange={changeStudentId}
+                onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
+                onAdvance={advanceChallenge}
+                onRetry={retryChallenge}
+                onNewSession={newChallenge}
+              />
+            )}
+          </div>
         </div>
 
 

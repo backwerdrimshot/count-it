@@ -113,16 +113,11 @@ function attemptReference(
   return `CI-${(hash >>> 0).toString(36).toUpperCase()}`;
 }
 
-/* Which rhythms this round actually asked about, and which were missed.
+/* Which one-beat rhythms this round asked about, and which were missed.
  *
- * Keyed by catalog cell id, which is the vocabulary a link is written against,
- * so a report reads in the same terms the assignment was set in.
- *
- * One honest caveat, stated here because the data cannot state it: in MEASURE
- * scope a question carries four cells and is answered as a whole, so a miss is
- * attributed to every cell in that measure. It is not a claim that all four
- * were misread — it is the finest attribution the question format allows, and
- * pretending otherwise would invent per-cell evidence nobody collected. */
+ * A one-beat question names one catalog cell, so it supports this summary. A
+ * measure question is answered as a whole; it cannot identify which of its
+ * constituent cells, if any, caused a miss, so those questions are omitted. */
 function summarizeErrors(session: ChallengeSession): ErrorSummaryEntry[] {
   const byQuestion = new Map<string, CountQuestion>();
   for (const question of session.questions) byQuestion.set(question.id, question);
@@ -131,7 +126,7 @@ function summarizeErrors(session: ChallengeSession): ErrorSummaryEntry[] {
   const order: string[] = [];
   for (const response of session.responses) {
     const question = byQuestion.get(response.questionId);
-    if (!question) continue;
+    if (!question || question.prompt.scope !== "beat") continue;
     for (const cell of question.prompt.cells) {
       let entry = tally.get(cell.id);
       if (!entry) {
@@ -180,11 +175,14 @@ export function createPraxisEvidenceResult(options: {
   const assigned = sequenceStep
     ? sequenceStepId(sequenceStep)
     : assignment?.name ?? "free-play";
-  const errorSummary = summarizeErrors(session);
-  const missed = errorSummary.filter((entry) => entry.wrong > 0).map((entry) => entry.item);
-
   const scope = assignment?.scope ?? options.scope;
   const level = assignment?.level ?? options.level;
+  const errorSummary = summarizeErrors(session);
+  const missedQuestionCount = session.responses.filter((response) => !response.correct).length;
+  const notMeasured = ["live playing", "tone quality", "sticking or hand use", "tempo", "speed", "audiation"];
+  if (scope === "measure") {
+    notMeasured.push("which individual rhythm cells were misread within a missed measure");
+  }
 
   const settings: Record<string, string> = {};
   if (assignment) {
@@ -254,14 +252,14 @@ export function createPraxisEvidenceResult(options: {
     measured: ["rhythm notation reading", "counting-syllable selection"],
     /* The boundary, on the evidence itself rather than only in the manifest.
        There is no timer anywhere in this app, by design. */
-    notMeasured: ["live playing", "tone quality", "sticking or hand use", "tempo", "speed", "audiation"],
+    notMeasured,
     validity: { valid: true, deviceReliabilityFlags: [] },
     errorSummary,
     settings,
     inputSource: ["touch", "mouse", "computer-keyboard"],
     timestamp,
-    recommendedNextActions: missed.length
-      ? [`Review these rhythms before the retake: ${missed.join(", ")}.`]
+    recommendedNextActions: missedQuestionCount > 0
+      ? [`Review the ${missedQuestionCount} missed question${missedQuestionCount === 1 ? "" : "s"} before another round.`]
       : ["Repeat the same round after a delay to provide retention evidence."],
   });
 }

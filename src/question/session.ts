@@ -46,6 +46,18 @@ export function getCurrentResponse(session: ChallengeSession): SessionResponse |
   );
 }
 
+/** Return the exact questions answered incorrectly, in their original order.
+ *
+ *  A measure question is one response about the whole measure; this selector
+ *  keeps it whole instead of turning its constituent cells into separate
+ *  claims about what the learner missed. Unanswered questions are not misses. */
+export function getMissedQuestions(session: ChallengeSession): readonly CountQuestion[] {
+  const missedIds = new Set(
+    session.responses.filter((response) => !response.correct).map((response) => response.questionId),
+  );
+  return Object.freeze(session.questions.filter((question) => missedIds.has(question.id)));
+}
+
 export function answerSession(session: ChallengeSession, choiceId: string): ChallengeSession {
   if (session.status !== "active") throw new Error("This challenge session is complete.");
   if (getCurrentResponse(session)) throw new Error("The current question has already been answered.");
