@@ -900,7 +900,7 @@ function ChallengeMode({
         <p className="result-footnote">{conditions}</p>
         <p className="result-code">
           <span>Verification</span> <code>{code}</code>
-          <small>Nothing is saved or sent. The code only shows this result was not retyped by hand.</small>
+          <small>Your answers are checked in this browser. The app does not automatically submit your answers or result. Settings, personal bests and attempt counts may be saved on this device. The code only shows this result was not retyped by hand.</small>
         </p>
       </section>
     );
