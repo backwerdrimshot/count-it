@@ -473,6 +473,7 @@ export default function AssignmentBuilder() {
                   <span>Trying again</span>
                   <select value={retry ?? ""} onChange={(event) => setRetry(orNull<"free" | "reseed" | "off">(event.target.value))}>
                     <option value="">The same round</option>
+                    <option value="free">The same round (pinned)</option>
                     <option value="reseed">New questions each time</option>
                     <option value="off">One attempt</option>
                   </select>
