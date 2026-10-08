@@ -167,3 +167,9 @@ A new cell is incomplete until all of these are present:
 7. Human visual review.
 
 Do not update the production recipe and the test expectation mechanically in one step. First decide the intended engraving, then encode and review it.
+
+## Practice time-grid layout (2026-10-07.4)
+
+The renderer now lives in `app/ScoreNotation.tsx`, with `RhythmNotation.tsx` adapting catalog prompts into its shared time model. It continues to read `staffFurniture()`. After VexFlow formats the glyphs, notehead centres are positioned on a linear instructional grid. Subdivision labels and the playback cursor use those same positions. This teaching layout deliberately prioritizes time alignment over optical publishing spacing. One-beat fragments use a compact staff. A single whole-bar note retains centering and an onset/span annotation.
+
+The unscored workshop uses explicit tie and tuplet recipes. These are separate from the reviewed assignment catalog. A tie suppresses a continuation attack; eighth-note triplets occupy exact thirds and carry a 3:2 tuplet. Beat-grouping exercises beam within the chosen quarter-beat groups. Independent musical sign-off remains pending.

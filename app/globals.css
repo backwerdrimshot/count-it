@@ -2736,3 +2736,37 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
   .focused-practice-heading progress { width: 100%; }
   .focused-practice-actions { align-items: stretch; flex-direction: column; }
 }
+
+/* Practice workspace: notation owns its time grid and scrolls with the guide. */
+.rhythm-exercise { width:100%; }
+.balanced-score svg { margin-inline:auto; max-width:none; }
+.rhythm-player { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; border-top:1px solid var(--tan-line); font-size:.9rem; }
+.rhythm-player label { display:flex; align-items:center; gap:6px; }
+.rhythm-player input[type=number] { width:64px; padding:6px; border:1px solid var(--tan-line); border-radius:6px; }
+.rhythm-player input[type=checkbox], .practice-customization input[type=checkbox] { accent-color:var(--forest-deep); width:18px; height:18px; }
+.practice-links { display:flex; flex-wrap:wrap; gap:10px 24px; padding:8px 2px; font-size:.9rem; }
+.practice-links a { color:var(--forest-deep); text-decoration:underline; text-underline-offset:3px; padding:4px; }
+.practice-customization { grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.practice-customization details { width:100%; }
+.practice-customization summary, .reading-scaffold summary { cursor:pointer; font-weight:700; padding:8px 0; }
+.practice-customization label { display:flex; align-items:center; gap:8px; padding:6px; }
+.rhythm-picker { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:4px; max-height:260px; overflow:auto; }
+.reading-scaffold { padding:8px 16px; }
+.reading-scaffold p { padding:8px 0; }
+.workshop-page { max-width:1080px; margin:24px auto; padding:20px; }
+.workshop-page h1 { margin:20px 0 8px; }
+.workshop-page > p { max-width:70ch; line-height:1.6; }
+.workshop-controls { display:flex; flex-wrap:wrap; gap:16px; padding:20px; margin:20px 0; border:1px solid var(--tan-line); border-radius:12px; background:var(--paper); }
+.workshop-controls label { display:flex; flex-direction:column; gap:6px; font-weight:600; }
+.workshop-controls select { min-height:44px; padding:8px; border:1px solid var(--tan-line); border-radius:6px; background:white; }
+.workshop-exercise, .history-list li { padding:20px; border:1px solid var(--tan-line); border-radius:14px; background:var(--paper); margin:16px 0; }
+.workshop-exercise h2 { margin-bottom:16px; }
+.history-list { list-style:none; padding:0; }
+.history-list p { margin:8px 0; }
+@media (max-width:600px) { .workshop-page { padding:12px; margin:8px auto; } .workshop-controls label { width:100%; } .rhythm-player { gap:8px; } }
+@media (prefers-reduced-motion:reduce) { .balanced-score [data-playhead] { display:none; } }
+
+.workshop-setup { margin:16px 0; border:1px solid var(--tan-line); border-radius:12px; background:var(--paper); }
+.workshop-setup > summary { cursor:pointer; padding:16px; font-weight:600; }
+.workshop-setup > summary span { margin-left:16px; font-weight:400; text-decoration:underline; }
+.workshop-setup .workshop-controls { border:0; margin:0; padding-top:0; }

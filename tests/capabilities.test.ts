@@ -114,7 +114,9 @@ describe("the published capability manifest", () => {
     expect(COUNT_IT_CAPABILITY_MANIFEST.integrationLevelRationale).toMatch(/no practice answers or scores leave the device/i);
     expect(COUNT_IT_CAPABILITY_MANIFEST.resultSchemaVersion).toBe("praxis.result.v0_1");
     const limitations = COUNT_IT_CAPABILITY_MANIFEST.limitations.join(" ");
-    expect(limitations).toMatch(/no audio, no microphone, and no tempo engine/i);
+    expect(limitations).toMatch(/synthesized rhythm playback/i);
+    expect(limitations).toMatch(/assigned challenges do not provide playback/i);
+    expect(limitations).toMatch(/no microphone input or performance scoring/i);
     expect(limitations).toMatch(/does not measure live performance/i);
   });
 });

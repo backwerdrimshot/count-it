@@ -95,4 +95,6 @@ The build fails if a cell has an unsupported resolution, invalid or duplicate po
 
 The catalog does not include whole-beat rests, triplets, compound meter, ties across beat boundaries, tuplets, grace notes, or cross-bar syncopation. Those require additional answer and notation semantics and should be introduced as separately validated catalog families.
 
+The unscored `/workshop` introduced in 2026-10-07.4 separately supports eighth-note triplets, ties across beats, dotted spanning values, syncopation and beat grouping. These additions do not change this scored assignment catalog or existing seeded rounds.
+
 Eighth-note-beat meters (3/8 and its relatives) are excluded too — see the retired catalog above.
