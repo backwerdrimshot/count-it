@@ -23,6 +23,8 @@ Research and implementation: 2026-10-08. Proposed release: 2026-10-07.4.
 
 ## Validation and release boundaries
 
+Count It is also intended for Praxis Percussion Program. See [the Program integration plan](praxis-program-integration-plan.md) for the proposed director-led launch, assignment adapter, governed result delivery and cross-product acceptance checks. This workspace PR does not yet implement that integration.
+
 Unit coverage includes note spans, exact triplet timing, tie suppression, all workshop focus/meter/grouping combinations, invalid preference storage, history bounds and image text wrapping. The existing assignment/preset suites verify unchanged generation contracts. Browser acceptance covers default setup, note/guide coordinates, playback start/stop, saved settings after reload, workshop notation and phone layouts.
 
 This branch does not publish a release by itself. Updating external public guides and release records is a release follow-up. The repository's notation standard still lists independent musician sign-off as pending; automated timing/engraving checks do not stand in for that review.
