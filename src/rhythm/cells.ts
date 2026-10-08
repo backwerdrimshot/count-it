@@ -162,7 +162,7 @@ export const RHYTHM_CELLS: readonly RhythmCell[] = Object.freeze([
 export const SPANNING_CELLS: readonly RhythmCell[] = Object.freeze([
   buildCell("half", "Half note", "Half", 1, 1, [0], "1", [token("2", 0)], [], "The note begins on the beat and holds through the next one. Say the beat it starts on; the beat it covers is not counted.", {}, 2),
   buildCell("half-rest", "Half rest", "Half rest", 1, 1, [], "", [token("2", 0, true)], [], "Two beats of silence. Nothing is counted here — the numbers belong to the beats that sound.", {}, 2),
-  buildCell("whole", "Whole note", "Whole", 1, 1, [0], "1", [token("1", 0)], [], "The note begins on the beat and holds for the whole bar. Only the beat it starts on is counted.", {}, 4),
+  buildCell("whole", "Whole note", "Whole", 1, 1, [0], "1", [token("1", 0)], [], "The note begins on the beat and lasts four quarter-note beats. Only the beat it starts on is counted.", {}, 4),
 ]);
 
 /* Every cell this app knows. Order matters: `getCellsByIds` returns catalog

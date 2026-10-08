@@ -46,6 +46,11 @@ Every cell above fills exactly one beat, which is what let the model treat a bar
 
 They sound **once**, at the top of the span. The beats underneath are silent because the note is still ringing, not because anything rests there, and the count does not distinguish those: this app counts the notes that sound. A half note on beat one of 4/4 answers `1`, and beat two contributes nothing.
 
+Whole-note feedback describes its **four quarter-note beats**, rather than the
+whole bar. In 5/4, a whole note followed by a quarter note occupies beats 1–4
+and beat 5 respectively; the answer is `1 | 5`. In 7/4, a whole note beginning
+on beat 2 occupies beats 2–5. Its duration stays four beats wherever it begins.
+
 Three rules follow, all enforced:
 
 - **Measure scope only.** "How long does this last?" is not a question one beat can pose. The app drops them when a student picks beat scope; a *link* that names one with `scope=beat` is refused, because a teacher who wrote it meant something the round cannot deliver.
