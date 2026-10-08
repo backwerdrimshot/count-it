@@ -157,6 +157,8 @@ export function createPraxisEvidenceResult(options: {
   level: string;
   scope: "beat" | "measure";
   countingSystem?: CountingProfileId;
+  practiceCells?: readonly string[] | null;
+  practiceGuide?: boolean;
   finishedAt: Date;
   /** Which run of this round this is, counting from 1.
    *
@@ -221,15 +223,15 @@ export function createPraxisEvidenceResult(options: {
     conditions: {
       scope,
       level,
-      cells: assignment?.cells ?? null,
-      guide: assignment?.guide ?? null,
+      cells: assignment?.cells ?? options.practiceCells ?? null,
+      guide: assignment?.guide ?? (options.practiceGuide === undefined ? null : options.practiceGuide ? "on" : "off"),
       countingSystem,
       passing: assignment?.passing ?? null,
       /* The same sentence the card shows, so the human record and the machine
          record cannot describe different rounds. */
       stated: assignment
         ? describeAssignment(assignment)
-        : `${getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}${playedMeterNote(session)}${countingSystem === "standard" ? "" : ` · ${COUNTING_PROFILES[countingSystem].name} counting`}`,
+        : `${options.practiceCells ? `${options.practiceCells.length} selected rhythms` : getLevel(level as Parameters<typeof getLevel>[0]).shortName} · ${scope === "beat" ? "one beat" : "one measure"}${playedMeterNote(session)}${countingSystem === "standard" ? "" : ` · ${COUNTING_PROFILES[countingSystem].name} counting`}`,
     },
     /* Null, deliberately, and the manifest says the same thing. This app has no
        reconciled Praxis skill vocabulary: candidate ids exist in the Sequence 2

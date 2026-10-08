@@ -2,7 +2,7 @@
   "schemaVersion": "1.1.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-10-07.3",
+  "version": "2026-10-07.4",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
@@ -132,6 +132,32 @@
     "eastman-ta-te-ta"
   ],
   "countingSystemStatus": "Students and teachers can select Standard (1 e & a), Eastman (ti-te-ta), or Eastman variant (ta-te-ta). The latter two labels identify their exact subdivision mappings; naming varies across teaching materials. Assignments can pin one with `sys`; links without `sys` keep the historical Standard behavior. Takadimi remains internal data.",
+  "practiceWorkshop": "https://count-it.backwerdrhythmshop.com/workshop",
+  "practiceHistory": "https://count-it.backwerdrhythmshop.com/history",
+  "programPractice": {
+    "contextParameter": "praxisContext=program",
+    "parentParameter": "praxisReturnOrigin",
+    "messages": [
+      "count-it.ready",
+      "count-it.return"
+    ],
+    "transmitsResults": false,
+    "description": "Director-led framed practice on approved Praxis hosts; no learner launch or persistent Program results."
+  },
+  "freePracticeDefaults": {
+    "level": "level-1",
+    "scope": "measure",
+    "meter": "4-4",
+    "guide": "on"
+  },
+  "freePracticeFeatures": [
+    "individual-rhythm-selection",
+    "optional-saved-setup",
+    "synthesized-playback",
+    "aligned-subdivision-guide",
+    "download-result-png",
+    "local-completed-challenge-history"
+  ],
   "acceptedInputSources": [
     "touch",
     "mouse",
@@ -144,7 +170,7 @@
   "skillVocabularyStatus": "Not yet reconciled. Candidate ids exist in the Sequence 2 draft but the vocabulary is an owner decision, and an invented id would be a contract no one agreed to. Until it is settled this app emits no skill ids.",
   "resultSchemaVersion": "praxis.result.v0_1",
   "resultSchemaStatus": "Adopted 2026-08-08, last of the three apps, after Scale Trail and Mallet Map. This app had no result object at all — the card was assembled inline — so the envelope was built rather than renamed. `skillReferences` is null and says so: the field is nullable across the family precisely so an app with no reconciled vocabulary can decline rather than invent ids. `activity.contentVersion` is null because questions are generated from the conditions and a seed, which already reproduce the round. In measure scope a miss is attributed to every cell in the measure, because the question is answered as a whole — the finest attribution the format allows, not a claim that all four were misread. Emitting the shape does not send this result; site-traffic measurement is separate.",
-  "supportDimensions": "The subdivision guide is a support, not a preference: an assignment pins it, and a gate counts the assignment's policy rather than the learner's own toggle. Question size (one beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. There is no timer anywhere in this app, by design.",
+  "supportDimensions": "The subdivision guide is a support, not a preference: an assignment pins it, and a gate counts the assignment's policy rather than the learner's own toggle. Question size (one beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. Playback has a tempo control; scored answers remain untimed.",
   "integrityMeasures": "An assigned round varies the ORDER of the answer choices per student, from the seed plus an identifier, so the questions stay identical and comparable while a posted answer key does not transfer. Attempts are counted and reported on the card, in the copied summary and in the verification code, because a replay of an already-answered round is a different fact than a first attempt. Attempts are counted per assignment in browser storage, so the count survives a reload rather than resetting with the page. `fb=end` withholds the correct answer, the running score and the guide's highlighting until the round is over. `retry=reseed` gives a retake the same conditions on new questions, seeded from the link's own seed plus the attempt number so a teacher can regenerate any attempt; `retry=off` withdraws the retry control. Practice mode is closed while an assigned round is unfinished, since it reveals counts for the same vocabulary. None of this makes a score proof: the app has no accounts, `retry=off` cannot stop a page reload — it reports the further attempt rather than preventing it, which is the same posture this app takes toward a pass mark — and the verification code remains a deterrent rather than a signature.",
   "accessibility": [
     "keyboard-operation",
@@ -154,7 +180,7 @@
     "large-touch-targets",
     "non-color-status-cues"
   ],
-  "offlineBehavior": "No account or cross-device score sync. Preferences, the optional saved counting profile, personal bests, a per-assignment attempt tally and an opaque per-browser string used only to vary answer order use browser storage when available; browser settings may block it or clearing site data may remove it. The optional assignment identifier is session-only and never persisted. The assignments page reads the local tally to show how many times a step was finished on this device. Count It also loads Cloudflare Web Analytics and queries the shop's existing visit counter for site-traffic measurement; these requests do not carry practice answers or scores. The visit counter is progressive enhancement and its absence changes nothing.",
+  "offlineBehavior": "No account or cross-device score sync. Preferences, the optional saved counting profile, personal bests, the last 50 completed challenge summaries without names/class IDs, a per-assignment attempt tally and an opaque per-browser string used only to vary answer order use browser storage when available; browser settings may block it or clearing site data may remove it. The optional assignment identifier is session-only and never persisted. The assignments page reads the local tally to show how many times a step was finished on this device. Count It also loads Cloudflare Web Analytics and queries the shop's existing visit counter for site-traffic measurement; these requests do not carry practice answers or scores. The visit counter is progressive enhancement and its absence changes nothing.",
   "siblingApps": {
     "eight-time": "https://eight-time.backwerdrhythmshop.com/",
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
@@ -165,9 +191,9 @@
   "assignmentCatalog": "https://count-it.backwerdrhythmshop.com/praxis-assignment-catalog.json",
   "limitations": [
     "Whole, half, quarter, eighth and sixteenth values in 2/4, 3/4, 4/4, 5/4 and 7/4. A whole note needs four beats and so appears in 4/4, 5/4 and 7/4 only; a half note needs two and appears in every meter.",
-    "Quarter-note-beat meters only. No odd-meter grouping (3+2 vs 2+3), no mixed or changing meters, no pickup measures, no triplets, compound meter, or ties across beats.",
+    "Scored assignment vocabulary remains quarter-note-beat straight subdivisions. The unscored /workshop adds triplets, ties across beats, dotted spanning values, syncopation and beat grouping. No mixed meters, pickups or compound meter in Count It.",
     "No eighth-, half- or dotted-quarter-beat meters (3/8, 2/2, 6/8): 3/8 was removed in 2026-08-29.1 and now lives in Eight Time, where legacy Count It 3/8 assignment links generate byte-identical rounds.",
-    "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
+    "Free practice provides synthesized rhythm playback, a count-in, optional beat pulse and tempo from 40–200 BPM. Assigned challenges do not provide playback. No microphone input or performance scoring.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Selectable counting profiles: Standard, Eastman (ti-te-ta), and Eastman variant (ta-te-ta). Takadimi remains internal and is not selectable.",
     "Progress is device-local; no account, roster, or cross-device score sync. Site-traffic measurement uses Cloudflare Web Analytics and the shop's existing visit counter; neither receives practice answers or scores.",

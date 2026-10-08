@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-07.3`
+- **Build:** `2026-10-07.4`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -15,6 +15,20 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 Build identifiers use ISO `YYYY-MM-DD`, based on the date the shipped app update
 began. The value stays fixed while that release pass is completed across code and
 documentation.
+
+## Practice workspace update
+
+- The opening setup is **Practice, Level 1, a full 4/4 measure, guide on**.
+- One-beat fragments use a compact centered staff. Full measures use a bounded responsive width. A teaching time grid aligns notehead centres, subdivision labels and the playback cursor; notation and guide scroll together. A lone whole-bar note keeps conventional centering and an explicit held-duration annotation.
+- **Choose individual rhythms** in setup selects a pool without writing an assignment. At least two rhythms must fit the current scope and meter. Changing the level restores that level's pool.
+- **Save my practice setup** restores the selected free-practice settings on this browser. Reset restores the agreed starting settings. Assignment links keep their historical parser defaults and seeded questions.
+- **Listen to rhythm** provides synthesized playback, 40–200 BPM, a count-in, optional beat pulse and a cursor. Playback starts only after a click and stops on Stop, a prompt change or navigation. Scored assignments withhold playback; answer scores remain untimed.
+- **Rhythm workshop** (`/workshop`) is unscored practice for triplets, ties across beats, dotted spanning values, syncopation and explicit grouping (including 3+2 vs 2+3 in 5/4). It uses the same notation/guide/playback renderer. Triplets explicitly use `1 trip let` in all profiles; this is a workshop convention, not a claim about Eastman triplet syllables. The new material is not added to assignment cell IDs or the cumulative levels.
+- **Practice history** (`/history`) keeps the last 50 completed challenge summaries on-device, including conditions, attempts and rhythms to revisit, without names/class IDs. Current results and history cards download as PNG. Scores are not sent anywhere automatically.
+
+Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
+
+Praxis Percussion Program integration now includes a director-led framing bridge: approved Program hosts can embed this same workspace, receive ready/return messages and retain their selected workspace. It transmits no practice results or learner identity. See [the integration plan](docs/praxis-program-integration-plan.md); governed assignments and durable result delivery remain separate work. This branch and the companion Platform wrapper are not deployed.
 
 ## What is included
 
@@ -258,12 +272,12 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 
 - Straight quarter-, eighth-, and sixteenth-note subdivisions in quarter-note-beat meters only (2/4, 3/4, 4/4, 5/4, 7/4).
 - A full-measure round never repeats a measure, so a short bar caps the round: two rhythms make only four bars of 2/4, so Level 1 in 2/4 is a four-question Challenge rather than five. An assignment link is refused instead of shortened.
-- No triplets, compound meter, ties across beats, syncopation across barlines, audio input/playback, tempo engine, student accounts, cloud sync, or score syncing. Cloudflare Web Analytics and the shop's existing visit counter measure site traffic; neither receives practice answers or scores.
+- Scored assignments retain the existing straight-subdivision vocabulary. The separate unscored workshop adds eighth-note triplets, ties across beats, dotted spanning values, syncopation and odd-meter beat grouping. No compound meter, cross-barline ties, microphone input, student accounts, cloud sync or score syncing. Cloudflare Web Analytics and the shop's existing visit counter measure site traffic; neither receives practice answers or scores.
 - A profile can be saved optionally on this device for free practice when browser storage is available and retained. A teacher's assignment profile takes precedence and does not overwrite the saved preference.
 - Progress is device-local and intentionally lightweight.
-- Assignment results are copied out by the student; there is no download-as-image yet, and no submission to any LMS.
+- Results can be copied or downloaded as PNG cards. The last 50 completed challenges are saved on this device without names or class IDs. No automatic submission to an LMS.
 - Nothing is timed and no duration is recorded, so a score says what was answered but not how long it took.
-- Level, question size and guide preferences are written to `localStorage` and never read back, so a returning visitor starts at Level 2 / one beat. The counting profile is a separate optional preference and is read back only when the student chooses to save it.
+- Free practice opens in Practice / Level 1 / full 4/4 measure / guide on. Saving the practice setup is opt-in; it restores level, question size, meter, guide and an optional rhythm pool. A counting profile is saved separately. Assignment links take precedence and never overwrite either saved default.
 
 ## Privacy and accessibility
 

@@ -4,9 +4,10 @@ const productionUrl = "https://count-it.backwerdrhythmshop.com/";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
+    { url: `${productionUrl}workshop`, lastModified: new Date("2026-10-08"), changeFrequency: "monthly", priority: 0.6 },
     {
       url: productionUrl,
-      lastModified: new Date("2026-08-02"),
+      lastModified: new Date("2026-10-08"),
       changeFrequency: "monthly",
       priority: 1,
     },

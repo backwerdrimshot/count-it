@@ -1,6 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { programFramePolicy } from '../src/program-frame';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -39,7 +40,12 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+    const headers = new Headers(response.headers);
+    // Allow the named Program hosts to frame the public activity, not arbitrary sites.
+    headers.set('Content-Security-Policy', programFramePolicy(headers.get('Content-Security-Policy') ?? '', process.env.NODE_ENV === 'development'));
+    headers.delete('X-Frame-Options'); // CSP expresses the exact cross-origin allowlist.
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   },
 };
 

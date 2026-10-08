@@ -2,10 +2,13 @@
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import CountReference from "./CountReference";
+import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool } from '../src/practice-settings';
+import { saveHistory } from '../src/practice-history';
+import { downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
+  ALL_RHYTHM_CELLS,
   LEVELS,
   getCellsByIds,
   getCellsForLevel,
@@ -13,7 +16,6 @@ import {
   METERS,
   METER_IDS,
   countLabelsForBeat,
-  getCompleteReference,
   getMeter,
   getLevel,
   getPromptAnswer,
@@ -69,7 +71,7 @@ type AppMode = "practice" | "challenge";
 const SESSION_LENGTH = DEFAULT_QUESTIONS;
 const INITIAL_SEED = 20260715;
 const BEST_KEY = "count-it-personal-bests-v1";
-const PREFERENCES_KEY = "count-it-preferences-v1";
+
 /* A stable per-browser string used to vary the ORDER of the answer choices in
    an assigned round. It is not an identity and never leaves the device: it
    exists so that two students opening the same link do not see the correct
@@ -160,8 +162,8 @@ function ScopeIcon({ scope, beats }: { scope: QuestionScope; beats: number }) {
 
 function ReadingScaffold({ prompt, system }: { prompt: RhythmPrompt; system: CountingProfileId }) {
   return (
-    <section className="reading-scaffold" aria-labelledby="reading-scaffold-title">
-      <h3 id="reading-scaffold-title">A way to work it out</h3>
+    <details className="reading-scaffold">
+      <summary>A way to work it out</summary>
       <ol>
         <li>
           <strong>Find the beat groups.</strong>
@@ -178,7 +180,7 @@ function ReadingScaffold({ prompt, system }: { prompt: RhythmPrompt; system: Cou
           {" Match each note start to the subdivision guide if it is visible, say the count out loud, and work out the full answer before revealing it."}
         </li>
       </ol>
-    </section>
+    </details>
   );
 }
 
@@ -211,6 +213,7 @@ function SetupControls({
   locked,
   studentId,
   identityLocked,
+  children,
   onLevelChange,
   onScopeChange,
   onMeterChange,
@@ -230,6 +233,7 @@ function SetupControls({
   locked: ReadonlySet<string>;
   studentId: string;
   identityLocked: boolean;
+  children?: React.ReactNode;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onMeterChange: (value: MeterId) => void;
@@ -409,6 +413,7 @@ function SetupControls({
         )}
         {systemSaveMessage && <small className="counting-profile-status" role="status">{systemSaveMessage}</small>}
       </div>
+      {children}
       <nav className="setup-help" aria-label="Help and more apps">
         <a href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
         <a href="https://apps.backwerdrhythmshop.com/">More apps</a>
@@ -457,17 +462,9 @@ function PracticeMode({
       </div>
       <ReadingScaffold prompt={prompt} system={system} />
       <div className="notation-panel">
-        <RhythmNotation prompt={prompt} label={notationLabel} />
+        <RhythmNotation prompt={prompt} label={notationLabel} system={system} showGuide={showReference} revealed={revealed} playback />
       </div>
-      {showReference && (
-        <div className="reference-panel">
-          <div className="mini-heading">
-            <span>Complete subdivision</span>
-            <small>{revealed ? "Green counts match sounding notes." : "Use the guide to locate each note."}</small>
-          </div>
-          <CountReference prompt={prompt} revealSounding={revealed} system={system} />
-        </div>
-      )}
+
       <div className={`reveal-panel ${revealed ? "is-revealed" : ""}`}>
         <span className="reveal-label">Correct count</span>
         <strong>{revealed ? answer : "Say it first, then check."}</strong>
@@ -582,17 +579,9 @@ function FocusedQuestionPractice({
       </div>
       <ReadingScaffold prompt={question.prompt} system={system} />
       <div className="notation-panel">
-        <RhythmNotation prompt={question.prompt} label="Rhythm for focused practice." />
+        <RhythmNotation prompt={question.prompt} label="Rhythm for focused practice." system={system} showGuide={showReference} revealed={Boolean(response)} playback />
       </div>
-      {showReference && (
-        <div className="reference-panel compact">
-          <div className="mini-heading">
-            <span>Complete subdivision</span>
-            <small>{response ? "Compare the note starts with the count." : getCompleteReference(question.prompt.scope, system, question.prompt.meter)}</small>
-          </div>
-          <CountReference prompt={question.prompt} revealSounding={Boolean(response)} system={system} />
-        </div>
-      )}
+
       <div className={`answer-grid scope-${question.prompt.scope}`} aria-label="Answer choices">
         {question.choices.map((choice, index) => {
           const isSelected = response?.choiceId === choice.id;
@@ -654,6 +643,7 @@ function ChallengeMode({
   system,
   showReference,
   personalBest,
+  practiceCells,
   assignment,
   sequenceStep,
   studentId,
@@ -673,6 +663,7 @@ function ChallengeMode({
   system: CountingProfileId;
   showReference: boolean;
   personalBest: number;
+  practiceCells?: readonly string[] | null;
   assignment: Assignment | null;
   sequenceStep: SequenceStep | null;
   studentId: string;
@@ -728,7 +719,7 @@ function ChallengeMode({
        migrate — and why the human record and any machine record could have
        described different rounds without anything noticing. */
     const result = createPraxisEvidenceResult({
-      session, assignment, sequenceStep, level, scope, countingSystem: system, finishedAt: stamped, attempt,
+      session, assignment, sequenceStep, level, scope, countingSystem: system, practiceCells, practiceGuide: showReference, finishedAt: stamped, attempt,
     });
     /* Separate from result.attemptReference on purpose: this is the
        teacher-facing code with its own published format and its own stated
@@ -837,6 +828,8 @@ function ChallengeMode({
           >
             Copy summary
           </button>
+          <button type="button" className="secondary-button" onClick={() => downloadResultImage(summary)}>Download result image</button>
+          <a className="secondary-button" href="/history">Practice history</a>
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
               would be a false one. */}
@@ -933,26 +926,9 @@ function ChallengeMode({
         </div>
       </div>
       <div className="notation-panel">
-        <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." />
+        <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} revealed={Boolean(response) && !holdFeedback} playback={!assignment} />
       </div>
-      {showReference && (
-        <div className="reference-panel compact">
-          <div className="mini-heading">
-            <span>Complete subdivision</span>
-            <small>
-              {response && !holdFeedback
-                ? "Sounding positions are highlighted."
-                /* From the PROMPT's own meter rather than a prop: a 3/4 grid
-                   has three beats, and the question already knows which meter
-                   it was built in. */
-                : getCompleteReference(scope, system, question.prompt.meter)}
-            </small>
-          </div>
-          {/* Highlighting the sounding positions IS the answer, so a held round
-              leaves the grid unmarked. */}
-          <CountReference prompt={question.prompt} revealSounding={!holdFeedback && Boolean(response)} system={system} />
-        </div>
-      )}
+
       <div className={`answer-grid scope-${scope}`} aria-label="Answer choices">
         {question.choices.map((choice, index) => {
           const isSelected = response?.choiceId === choice.id;
@@ -1080,20 +1056,25 @@ export default function CountItApp() {
     challenge: null,
   });
   const focusModeTabAfterCommit = useRef<AppMode | null>(null);
-  const [level, setLevel] = useState<LevelId>("level-2");
-  const [scope, setScope] = useState<QuestionScope>("beat");
+  const [level, setLevel] = useState<LevelId>(DEFAULT_PRACTICE.level);
+  const [scope, setScope] = useState<QuestionScope>(DEFAULT_PRACTICE.scope);
   const [meter, setMeter] = useState<MeterId>(DEFAULT_METER);
   const [system, setSystem] = useState<CountingProfileId>("standard");
   const [savedSystem, setSavedSystem] = useState<CountingProfileId | null>(null);
   const [systemSaveMessage, setSystemSaveMessage] = useState("");
   const [showReference, setShowReference] = useState(true);
+  const [freeCells, setFreeCells] = useState<string[] | null>(null);
+  const [saveSetup, setSaveSetup] = useState(false);
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const [preferenceMessage, setPreferenceMessage] = useState('');
   const [practiceSeed, setPracticeSeed] = useState(INITIAL_SEED);
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [challengeSeed, setChallengeSeed] = useState<string | number>(INITIAL_SEED + 100);
   const [session, setSession] = useState(() =>
-    makeSession({ level: "level-2", scope: "beat", system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
+    makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
+  const savedHistorySession = useRef<ChallengeSession | null>(null);
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
   // is something a teacher set, not something this browser remembers. It is
@@ -1145,7 +1126,7 @@ export default function CountItApp() {
     [assignment, pinnedLocks],
   );
   const sessionLength = assignment?.count ?? SESSION_LENGTH;
-  const assignedCells = assignment?.cells ?? undefined;
+  const assignedCells = assignment?.cells ?? freeCells ?? undefined;
   const holdFeedback = assignment?.feedback === "end";
   /* `free` is what this app has always done, so an existing link keeps it. */
   const retryPolicy = assignment?.retry ?? "free";
@@ -1200,13 +1181,16 @@ export default function CountItApp() {
       const savedProfile = readCountingPreference(() => window.localStorage);
       setSavedSystem(savedProfile);
       const freePlayProfile = resolveCountingProfile(null, savedProfile);
-      if (savedProfile) {
-        setSystem(freePlayProfile);
-        setSession(makeSession({
-          level: "level-2", scope: "beat", system: freePlayProfile,
-          seed: INITIAL_SEED + 100, count: SESSION_LENGTH,
-        }));
-      }
+      let savedSetup = null;
+      try { savedSetup = readPracticeSettings(localStorage); } catch { /* optional */ }
+      const settings = savedSetup ?? DEFAULT_PRACTICE;
+      setSaveSetup(Boolean(savedSetup));
+      setPreferencesReady(true);
+      setLevel(settings.level); setScope(settings.scope); setMeter(settings.meter);
+      setShowReference(settings.showReference); setFreeCells(settings.cells);
+      setSystem(freePlayProfile);
+      setSession(makeSession({ ...settings, ...(settings.cells ? { cells: settings.cells } : { cells: undefined }), system: freePlayProfile,
+        seed: INITIAL_SEED + 100, count: SESSION_LENGTH }));
       /* Read before the assignment is validated: a link that names a step and
          then fails validation is still evidence of which step was attempted,
          and refusing the round does not make the marker untrue. */
@@ -1263,6 +1247,7 @@ export default function CountItApp() {
 
       setDeviceVariant(device);
       setAssignment(pinned);
+      setFreeCells(null);
       setPinnedLocks(result.locked);
       setLevel(pinned.level);
       setScope(pinned.scope);
@@ -1315,7 +1300,7 @@ export default function CountItApp() {
      a full 4/4 round can. Appended only when it is not 4/4, so every key
      written before meters could be chosen still matches. */
   const bestKey = [
-    assignment?.cells ? `cells:${assignment.cells.join(",")}` : level,
+    assignedCells ? `cells:${assignedCells.join(",")}` : level,
     scope,
     meter === DEFAULT_METER ? "" : `meter:${meter}`,
     system === "standard" ? "" : `sys:${system}`,
@@ -1336,12 +1321,11 @@ export default function CountItApp() {
   }, []);
 
   useEffect(() => {
+    if (!preferencesReady || assignment || !saveSetup) return;
     try {
-      localStorage.setItem(PREFERENCES_KEY, JSON.stringify({ level, scope, meter, showReference }));
-    } catch {
-      // Preferences are harmless enhancements, not required application state.
-    }
-  }, [level, meter, scope, showReference]);
+      localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+    } catch { /* optional; explicit save reports failures */ }
+  }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells]);
 
   useEffect(() => {
     if (session.status !== "complete") return;
@@ -1349,7 +1333,17 @@ export default function CountItApp() {
       // Stamped once, when the round actually ends, so the card and its
       // verification code describe the moment the work finished rather than
       // the moment someone happened to look at it.
-      setFinishedAt((current) => current ?? new Date());
+      const finished = new Date();
+      setFinishedAt((current) => current ?? finished);
+      if (savedHistorySession.current !== session) {
+      savedHistorySession.current = session;
+      saveHistory({ id: `${finished.toISOString()}:${challengeSeed}:${bestKey}:${attempt}:${session.questions.map(q => q.id).join(',')}`,
+        finishedAt: finished.toISOString(), score: session.score, total: session.questions.length,
+        conditions: `${getMeter(meter).label} · ${scope} · ${COUNTING_PROFILES[system].name} · Guide ${showReference ? 'on' : 'off'}`,
+        rhythms: [...new Set(session.questions.flatMap(q => q.prompt.cells.map(c => c.id)))],
+        missed: [...new Set(getMissedQuestions(session).flatMap(q => q.prompt.cells.map(c => c.id)))],
+        assignment: assignment?.name ?? null, attempt });
+      }
       if (attemptKey) writeAttempts(attemptKey, attempt);
       setPersonalBests((current) => {
         const nextScore = Math.max(current[bestKey] ?? 0, session.score);
@@ -1361,7 +1355,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [attempt, attemptKey, bestKey, session.score, session.status]);
+  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -1372,6 +1366,7 @@ export default function CountItApp() {
     nextScope: QuestionScope,
     nextMeter: MeterId,
     nextSystem: CountingProfileId = system,
+    cells: readonly string[] | null | undefined = assignedCells,
   ) {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
@@ -1387,26 +1382,27 @@ export default function CountItApp() {
       system: nextSystem,
       seed: nextSeed,
       count: sessionLength,
-      ...(assignedCells ? { cells: assignedCells } : {}),
+      ...(cells ? { cells } : {}),
       ...(assignment && variant ? { variant } : {}),
     }));
   }
 
   function changeLevel(nextLevel: LevelId) {
     setLevel(nextLevel);
-    resetForSettings(nextLevel, scope, meter);
+    if (!assignment) setFreeCells(null);
+    resetForSettings(nextLevel, scope, meter, system, assignment?.cells ?? null);
   }
 
   function changeScope(nextScope: QuestionScope) {
-    setScope(nextScope);
-    resetForSettings(level, nextScope, meter);
+    if (freeCells && !usablePool(freeCells, nextScope, meter)) { setPreferenceMessage('Choose at least two rhythms that fit this question size first.'); return; }
+    setScope(nextScope); resetForSettings(level, nextScope, meter);
   }
 
   /* Changing the meter changes how many beats fill a bar, so the round is
      rebuilt rather than adjusted, the same as for a level or a size change. */
   function changeMeter(nextMeter: MeterId) {
-    setMeter(nextMeter);
-    resetForSettings(level, scope, nextMeter);
+    if (freeCells && !usablePool(freeCells, scope, nextMeter)) { setPreferenceMessage('Your selected rhythms do not fit this meter. Choose a different pool first.'); return; }
+    setMeter(nextMeter); resetForSettings(level, scope, nextMeter);
   }
 
   function changeSystem(nextSystem: CountingProfileId) {
@@ -1601,6 +1597,7 @@ export default function CountItApp() {
             </p>
           )}
 
+          {!assignment && <nav className="practice-links" aria-label="More practice"><a href="/workshop">Rhythm workshop: ties, triplets & grouping</a><a href="/history">Practice history</a></nav>}
           <div className="focus-bar" ref={focusBar}>
             <button
               type="button"
@@ -1613,7 +1610,7 @@ export default function CountItApp() {
               <span className="focus-label">{assignment ? "Assigned" : "Set your focus"}</span>
               <span className="focus-summary">
                 {[
-                  assignment?.name ?? (assignment?.cells ? `${assignment.cells.length} rhythms` : getLevel(level).name),
+                  assignment?.name ?? (assignedCells ? `${assignedCells.length} rhythms` : getLevel(level).name),
                   getMeter(meter).label,
                   scope === "beat" ? "One beat" : "One measure",
                   COUNTING_PROFILES[system].name,
@@ -1642,7 +1639,36 @@ export default function CountItApp() {
                 onSaveSystemChange={saveSystemPreference}
                 onReferenceChange={setShowReference}
                 onStudentIdChange={changeStudentId}
-              />
+              >
+                {!assignment && <div className="practice-customization">
+                  <details><summary>Choose individual rhythms</summary>
+                    <p>Select at least two. Changing the level returns to its complete vocabulary.</p>
+                    <div className="rhythm-picker">{ALL_RHYTHM_CELLS.map(cell => {
+                      const selected = freeCells ?? getCellsForLevel(level).map(c => c.id);
+                      const fits = cell.beats <= (scope === 'beat' ? 1 : getMeter(meter).beatsPerMeasure);
+                      return <label key={cell.id}><input type="checkbox" checked={selected.includes(cell.id)} disabled={!fits}
+                        onChange={event => {
+                          const next = event.target.checked ? [...selected, cell.id] : selected.filter(id => id !== cell.id);
+                          if (!usablePool(next, scope, meter)) { setPreferenceMessage('Keep at least two rhythms that fit this meter.'); return; }
+                          setFreeCells(next); setPreferenceMessage(''); resetForSettings(level, scope, meter, system, next);
+                        }} /> {cell.label}{!fits ? ' (full measure required)' : ''}</label>;
+                    })}</div>
+                    <button type="button" className="quiet-button" onClick={() => { setFreeCells(null); resetForSettings(level, scope, meter, system, null); }}>Use level rhythms</button>
+                  </details>
+                  <label><input type="checkbox" checked={saveSetup} onChange={e => {
+                    try {
+                      if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+                      else localStorage.removeItem(PRACTICE_SETTINGS_KEY);
+                      setSaveSetup(e.target.checked); setPreferenceMessage(e.target.checked ? 'Practice setup saved on this device.' : 'Saved practice setup cleared.');
+                    } catch { setPreferenceMessage('This browser could not save your setup. You can still practice.'); }
+                  }} /> Save my practice setup</label>
+                  <button type="button" className="quiet-button" onClick={() => {
+                    setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
+                    resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null);
+                  }}>Reset practice defaults</button>
+                  <p role="status">{preferenceMessage}</p>
+                </div>}
+              </SetupControls>
             </div>
           </div>
 
@@ -1677,6 +1703,7 @@ export default function CountItApp() {
                 scope={scope}
                 system={system}
                 showReference={showReference}
+                practiceCells={freeCells}
                 personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
                 assignment={assignment}
                 sequenceStep={sequenceStep}

@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-07.3";
+export const COUNT_IT_BUILD = "2026-10-07.4";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -131,6 +131,17 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "variant (ta-te-ta). The latter two labels identify their exact subdivision mappings; " +
     "naming varies across teaching materials. Assignments can pin one with `sys`; links " +
     "without `sys` keep the historical Standard behavior. Takadimi remains internal data.",
+  practiceWorkshop: "https://count-it.backwerdrhythmshop.com/workshop",
+  practiceHistory: "https://count-it.backwerdrhythmshop.com/history",
+  programPractice: {
+    contextParameter: "praxisContext=program",
+    parentParameter: "praxisReturnOrigin",
+    messages: ["count-it.ready", "count-it.return"],
+    transmitsResults: false,
+    description: "Director-led framed practice on approved Praxis hosts; no learner launch or persistent Program results.",
+  },
+  freePracticeDefaults: { level: "level-1", scope: "measure", meter: "4-4", guide: "on" },
+  freePracticeFeatures: ["individual-rhythm-selection", "optional-saved-setup", "synthesized-playback", "aligned-subdivision-guide", "download-result-png", "local-completed-challenge-history"],
   acceptedInputSources: ["touch", "mouse", "computer-keyboard"],
   evidenceTypes: ["A1_ANSWER_CORRECTNESS"],
   /* Deliberately empty, and said out loud rather than invented. Count It has
@@ -157,7 +168,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "The subdivision guide is a support, not a preference: an assignment pins it, and a gate " +
     "counts the assignment's policy rather than the learner's own toggle. Question size (one " +
     "beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. " +
-    "There is no timer anywhere in this app, by design.",
+    "Playback has a tempo control; scored answers remain untimed.",
   integrityMeasures:
     "An assigned round varies the ORDER of the answer choices per student, from the seed plus " +
     "an identifier, so the questions stay identical and comparable while a posted answer key " +
@@ -183,7 +194,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   ],
   offlineBehavior:
     "No account or cross-device score sync. Preferences, the optional saved counting profile, " +
-    "personal bests, a per-assignment attempt tally and an opaque per-browser string used only " +
+    "personal bests, the last 50 completed challenge summaries without names/class IDs, a per-assignment attempt tally and an opaque per-browser string used only " +
     "to vary answer order use browser storage when available; browser settings may block it or " +
     "clearing site data may remove it. The optional assignment identifier is session-only and " +
     "never persisted. The assignments page reads the local tally to show how many times a step " +
@@ -203,12 +214,11 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Whole, half, quarter, eighth and sixteenth values in 2/4, 3/4, 4/4, 5/4 and 7/4. A whole " +
       "note needs four beats and so appears in 4/4, 5/4 and 7/4 only; a half note needs two " +
       "and appears in every meter.",
-    "Quarter-note-beat meters only. No odd-meter grouping (3+2 vs 2+3), no mixed or changing " +
-      "meters, no pickup measures, no triplets, compound meter, or ties across beats.",
+    "Scored assignment vocabulary remains quarter-note-beat straight subdivisions. The unscored /workshop adds triplets, ties across beats, dotted spanning values, syncopation and beat grouping. No mixed meters, pickups or compound meter in Count It.",
     "No eighth-, half- or dotted-quarter-beat meters (3/8, 2/2, 6/8): 3/8 was removed in " +
       "2026-08-29.1 and now lives in Eight Time, where legacy Count It 3/8 assignment links " +
       "generate byte-identical rounds.",
-    "Does not play, listen to, or time anything: there is no audio, no microphone, and no tempo engine.",
+    "Free practice provides synthesized rhythm playback, a count-in, optional beat pulse and tempo from 40–200 BPM. Assigned challenges do not provide playback. No microphone input or performance scoring.",
     "Does not measure live performance, tone, sticking, or physical technique.",
     "Selectable counting profiles: Standard, Eastman (ti-te-ta), and Eastman variant (ta-te-ta). " +
       "Takadimi remains internal and is not selectable.",
