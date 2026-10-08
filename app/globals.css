@@ -2770,3 +2770,5 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 .workshop-setup > summary { cursor:pointer; padding:16px; font-weight:600; }
 .workshop-setup > summary span { margin-left:16px; font-weight:400; text-decoration:underline; }
 .workshop-setup .workshop-controls { border:0; margin:0; padding-top:0; }
+.program-frame-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--tan-line); background:var(--paper); font-size:.9rem; }
+body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mobile-teacher-entry { display:none; }

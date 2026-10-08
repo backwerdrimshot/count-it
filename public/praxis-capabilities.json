@@ -134,6 +134,16 @@
   "countingSystemStatus": "Students and teachers can select Standard (1 e & a), Eastman (ti-te-ta), or Eastman variant (ta-te-ta). The latter two labels identify their exact subdivision mappings; naming varies across teaching materials. Assignments can pin one with `sys`; links without `sys` keep the historical Standard behavior. Takadimi remains internal data.",
   "practiceWorkshop": "https://count-it.backwerdrhythmshop.com/workshop",
   "practiceHistory": "https://count-it.backwerdrhythmshop.com/history",
+  "programPractice": {
+    "contextParameter": "praxisContext=program",
+    "parentParameter": "praxisReturnOrigin",
+    "messages": [
+      "count-it.ready",
+      "count-it.return"
+    ],
+    "transmitsResults": false,
+    "description": "Director-led framed practice on approved Praxis hosts; no learner launch or persistent Program results."
+  },
   "freePracticeDefaults": {
     "level": "level-1",
     "scope": "measure",

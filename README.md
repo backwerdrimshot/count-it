@@ -28,6 +28,8 @@ documentation.
 
 Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
 
+Praxis Percussion Program integration now includes a director-led framing bridge: approved Program hosts can embed this same workspace, receive ready/return messages and retain their selected workspace. It transmits no practice results or learner identity. See [the integration plan](docs/praxis-program-integration-plan.md); governed assignments and durable result delivery remain separate work. This branch and the companion Platform wrapper are not deployed.
+
 ## What is included
 
 - **Practice:** move through one-beat or full-measure prompts, reveal the count, inspect the subdivision guide, and read a short explanation.

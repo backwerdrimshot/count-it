@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ProgramFrame from './ProgramFrame';
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -63,6 +64,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <ProgramFrame />
         {children}
         {/* Cloudflare Web Analytics.
 
