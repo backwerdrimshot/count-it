@@ -6,7 +6,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-07.4`
+- **Build:** `2026-10-08.1` (prepared in source; release pending)
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -28,7 +28,7 @@ documentation.
 
 Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
 
-Praxis Percussion Program integration now includes a director-led framing bridge: approved Program hosts can embed this same workspace, receive ready/return messages and retain their selected workspace. It transmits no practice results or learner identity. See [the integration plan](docs/praxis-program-integration-plan.md); governed assignments and durable result delivery remain separate work. This branch and the companion Platform wrapper are not deployed.
+Praxis Percussion Program integration includes a director-led framing bridge. This continuation adds **Save to Program** in the assignment builder for a verified Program frame, with idempotent request IDs and matched saved/failed replies. Saved queries reopen with their original pinned and unpinned choices; editing creates a new configuration. Standalone link building stays free. Only named settings are sent to Program, without practice results or learner identity. See [the integration plan](docs/praxis-program-integration-plan.md); governed learner launches and result delivery remain separate work. The saved-configuration continuation and companion Platform implementation are not deployed.
 
 ## What is included
 

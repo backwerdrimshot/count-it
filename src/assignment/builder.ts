@@ -110,6 +110,27 @@ export function defaultBuilderState(seed: string): BuilderState {
   });
 }
 
+/** Reopen a saved link while preserving every unpinned choice. The app parser
+ * remains the sole validator of musical settings. */
+export function builderStateFromQuery(search: string): BuilderState | null {
+  const params = new URLSearchParams(search);
+  const keys = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed'];
+  if (keys.some(key => params.getAll(key).length > 1) || params.has('seed') && !SEED_PATTERN.test(params.get('seed')!)) return null;
+  const parsed = parseAssignment(search);
+  if (!parsed.ok) return null;
+  const a = parsed.assignment;
+  return {
+    name: a.name ?? '',
+    vocabulary: a.cells ? { kind: 'cells', cells: a.cells }
+      : params.has('level') ? { kind: 'level', level: Number(a.level.slice(-1)) as 1 | 2 | 3 } : { kind: 'student' },
+    scope: params.has('scope') ? a.scope : null,
+    meter: a.meter,
+    system: a.systemPinned ? a.system : null,
+    guide: a.guide, feedback: a.feedback, retry: a.retry,
+    count: a.count, passing: a.passing, seed: a.seed ?? '',
+  };
+}
+
 /** A short, readable seed. Takes the random source so the logic stays pure and
  *  a test can fix it. Six base-36 characters is far more than a class needs and
  *  short enough to read aloud. */
