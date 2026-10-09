@@ -206,12 +206,16 @@ export default function NotationPage() {
         </Topic>
 
         <Topic id="eighth-beat" heading="When the beat is an eighth">
+          {/* Eight Time's meters change on its own schedule. When its capabilities manifest
+              (`meters`, `meterStatus`) moves, this paragraph moves with it. */}
           <p>
-            In 3/8 the eighth note is the beat. That is a different reading skill behind a similar-looking time
-            signature, so Count It stays with meters whose beat is a quarter note. 3/8 lives in its sibling app,{" "}
-            <a href="https://eight-time.backwerdrhythmshop.com/">Eight Time</a>, and the{" "}
-            <a href="https://backwerdrhythmshop.com/lessons/rhythms-in-three/">Rhythms in Three lesson</a> teaches both
-            spellings of a bar of three. Meters such as 6/8 and cut time are not in either app.
+            In 3/8 the eighth note is the beat. In 6/8, 9/8 and 12/8 the eighth is still the unit, but Eight Time counts
+            them in dotted-quarter beats by default (two, three and four), and 5/8 and 7/8 group their eighths unevenly,
+            such as 2+3 or 2+2+3. Each is a different reading skill behind a similar-looking time signature, so Count It
+            stays with meters whose beat is a quarter note. Those live in its sibling app,{" "}
+            <a href="https://eight-time.backwerdrhythmshop.com/">Eight Time</a>, which reads 3/8, 5/8, 6/8, 7/8, 9/8 and
+            12/8, and the <a href="https://backwerdrhythmshop.com/lessons/rhythms-in-three/">Rhythms in Three lesson</a>{" "}
+            teaches both spellings of a bar of three. Cut time (2/2) is not in either app.
           </p>
         </Topic>
 
