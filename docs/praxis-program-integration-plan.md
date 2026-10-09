@@ -1,6 +1,6 @@
 # Count It in Praxis Percussion Program
 
-Planning date: 2026-10-07. Taylor confirmed that Count It is also being built into Praxis Percussion Program. Step 1 is implemented on review branches; governed assignment/result delivery remains pending the approved rhythm skill mapping and release checks.
+Planning date: 2026-10-07. Taylor confirmed that Count It is also being built into Praxis Percussion Program. The director wrapper is on a review branch. The subsequent saved-configuration increment is built locally; governed learner delivery remains pending approved rhythm vocabulary and release checks.
 
 ## Current, verified
 
@@ -21,6 +21,10 @@ Add a Program entry that opens the maintained public app in a director practice 
 Carry over the same readable measure spacing, aligned guide, rhythm selection, playback and advanced workshop. Launch with Practice, full 4/4 measures, Level 1 and guide on when the director has not supplied settings. Program chrome provides a clear return route. Standalone use stays free and useful.
 
 The first acceptance milestone is a director opening Count It from Program, selecting a rehearsal rhythm, listening and returning to the Program workspace. It does not require student accounts or persistent learner evidence.
+
+### 1a. Saved settings and custom assignment links
+
+Taylor clarified that Program adds settings control, saving and custom assignments. The builder continuation sends version-1 configuration-save requests to its exact approved parent, matches replies to the pending request, and permits reopening existing assignment queries without pinning formerly unpinned choices. The companion Program implementation stores immutable named snapshots under current tenant, Program-standing and director-capability checks, supports archive/restore and copying public links, and creates a new snapshot for edits. This is adult configuration persistence, not a delivered learner assignment or learner-result record. Platform ADR 0283 documents the lifecycle. Shared route registration and migration numbering are pending coordination before release.
 
 ### 2. Governed assignment launches
 
