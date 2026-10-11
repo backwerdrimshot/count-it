@@ -1,0 +1,30 @@
+--- a/guides/count-it/index.html
++++ b/guides/count-it/index.html
+@@ -425,7 +425,7 @@
+               when you finished and the verification code.</td>
+           </tr>
+           <tr>
+-            <td>Download result image</td>
++            <td>Download PNG</td>
+             <td>Saves the same summary as a picture, <code>count-it-result.png</code>,
+               made on your device.</td>
+           </tr>
+@@ -453,14 +453,16 @@
+     <p>
+       The <strong>verification code</strong> at the foot of the card is not a
+       submission. Your answers are checked in this browser, and Count It does not
+-      automatically submit your answers or result; the code only shows the result
+-      was not retyped by hand. An assigned round&rsquo;s card also states the
++      automatically submit your answers or result. The browser-generated code can help compare submissions,
++      but it is not proof of authentic work. An assigned round&rsquo;s card also states the
+       conditions the link set, as described <a href="#builder">below</a>.
+     </p>
+   </section>
+ 
+   <section>
+     <h2>Copying and keyboard controls</h2>
++    <p><strong>Copy result image</strong> copies the same locally generated picture as <strong>Download PNG</strong> after you press its button. If image copying is unavailable or denied, use Download PNG and attach the file yourself. Nothing is uploaded automatically. The picture and browser-generated checksum are not proof of authentic work.</p>
++
+     <p><strong>Copy summary</strong> announces success. If clipboard access is unavailable, a selectable
+       summary appears below the controls so you can copy it yourself. <strong>Retry this set</strong> repeats
+       the same questions; <strong>New questions</strong> makes a new free-practice set. An assignment
