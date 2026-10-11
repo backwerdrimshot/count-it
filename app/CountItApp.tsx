@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboa
 import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool, PRACTICE_LENGTHS, supportedPracticeLength, type PracticeLength } from '../src/practice-settings';
 import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
-import { downloadResultImage } from '../src/result-download';
+import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
 import {
@@ -845,7 +845,14 @@ function ChallengeMode({
           >
             Copy summary
           </button>
-          <button type="button" className="secondary-button" onClick={() => downloadResultImage(summary)}>Download result image</button>
+          <button type="button" className="secondary-button" onClick={async () => {
+            const copied = await copyResultImage(summary);
+            setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
+          }}>Copy result image</button>
+          <button type="button" className="secondary-button" onClick={async () => {
+            const downloaded = await downloadResultImage(summary);
+            setCopyNotice(downloaded ? "PNG download started." : "PNG unavailable. Use Copy summary instead.");
+          }}>Download PNG</button>
           <a className="secondary-button" href="/history">Practice history</a>
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
@@ -912,7 +919,7 @@ function ChallengeMode({
         <p className="result-footnote">{conditions}</p>
         <p className="result-code">
           <span>Verification</span> <code>{code}</code>
-          <small>Your answers are checked in this browser. The app does not automatically submit your answers or result. Settings, personal bests and attempt counts may be saved on this device. The code only shows this result was not retyped by hand.</small>
+          <small>Your answers are checked in this browser. The app does not automatically submit your answers or result. Settings, personal bests and attempt counts may be saved on this device. This browser-generated code can help compare submissions, but it is not proof of authentic work.</small>
         </p>
       </section>
     );

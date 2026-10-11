@@ -6,7 +6,7 @@ The focus popover groups **Rhythms and meter**, **Counting and help**, and **Rem
 
 **Save this profile on this device** remembers syllables. **Save my practice setup** independently remembers practice settings. Unchecking a box clears its saved default. Reset setup keeps the counting profile and personal bests; while setup saving is enabled it updates the saved setup. Assignment links override saved defaults and do not overwrite them.
 
-Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
+Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. **Copy result image** creates the same local PNG as **Download PNG**, writes only after its button is pressed, and announces success or a download fallback when unsupported or denied. It uploads nothing and adds no identity fields; the image and checksum are browser-generated records, not proof of authentic work. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
 
 **Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
 
@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-11.2`
+- **Build:** `2026-10-11.3`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
