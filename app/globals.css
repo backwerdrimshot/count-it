@@ -2772,3 +2772,15 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 .workshop-setup .workshop-controls { border:0; margin:0; padding-top:0; }
 .program-frame-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--tan-line); background:var(--paper); font-size:.9rem; }
 body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mobile-teacher-entry { display:none; }
+
+/* Focus sections and selectable copy fallback stay within the popover/card. */
+.setup-panel h3 { margin: 14px 0 6px; font-size: 1rem; }
+.setup-panel details { margin-block: 8px; }
+.setup-panel summary { cursor: pointer; }
+.result-card textarea { display: block; width: 100%; min-height: 160px; padding: 12px; font: inherit; }
+.focused-practice { margin-block: 16px; }
+.scope-note svg { width: 42px; height: 28px; vertical-align: middle; }
+
+.setup-popover .setup-panel { display: flex; flex-direction: column; gap: 10px; }
+
+.setup-panel > p { margin-block: 0; }

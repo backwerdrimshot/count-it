@@ -94,7 +94,7 @@ const exactlyOneModeSelected = async (page) =>
         hasMissedQuestion = true;
         break;
       }
-      await page.getByRole("button", { name: /New randomized session/ }).click();
+      await page.getByRole("button", { name: /New questions/ }).click();
     }
     note("free-play results offer focused practice after a missed question", hasMissedQuestion);
     if (hasMissedQuestion) {

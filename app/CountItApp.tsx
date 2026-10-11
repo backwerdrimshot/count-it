@@ -1,8 +1,10 @@
 "use client";
+import { useRoundChangeGuard } from "./RoundChangeGuard";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool } from '../src/practice-settings';
+import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
 import { downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
@@ -214,6 +216,7 @@ function SetupControls({
   studentId,
   identityLocked,
   children,
+  rhythmControls,
   onLevelChange,
   onScopeChange,
   onMeterChange,
@@ -234,6 +237,7 @@ function SetupControls({
   studentId: string;
   identityLocked: boolean;
   children?: React.ReactNode;
+  rhythmControls?: React.ReactNode;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onMeterChange: (value: MeterId) => void;
@@ -267,6 +271,8 @@ function SetupControls({
           <small>These settings are part of the assignment, so they stay put.</small>
         </p>
       )}
+      <h3>Rhythms and meter</h3>
+      <p>Changing rhythms, meter or counting starts a new set. An answered, unfinished challenge asks before clearing your work.</p>
       {assignment?.cells ? (
         <p className="level-control" aria-label="Rhythms in this assignment">
           <span>Rhythms</span>
@@ -279,7 +285,7 @@ function SetupControls({
         </p>
       ) : (
         <label className="level-control">
-          <span>Beginner level</span>
+          <span>Rhythm level</span>
           <select
             value={level}
             disabled={locked.has("level")}
@@ -339,6 +345,8 @@ function SetupControls({
           </small>
         )}
       </fieldset>
+      {rhythmControls}
+      <h3>Counting and help</h3>
       <label className="reference-toggle">
         <input
           type="checkbox"
@@ -394,7 +402,10 @@ function SetupControls({
             ))}
           </select>
           <small>Preview: <code>{COUNTING_PROFILES[system].preview}</code></small>
+          <details><summary>How counting profiles work</summary><p>The meter sets the numbered quarter-note beats. The profile chooses the syllables between them. Count only note beginnings; rests and held space stay silent.</p></details>
         </label>
+        <h3>Remember on this device</h3>
+        <p>Save profile remembers syllables only. Save setup remembers rhythm level, question size, meter, guide and chosen rhythms. Assignment links override these defaults.</p>
         {assignment ? (
           <small className="counting-profile-status" role="status">
             {savedSystem
@@ -512,7 +523,7 @@ function FocusedQuestionPractice({
     if (!session || session.status !== "active") return;
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.matches("input, select, textarea") || getCurrentResponse(session)) return;
+      if ((target.matches("input, select, textarea") || Boolean(document.querySelector("dialog[open]"))) || getCurrentResponse(session)) return;
       if (!/^[1-4]$/.test(event.key)) return;
       const choice = getCurrentQuestion(session).choices[Number(event.key) - 1];
       if (!choice) return;
@@ -681,8 +692,16 @@ function ChallengeMode({
   onRetry: () => void;
   onNewSession: () => void;
 }) {
+  const [copyNotice, setCopyNotice] = useState("");
+  const [copyFallback, setCopyFallback] = useState("");
   const questionHeading = useRef<HTMLHeadingElement>(null);
   const resultHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (session.status !== "active") return;
+    const clear = window.setTimeout(() => { setCopyNotice(""); setCopyFallback(""); }, 0);
+    return () => window.clearTimeout(clear);
+  }, [session.status]);
+
 
   useEffect(() => {
     if (session.status === "complete") resultHeading.current?.focus();
@@ -692,7 +711,7 @@ function ChallengeMode({
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.matches("input, select, textarea") || session.status !== "active") return;
+      if ((target.matches("input, select, textarea") || Boolean(document.querySelector("dialog[open]"))) || session.status !== "active") return;
       const question = getCurrentQuestion(session);
       const response = getCurrentResponse(session);
       if (!response && /^[1-4]$/.test(event.key)) {
@@ -818,12 +837,10 @@ function ChallengeMode({
           <button
             type="button"
             className="secondary-button"
-            onClick={() => {
-              void copyTextOrFallback(
-                summary,
-                () => navigator.clipboard,
-                (text) => { window.prompt("Copy your result summary:", text); },
-              );
+            onClick={async () => {
+              setCopyFallback("");
+              const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
+              setCopyNotice(copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
             }}
           >
             Copy summary
@@ -835,11 +852,11 @@ function ChallengeMode({
               would be a false one. */}
           {retryPolicy !== "off" && (
             <button type="button" className="secondary-button" onClick={onRetry}>
-              {retryPolicy === "reseed" ? "Try again on new questions" : "Retry this set"}
+              {retryPolicy === "reseed" ? "Try new questions" : "Retry this set"}
             </button>
           )}
           {!assignment && (
-            <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
+            <button type="button" className="primary-button" onClick={onNewSession}>New questions <span aria-hidden="true">↻</span></button>
           )}
         </div>
         {!assignment && missedQuestions.length > 0 && (
@@ -850,6 +867,8 @@ function ChallengeMode({
             onReturn={() => resultHeading.current?.focus()}
           />
         )}
+        <p role="status">{copyNotice}</p>
+        {copyFallback && <label>Result summary to copy<textarea readOnly value={copyFallback} onFocus={event => event.target.select()} /></label>}
         {assignment && retryPolicy === "off" && (
           // Said, rather than left as an absence a student has to notice. The
           // claim is deliberately about what the assignment asks for, not about
@@ -1075,6 +1094,7 @@ export default function CountItApp() {
     makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const savedHistorySession = useRef<ChallengeSession | null>(null);
+  const { protect, confirmation } = useRoundChangeGuard(session.status === "active" && session.responses.length > 0);
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
   // is something a teacher set, not something this browser remembers. It is
@@ -1106,11 +1126,12 @@ export default function CountItApp() {
   useEffect(() => {
     if (!setupOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
       setSetupOpen(false);
       setupToggle.current?.focus();
     };
     const onPointer = (event: PointerEvent) => {
+      if (document.querySelector("dialog[open]")) return;
       if (focusBar.current && !focusBar.current.contains(event.target as Node)) setSetupOpen(false);
     };
     document.addEventListener("keydown", onKey);
@@ -1253,7 +1274,7 @@ export default function CountItApp() {
       setScope(pinned.scope);
       setMeter(pinned.meter ?? DEFAULT_METER);
       setSystem(resolveCountingProfile(pinned.system, savedProfile));
-      if (pinned.guide) setShowReference(pinned.guide === "on");
+      setShowReference(pinned.guide ? pinned.guide === "on" : DEFAULT_PRACTICE.showReference);
       // An assignment is a scored round by definition, so it opens in the
       // challenge rather than making a student find the tab.
       setMode("challenge");
@@ -1435,6 +1456,16 @@ export default function CountItApp() {
     } else {
       setSystemSaveMessage("This browser could not clear the saved profile.");
     }
+  }
+
+  function resetPracticeSetup() {
+    if (level === DEFAULT_PRACTICE.level && scope === DEFAULT_PRACTICE.scope && meter === DEFAULT_PRACTICE.meter && freeCells === null) {
+      setShowReference(true); return;
+    }
+    protect(() => {
+      setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
+      resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null);
+    });
   }
 
   function nextPractice(direction: 1 | -1) {
@@ -1632,15 +1663,24 @@ export default function CountItApp() {
                 locked={locked}
                 studentId={studentId}
                 identityLocked={identityLocked}
-                onLevelChange={changeLevel}
-                onScopeChange={changeScope}
-                onMeterChange={changeMeter}
-                onSystemChange={changeSystem}
+                onLevelChange={value => { if (value !== level) protect(() => changeLevel(value)); }}
+                onScopeChange={value => { if (value !== scope) protect(() => changeScope(value)); }}
+                onMeterChange={value => { if (value !== meter) protect(() => changeMeter(value)); }}
+                onSystemChange={value => { if (value !== system) protect(() => changeSystem(value)); }}
                 onSaveSystemChange={saveSystemPreference}
                 onReferenceChange={setShowReference}
                 onStudentIdChange={changeStudentId}
-              >
-                {!assignment && <div className="practice-customization">
+                rhythmControls={!assignment && <div className="practice-customization">
+                  <details><summary>Practice starting points</summary>
+                    <p>Choose a rhythm pool from the existing teaching sequence for unscored exploration. These do not set an assignment or goal.</p>
+                    {COUNTING_RHYTHMS_STEPS.slice(0, 3).map(preset => <button type="button" className="quiet-button" key={preset.id} onClick={() => protect(() => {
+                      const vocabulary = preset.state.vocabulary;
+                      if (vocabulary.kind !== "cells") return;
+                      const cells = [...vocabulary.cells];
+                      setLevel("level-1"); setScope("beat"); setMeter("4-4"); setShowReference(true); setFreeCells(cells); setMode("practice");
+                      resetForSettings("level-1", "beat", "4-4", system, cells);
+                    })}>{preset.title} — {preset.focus}</button>)}
+                  </details>
                   <details><summary>Choose individual rhythms</summary>
                     <p>Select at least two. Changing the level returns to its complete vocabulary.</p>
                     <div className="rhythm-picker">{ALL_RHYTHM_CELLS.map(cell => {
@@ -1650,11 +1690,14 @@ export default function CountItApp() {
                         onChange={event => {
                           const next = event.target.checked ? [...selected, cell.id] : selected.filter(id => id !== cell.id);
                           if (!usablePool(next, scope, meter)) { setPreferenceMessage('Keep at least two rhythms that fit this meter.'); return; }
-                          setFreeCells(next); setPreferenceMessage(''); resetForSettings(level, scope, meter, system, next);
+                          protect(() => { setFreeCells(next); setPreferenceMessage(''); resetForSettings(level, scope, meter, system, next); });
                         }} /> {cell.label}{!fits ? ' (full measure required)' : ''}</label>;
                     })}</div>
-                    <button type="button" className="quiet-button" onClick={() => { setFreeCells(null); resetForSettings(level, scope, meter, system, null); }}>Use level rhythms</button>
+                    <button type="button" className="quiet-button" onClick={() => { if (freeCells) protect(() => { setFreeCells(null); resetForSettings(level, scope, meter, system, null); }); }}>Use level rhythms</button>
                   </details>
+                </div>}
+              >
+                {!assignment && <div className="practice-customization">
                   <label><input type="checkbox" checked={saveSetup} onChange={e => {
                     try {
                       if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
@@ -1662,10 +1705,8 @@ export default function CountItApp() {
                       setSaveSetup(e.target.checked); setPreferenceMessage(e.target.checked ? 'Practice setup saved on this device.' : 'Saved practice setup cleared.');
                     } catch { setPreferenceMessage('This browser could not save your setup. You can still practice.'); }
                   }} /> Save my practice setup</label>
-                  <button type="button" className="quiet-button" onClick={() => {
-                    setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
-                    resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null);
-                  }}>Reset practice defaults</button>
+                  <p>Uncheck either save option to clear that saved default. Reset setup keeps your counting profile, history and personal bests; if setup saving is on, it also updates the saved setup.</p>
+                  <button type="button" className="quiet-button" onClick={resetPracticeSetup}>Reset practice setup</button>
                   <p role="status">{preferenceMessage}</p>
                 </div>}
               </SetupControls>
@@ -1757,6 +1798,7 @@ export default function CountItApp() {
         <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
         <BuildStamp />
       </footer></WorkspaceInfo>
+      {confirmation}
       <SupportFallbackDialog />
     </div>
   );
