@@ -6,7 +6,7 @@ The focus popover groups **Rhythms and meter**, **Counting and help**, and **Rem
 
 **Save this profile on this device** remembers syllables. **Save my practice setup** independently remembers practice settings. Unchecking a box clears its saved default. Reset setup keeps the counting profile and personal bests; while setup saving is enabled it updates the saved setup. Assignment links override saved defaults and do not overwrite them.
 
-Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
+Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
 
 **Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
 
@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-11.1`
+- **Build:** `2026-10-11.2`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -48,7 +48,7 @@ Praxis Percussion Program integration now includes a director-led framing bridge
 ## What is included
 
 - **Practice:** move through one-beat or full-measure prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
-- **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
+- **Challenge:** choose Quick 5, Standard 12, or Extended 20 for free practice when the unique-measure pool supports it, then answer multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
 - **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4, 5/4 and 7/4 only.
 - **Five quarter-note-beat meters:** 2/4, 3/4, 4/4, 5/4 and 7/4, chosen per assignment link or in the setup panel. Each reads the same quarter-note beat as 4/4 with a different number of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. In 5/4 and 7/4 beams stay inside each beat, so the 3+2 or 2+3 grouping an odd meter is sometimes written with is not drawn or asked. That is the whole admission rule: **the beat is a quarter note.** Eighth-beat (3/8), half-note-beat (2/2) and compound (6/8) meters are different counting problems and are not read here. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned [Eight Time](https://eight-time.backwerdrhythmshop.com/) its own app, live since 2026-09-02. It accepts legacy Count It 3/8 assignment links and generates byte-identical rounds; the apps share git ancestry and may be recombined later. Count It still refuses `meter=3-8` and retired eighth-beat cell ids here, with a plain-language message rather than repairing them.
