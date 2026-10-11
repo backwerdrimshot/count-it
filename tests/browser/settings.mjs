@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
+import { publishedLinks } from './harness.mjs';
 const base = process.env.BASE_URL || 'http://127.0.0.1:4317';
 const eight = false;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
@@ -20,6 +21,39 @@ const meter = () => page.getByLabel(/^Meter/);
 const question = () => page.locator('.answer-grid').innerText();
 const progress = () => page.locator('.challenge-progress').innerText();
 try {
+  await go();
+  await open();
+  await page.getByLabel('Counting profile', { exact: true }).selectOption('eastman-ta-te-ta');
+  const startingPoints = page.locator('details').filter({ has: page.getByText('Practice starting points', { exact: true }) });
+  await startingPoints.locator('summary').click();
+  const advertised = publishedLinks('counting-rhythms').slice(0, 3).map(link => new URLSearchParams(link));
+  assert.equal(await startingPoints.getByRole('button').count(), advertised.length);
+  const selectedPool = () => page.locator('.rhythm-picker input:checked').evaluateAll(nodes => nodes.map(node => node.value).sort());
+  for (const index of [0, 1, 2, 0]) {
+    const preset = advertised[index];
+    const button = startingPoints.getByRole('button').nth(index);
+    assert.ok((await button.innerText()).includes(preset.get('a').replace(/^Step \d+: /, '')));
+    await button.click();
+    assert.equal(await page.getByLabel('Subdivision guide').isChecked(), preset.get('guide') === 'on');
+    await page.waitForFunction(shown => (document.querySelectorAll('.practice-card [data-guide-at]').length > 0) === shown, preset.get('guide') === 'on');
+    assert.equal(await page.getByRole('radio', { name: /One beat/i }).isChecked(), preset.get('scope') === 'beat');
+    assert.equal(await meter().inputValue(), '4-4');
+    assert.equal(await page.getByLabel('Counting profile', { exact: true }).inputValue(), 'eastman-ta-te-ta');
+    assert.deepEqual(await selectedPool(), preset.get('cells').split(',').sort());
+  }
+  await page.locator('#challenge-tab').click();
+  await page.locator('.answer-choice').first().click();
+  const presetQuestions = await question(); const presetPosition = await progress();
+  await open();
+  await startingPoints.getByRole('button').nth(2).click();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  assert.equal(await question(), presetQuestions); assert.equal(await progress(), presetPosition);
+  assert.equal(await page.getByLabel('Subdivision guide').isChecked(), true);
+  assert.equal(await page.getByRole('radio', { name: /One beat/i }).isChecked(), true);
+  assert.equal(await meter().inputValue(), '4-4');
+  assert.equal(await page.getByLabel('Counting profile', { exact: true }).inputValue(), 'eastman-ta-te-ta');
+  assert.deepEqual(await selectedPool(), advertised[0].get('cells').split(',').sort());
+  console.log('PASS every advertised starting point pool/scope/meter/guide, retained profile, and cancellation preserves round/settings');
   await go();
   await page.locator('#practice-tab').focus();
   await page.keyboard.press('ArrowRight');

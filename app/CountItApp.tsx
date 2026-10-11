@@ -1677,7 +1677,7 @@ export default function CountItApp() {
                       const vocabulary = preset.state.vocabulary;
                       if (vocabulary.kind !== "cells") return;
                       const cells = [...vocabulary.cells];
-                      setLevel("level-1"); setScope("beat"); setMeter("4-4"); setShowReference(true); setFreeCells(cells); setMode("practice");
+                      setLevel("level-1"); setScope("beat"); setMeter("4-4"); setShowReference(preset.state.guide === "on"); setFreeCells(cells); setMode("practice");
                       resetForSettings("level-1", "beat", "4-4", system, cells);
                     })}>{preset.title} — {preset.focus}</button>)}
                   </details>
@@ -1686,7 +1686,7 @@ export default function CountItApp() {
                     <div className="rhythm-picker">{ALL_RHYTHM_CELLS.map(cell => {
                       const selected = freeCells ?? getCellsForLevel(level).map(c => c.id);
                       const fits = cell.beats <= (scope === 'beat' ? 1 : getMeter(meter).beatsPerMeasure);
-                      return <label key={cell.id}><input type="checkbox" checked={selected.includes(cell.id)} disabled={!fits}
+                      return <label key={cell.id}><input type="checkbox" value={cell.id} checked={selected.includes(cell.id)} disabled={!fits}
                         onChange={event => {
                           const next = event.target.checked ? [...selected, cell.id] : selected.filter(id => id !== cell.id);
                           if (!usablePool(next, scope, meter)) { setPreferenceMessage('Keep at least two rhythms that fit this meter.'); return; }

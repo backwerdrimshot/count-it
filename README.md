@@ -8,7 +8,7 @@ The focus popover groups **Rhythms and meter**, **Counting and help**, and **Rem
 
 Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
 
-**Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for guided, unscored practice. History, playback, workshop and optional missed-question practice remain the existing implementations.
+**Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
 
 The verified public-guide owner is `backwerdrimshot/backwerd-rhythm-shop-site`, commit `94fa68772f73e0790eacde9864ef6cdad92a1efc`. `docs/guide-update-v1.patch` contains exact changes for its `guides/` source; review/apply that patch alongside release. No public guide has been deployed here. `docs/followup-plan.md` captures the deferred shared shell, migration compatibility and pedagogical follow-ups.
 
@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-11`
+- **Build:** `2026-10-11.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>

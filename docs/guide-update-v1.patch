@@ -1,5 +1,5 @@
 diff --git a/guides/count-it/index.html b/guides/count-it/index.html
-index c9caad4..9c67551 100644
+index c9caad4..c9201eb 100644
 --- a/guides/count-it/index.html
 +++ b/guides/count-it/index.html
 @@ -102,7 +102,7 @@
@@ -7,7 +7,7 @@ index c9caad4..9c67551 100644
        <div>
          <dt>Build</dt>
 -        <dd><code>2026-10-09</code></dd>
-+        <dd><code>2026-10-11</code></dd>
++        <dd><code>2026-10-11.1</code></dd>
        </div>
        <div>
          <dt>Open the app</dt>
@@ -20,7 +20,7 @@ index c9caad4..9c67551 100644
                options and get feedback on each. Press <kbd>1</kbd>, <kbd>2</kbd>,
                <kbd>3</kbd> or <kbd>4</kbd> to choose an answer.</td>
            </tr>
-@@ -259,6 +259,17 @@
+@@ -259,6 +259,18 @@
 
    <section id="saving">
      <h2>Saving your setup</h2>
@@ -34,11 +34,12 @@ index c9caad4..9c67551 100644
 +      toggling the subdivision guide keeps the current challenge.</p>
 +    <p><strong>Practice starting points</strong> offers Quarters &amp; Pairs, Where&rsquo;s the &amp;?,
 +      and the combined quarter/eighth/rest pool from the existing teaching sequence. These open
-+      free Practice with a guide, rather than creating a scored assignment.</p>
++      free Practice with their preset guide policy: the first two show the guide and No Help hides it.
++      They do not create a scored assignment.</p>
      <p>
        Two optional boxes in <strong>Set your focus</strong> keep your choices in this
        browser, on this device only:
-@@ -270,10 +281,11 @@
+@@ -270,10 +282,11 @@
          refresh.</li>
      </ul>
      <p>
@@ -52,7 +53,7 @@ index c9caad4..9c67551 100644
      </p>
    </section>
 
-@@ -421,7 +433,7 @@
+@@ -421,7 +434,7 @@
              <td>The same questions again.</td>
            </tr>
            <tr>
@@ -61,7 +62,7 @@ index c9caad4..9c67551 100644
              <td>A different set of questions.</td>
            </tr>
            <tr>
-@@ -446,6 +458,17 @@
+@@ -446,6 +459,17 @@
      </p>
    </section>
 
