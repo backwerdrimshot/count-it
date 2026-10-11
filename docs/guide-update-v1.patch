@@ -1,0 +1,82 @@
+diff --git a/guides/count-it/index.html b/guides/count-it/index.html
+index c9caad4..c9201eb 100644
+--- a/guides/count-it/index.html
++++ b/guides/count-it/index.html
+@@ -102,7 +102,7 @@
+     <dl class="facts">
+       <div>
+         <dt>Build</dt>
+-        <dd><code>2026-10-09</code></dd>
++        <dd><code>2026-10-11.1</code></dd>
+       </div>
+       <div>
+         <dt>Open the app</dt>
+@@ -171,7 +171,7 @@
+           </tr>
+           <tr>
+             <td>Choose the Count</td>
+-            <td>A five-question challenge. You pick the correct count from
++            <td>A challenge with five questions by default; assignment links can choose another length. You pick the correct count from
+               options and get feedback on each. Press <kbd>1</kbd>, <kbd>2</kbd>,
+               <kbd>3</kbd> or <kbd>4</kbd> to choose an answer.</td>
+           </tr>
+@@ -259,6 +259,18 @@
+
+   <section id="saving">
+     <h2>Saving your setup</h2>
++    <p><strong>Set your focus</strong> groups its controls into <strong>Rhythms and meter</strong>,
++      <strong>Counting and help</strong>, and <strong>Remember on this device</strong>.
++      <strong>Rhythm level</strong> chooses the vocabulary; the counting example stays visible
++      while <strong>How counting profiles work</strong> opens the longer explanation.</p>
++    <p>Changing rhythms, question size, meter or counting starts a new set. If you have answered
++      an unfinished challenge, choose <strong>Continue</strong> to clear it or <strong>Cancel</strong>
++      to keep the same questions and answers. Escape also cancels. Untouched practice changes immediately;
++      toggling the subdivision guide keeps the current challenge.</p>
++    <p><strong>Practice starting points</strong> offers Quarters &amp; Pairs, Where&rsquo;s the &amp;?,
++      and the combined quarter/eighth/rest pool from the existing teaching sequence. These open
++      free Practice with their preset guide policy: the first two show the guide and No Help hides it.
++      They do not create a scored assignment.</p>
+     <p>
+       Two optional boxes in <strong>Set your focus</strong> keep your choices in this
+       browser, on this device only:
+@@ -270,10 +282,11 @@
+         refresh.</li>
+     </ul>
+     <p>
+-      <strong>Reset practice defaults</strong> returns to the opening setup: Level 1,
++      <strong>Reset practice setup</strong> returns to the opening setup: Level 1,
+       One measure, 4/4, guide on. Your counting profile is separate and stays as you
+       set it. An assignment link sets its own conditions for that round and does not
+-      change what you saved.
++      change what you saved. Uncheck a save box to clear that saved default. Reset leaves history and
++      personal bests intact; if setup saving is on, the reset setup becomes the saved setup too.
+     </p>
+   </section>
+
+@@ -421,7 +434,7 @@
+             <td>The same questions again.</td>
+           </tr>
+           <tr>
+-            <td>New randomized session</td>
++            <td>New questions</td>
+             <td>A different set of questions.</td>
+           </tr>
+           <tr>
+@@ -446,6 +459,17 @@
+     </p>
+   </section>
+
++  <section>
++    <h2>Copying and keyboard controls</h2>
++    <p><strong>Copy summary</strong> announces success. If clipboard access is unavailable, a selectable
++      summary appears below the controls so you can copy it yourself. <strong>Retry this set</strong> repeats
++      the same questions; <strong>New questions</strong> makes a new free-practice set. An assignment
++      with reseeded retries says <strong>Try new questions</strong>.</p>
++    <p>With focus on a mode tab, use Left/Right arrows, Home or End to change modes. Escape closes
++      the focus popover and returns focus to its toggle; an assignment keeps Practice unavailable until
++      its round ends.</p>
++  </section>
++
+   <section id="history">
+     <h2>Practice history</h2>
+     <p>

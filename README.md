@@ -1,12 +1,27 @@
 # Count It
 
+## Practice controls V1
+
+The focus popover groups **Rhythms and meter**, **Counting and help**, and **Remember on this device**. Counting examples stay visible; longer explanations are expandable. Rhythm/meter/counting changes start a new set. For an answered, unfinished challenge, **Continue** applies the change and clears the round; **Cancel** or Escape keeps all existing questions, answers, settings and seeds. Untouched practice updates immediately; guide visibility does not rebuild a round. Resetting an already-default setup does not discard answers.
+
+**Save this profile on this device** remembers syllables. **Save my practice setup** independently remembers practice settings. Unchecking a box clears its saved default. Reset setup keeps the counting profile and personal bests; while setup saving is enabled it updates the saved setup. Assignment links override saved defaults and do not overwrite them.
+
+Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
+
+**Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
+
+The verified public-guide owner is `backwerdrimshot/backwerd-rhythm-shop-site`, commit `94fa68772f73e0790eacde9864ef6cdad92a1efc`. `docs/guide-update-v1.patch` contains exact changes for its `guides/` source; review/apply that patch alongside release. No public guide has been deployed here. `docs/followup-plan.md` captures the deferred shared shell, migration compatibility and pedagogical follow-ups.
+
+Regression checks: `tests/browser/settings.mjs` runs against a local build with isolated headless Chromium and blocked analytics. Set `BASE_URL` to the local trainer, and optionally `CHROMIUM_PATH` to an installed headless Chromium executable. It verifies cancellation and unchanged rounds, tab keyboard/focus/Escape, explicit persistence/assignment overrides, blocked setup storage, clipboard absence and feedback, and phone layout.
+
+
 Count It is a local-first rhythm-reading MVP for Backwerd Rhythm Shop. It helps musicians connect standard notation to spoken subdivision counts through guided practice and short, scored challenges.
 
 The app deliberately begins with a small, verified straight-subdivision catalog. Rhythm notation, timing, accepted answers, distractors, and explanations all come from the same structured data model; no answer is inferred from an SVG.
 
 ## Release information
 
-- **Build:** `2026-10-09`
+- **Build:** `2026-10-11.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
