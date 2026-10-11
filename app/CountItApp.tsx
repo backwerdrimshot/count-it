@@ -3,7 +3,7 @@ import { useRoundChangeGuard } from "./RoundChangeGuard";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool } from '../src/practice-settings';
+import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool, PRACTICE_LENGTHS, supportedPracticeLength, type PracticeLength } from '../src/practice-settings';
 import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
 import { downloadResultImage } from '../src/result-download';
@@ -272,7 +272,7 @@ function SetupControls({
         </p>
       )}
       <h3>Rhythms and meter</h3>
-      <p>Changing rhythms, meter or counting starts a new set. An answered, unfinished challenge asks before clearing your work.</p>
+      <p>Changing rhythms, meter, challenge length or counting starts a new set. An answered, unfinished challenge asks before clearing your work.</p>
       {assignment?.cells ? (
         <p className="level-control" aria-label="Rhythms in this assignment">
           <span>Rhythms</span>
@@ -405,7 +405,7 @@ function SetupControls({
           <details><summary>How counting profiles work</summary><p>The meter sets the numbered quarter-note beats. The profile chooses the syllables between them. Count only note beginnings; rests and held space stay silent.</p></details>
         </label>
         <h3>Remember on this device</h3>
-        <p>Save profile remembers syllables only. Save setup remembers rhythm level, question size, meter, guide and chosen rhythms. Assignment links override these defaults.</p>
+        <p>Save profile remembers syllables only. Save setup remembers rhythm level, question size, meter, guide, chosen rhythms and challenge length. Assignment links override these defaults.</p>
         {assignment ? (
           <small className="counting-profile-status" role="status">
             {savedSystem
@@ -1083,6 +1083,7 @@ export default function CountItApp() {
   const [systemSaveMessage, setSystemSaveMessage] = useState("");
   const [showReference, setShowReference] = useState(true);
   const [freeCells, setFreeCells] = useState<string[] | null>(null);
+  const [freeLength, setFreeLength] = useState<PracticeLength>(5);
   const [saveSetup, setSaveSetup] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [preferenceMessage, setPreferenceMessage] = useState('');
@@ -1146,7 +1147,7 @@ export default function CountItApp() {
     () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
     [assignment, pinnedLocks],
   );
-  const sessionLength = assignment?.count ?? SESSION_LENGTH;
+  const sessionLength = assignment ? assignment.count ?? SESSION_LENGTH : freeLength;
   const assignedCells = assignment?.cells ?? freeCells ?? undefined;
   const holdFeedback = assignment?.feedback === "end";
   /* `free` is what this app has always done, so an existing link keeps it. */
@@ -1210,8 +1211,10 @@ export default function CountItApp() {
       setLevel(settings.level); setScope(settings.scope); setMeter(settings.meter);
       setShowReference(settings.showReference); setFreeCells(settings.cells);
       setSystem(freePlayProfile);
+      const restoredLength = supportedPracticeLength(settings, settings.challengeLength);
+      setFreeLength(restoredLength);
       setSession(makeSession({ ...settings, ...(settings.cells ? { cells: settings.cells } : { cells: undefined }), system: freePlayProfile,
-        seed: INITIAL_SEED + 100, count: SESSION_LENGTH }));
+        seed: INITIAL_SEED + 100, count: restoredLength }));
       /* Read before the assignment is validated: a link that names a step and
          then fails validation is still evidence of which step was attempted,
          and refusing the round does not make the marker untrue. */
@@ -1326,6 +1329,7 @@ export default function CountItApp() {
     meter === DEFAULT_METER ? "" : `meter:${meter}`,
     system === "standard" ? "" : `sys:${system}`,
     assignment?.guide ? `guide:${assignment.guide}` : "",
+    !assignment && freeLength !== 5 ? `n:${session.questions.length}` : "",
   ].filter(Boolean).join(":");
 
   useEffect(() => {
@@ -1344,9 +1348,9 @@ export default function CountItApp() {
   useEffect(() => {
     if (!preferencesReady || assignment || !saveSetup) return;
     try {
-      localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+      localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells, challengeLength: freeLength }));
     } catch { /* optional; explicit save reports failures */ }
-  }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells]);
+  }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells, freeLength]);
 
   useEffect(() => {
     if (session.status !== "complete") return;
@@ -1388,7 +1392,10 @@ export default function CountItApp() {
     nextMeter: MeterId,
     nextSystem: CountingProfileId = system,
     cells: readonly string[] | null | undefined = assignedCells,
+    wantedLength: PracticeLength = freeLength,
   ) {
+    const nextLength = assignment ? sessionLength : supportedPracticeLength({ level: nextLevel, scope: nextScope, meter: nextMeter, cells: cells ? [...cells] : null }, wantedLength);
+    if (!assignment) setFreeLength(nextLength as PracticeLength);
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setPracticeSeed((seed) => seed + 1);
@@ -1402,7 +1409,7 @@ export default function CountItApp() {
       meter: nextMeter,
       system: nextSystem,
       seed: nextSeed,
-      count: sessionLength,
+      count: nextLength,
       ...(cells ? { cells } : {}),
       ...(assignment && variant ? { variant } : {}),
     }));
@@ -1459,12 +1466,12 @@ export default function CountItApp() {
   }
 
   function resetPracticeSetup() {
-    if (level === DEFAULT_PRACTICE.level && scope === DEFAULT_PRACTICE.scope && meter === DEFAULT_PRACTICE.meter && freeCells === null) {
+    if (level === DEFAULT_PRACTICE.level && scope === DEFAULT_PRACTICE.scope && meter === DEFAULT_PRACTICE.meter && freeCells === null && freeLength === 5) {
       setShowReference(true); return;
     }
     protect(() => {
       setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
-      resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null);
+      resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null, 5);
     });
   }
 
@@ -1671,6 +1678,19 @@ export default function CountItApp() {
                 onReferenceChange={setShowReference}
                 onStudentIdChange={changeStudentId}
                 rhythmControls={!assignment && <div className="practice-customization">
+                  <fieldset className="scope-control">
+                    <legend>Challenge length</legend>
+                    <div className="scope-options">{PRACTICE_LENGTHS.map(count => {
+                      const available = roundLengthFor({ level, scope, meter, cells: assignedCells, wanted: count });
+                      return <label key={count} className={freeLength === count ? 'is-selected' : ''}>
+                        <input type="radio" name="challenge-length" value={count} checked={freeLength === count}
+                          disabled={count !== 5 && available < count}
+                          onChange={() => { if (count !== freeLength) protect(() => resetForSettings(level, scope, meter, system, assignedCells, count)); }} />
+                        <span>{count === 5 ? 'Quick 5' : count === 12 ? 'Standard 12' : 'Extended 20'}{available < count ? ` (${available} available)` : ''}</span>
+                      </label>;
+                    })}</div>
+                    <small>Choose the Count uses {session.questions.length} questions. Longer sets need enough unique measures; a small pool can shorten Quick 5. Unscored Practice examples stay separate.</small>
+                  </fieldset>
                   <details><summary>Practice starting points</summary>
                     <p>Choose a rhythm pool from the existing teaching sequence for unscored exploration. These do not set an assignment or goal.</p>
                     {COUNTING_RHYTHMS_STEPS.slice(0, 3).map(preset => <button type="button" className="quiet-button" key={preset.id} onClick={() => protect(() => {
@@ -1700,7 +1720,7 @@ export default function CountItApp() {
                 {!assignment && <div className="practice-customization">
                   <label><input type="checkbox" checked={saveSetup} onChange={e => {
                     try {
-                      if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+                      if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells, challengeLength: freeLength }));
                       else localStorage.removeItem(PRACTICE_SETTINGS_KEY);
                       setSaveSetup(e.target.checked); setPreferenceMessage(e.target.checked ? 'Practice setup saved on this device.' : 'Saved practice setup cleared.');
                     } catch { setPreferenceMessage('This browser could not save your setup. You can still practice.'); }

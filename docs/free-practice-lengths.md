@@ -1,0 +1,9 @@
+# Free challenge lengths
+
+Quick5 preserves the existing free challenge default. Standard12 and Extended20 appear in focus settings and are unavailable when the unique-measure pool cannot fill them. Pool/meter/size changes choose the largest supported option no greater than the previous choice; a pool smaller than five still uses its actual capacity and labels Quick5 with the available count. Unscored Practice retains its existing twelve-example ceiling.
+
+Changes use the existing Continue/Cancel guard. Cancel retains questions, answers, seeds, selected length and saved setup. Saving setup opts in to persistence through the existing count-it-practice-defaults-v2 key with an additive challengeLength field; older records and unknown values use Quick5. Reset restores Quick5. Assignment links override saved preferences and preserve historical defaults, explicit counts, seeds, attempts, scoring and verification. New free lengths have separate personal-best suffixes; legacy Quick5 and assignment keys are unchanged.
+
+Validation: lint, TypeScript, 246 unit tests, nine rendered checks/build, tests/browser/practice-length.mjs, existing tests/browser/settings.mjs, and phone screenshot inspection. New browser regression covers default availability, pool bounds/fallback, answered-round cancellation/Continue, opt-in reload, fixed and omitted-count legacy assignments, storage preservation, reset and phone overflow. Existing assignment/golden fixtures are unchanged. No merge or deployment is authorized for this follow-up until review.
+
+Guide addition prepared for the verified owning repository backwerdrimshot/backwerd-rhythm-shop-site, guides/count-it/index.html: explain the three free challenge choices, capacity limits, setup persistence and fixed assignment counts. Apply separately after the existing docs/guide-update-v1.patch; no whole-site deployment belongs to this PR.
