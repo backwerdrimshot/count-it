@@ -15,7 +15,14 @@ try {
     await page.getByRole('button', { name: /Next question|See results/ }).click();
   }
   await page.locator('.result-code code').waitFor();
-  await page.waitForFunction(() => document.querySelector('.result-code code').textContent.startsWith('BRS-'));
+  // Completion stamps asynchronously; the initial epoch code is not ready.
+  await page.waitForFunction(() => {
+    const epoch = new Date(0);
+    const stamp = [epoch.getFullYear() % 100, epoch.getMonth() + 1, epoch.getDate()]
+      .map(value => String(value).padStart(2, '0')).join('');
+    const code = document.querySelector('.result-code code')?.textContent ?? '';
+    return /^BRS-/.test(code) && code.split('-')[2] !== stamp;
+  });
   const resultBefore = await page.locator('.result-stats').innerText();
   const codeBefore = await page.locator('.result-code code').innerText();
   assert.match(await page.locator('.result-code').innerText(), /not proof of authentic work/);
