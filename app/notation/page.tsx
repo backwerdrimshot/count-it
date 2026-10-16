@@ -77,7 +77,7 @@ export default function NotationPage() {
   return (
     <div className="builder-shell">
       <a className="skip-link" href="#reference">Skip to the reference</a>
-      <PageHeader />
+      <PageHeader page="notation" />
 
       <main className="builder-main" id="reference">
         <div className="builder-intro">

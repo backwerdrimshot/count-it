@@ -45,9 +45,10 @@ const sizes = [["laptop 1366x768", 1366, 768], ["laptop 1280x720", 1280, 720], [
           await p.goto(BASE + "/", { waitUntil: "networkidle" });
         }
       }
-      await p.getByRole("button", { name: "About", exact: true }).click();
-      const inAbout = await p.locator("#workspace-about a", { hasText: /^Assignments$/ }).isVisible();
-      note(`${label}: the assignments link is still reachable through About`, inAbout);
+      // The footer lists Assignments at every width; About no longer carries page links.
+      await p.locator("footer").scrollIntoViewIfNeeded();
+      const inFooter = await p.locator("footer a", { hasText: /^Assignments$/ }).isVisible();
+      note(`${label}: the assignments link is still reachable from the footer`, inFooter);
     } else {
       const box = visible ? await link.boundingBox() : null;
       const inView = !!box && box.x >= 0 && box.y >= 0 && box.x + box.width <= w && box.y + box.height <= h;

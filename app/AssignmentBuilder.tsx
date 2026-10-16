@@ -211,7 +211,7 @@ export default function AssignmentBuilder() {
   return (
     <div className="builder-shell">
       <a className="skip-link" href="#builder-form">Skip to the form</a>
-      <PageHeader />
+      <PageHeader page="build" />
 
       <main className="builder-main">
         <div className="builder-intro">

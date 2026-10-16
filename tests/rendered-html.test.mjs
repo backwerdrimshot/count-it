@@ -115,14 +115,14 @@ test("the internal audit page navigates with a plain anchor", async () => {
 });
 
 test("the practice screen links teachers to the assignments page, beside Help and About", async () => {
-  /* The links to /assignments, /build and /notation also sit in the About dialog, which
-     is closed until opened, so a teacher on the main screen sees none of them. This one
-     is in the page, in the same nav as the Help and About buttons. */
+  /* The links to /assignments, /build and /notation also sit in the footer, which is
+     below the board, so a teacher on the main screen sees none of them without scrolling.
+     This one is in the page, in the same nav as the Help, Feedback and About buttons. */
   const html = await (await render("/")).text();
   const nav = html.match(/<nav class="workspace-actions"[\s\S]*?<\/nav>/)?.[0] ?? "";
   assert.match(nav, /<a href="\/assignments">For teachers<\/a>/);
-  assert.match(nav, /<button[^>]*>Help<\/button>/);
-  assert.match(nav, /<button[^>]*>About<\/button>/);
+  assert.match(nav, /<button type="button" aria-label="Help"[^>]*>[\s\S]*?<span>Help<\/span><\/button>/);
+  assert.match(nav, /<button type="button" aria-label="About"[^>]*>[\s\S]*?<span>About<\/span><\/button>/);
 });
 
 test("the free-practice screen includes a concise, profile-aware reading scaffold", async () => {
@@ -132,4 +132,116 @@ test("the free-practice screen includes a concise, profile-aware reading scaffol
   assert.match(html, /Rests and held notes do not begin a new count/);
   assert.match(html, /Use (?:<!--.*?-->)?Standard(?:<!--.*?-->)? counting/);
   assert.match(html, /before revealing it/);
+});
+
+/* The shop's header rule: Help, Feedback and About in one navigation labelled Help and app
+   information, each with its name and a title, then the monogram last. */
+test("the header has Help, Feedback and About, then the monogram last", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
+  const header = html.match(/<header class="site-header"[\s\S]*?<\/header>/)?.[0] ?? "";
+  assert.ok(header, "the header is server-rendered");
+
+  const nav = header.match(/<nav class="workspace-actions" aria-label="Help and app information">[\s\S]*?<\/nav>/)?.[0] ?? "";
+  assert.ok(nav, "Help, Feedback and About sit in one navigation labelled Help and app information");
+  const buttons = [...nav.matchAll(/<button type="button" aria-label="([^"]+)" title="([^"]+)">/g)].map((m) => m[1]);
+  assert.deepEqual(buttons, ["Help", "Feedback", "About"]);
+
+  const monogram = '<a class="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home"><img src="/brs-monogram.svg" alt="" width="28" height="28"/></a>';
+  assert.ok(header.endsWith(`${monogram}</header>`), "the monogram is the last item in the header");
+  assert.ok(header.indexOf("</nav>") < header.indexOf('class="brs-home"'), "the monogram comes after the nav");
+});
+
+/* The page footer, below the board: the social marks, then the two forms and two email
+   links with Guide and All free apps, then the copyright and build. It is a page footer,
+   not a block inside a dialog. */
+test("the footer carries the social marks, the forms, the emails, the guide and the copyright, in order", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
+  const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
+  assert.ok(footer, "the footer is server-rendered");
+  const about = html.match(/<dialog id="workspace-about"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.equal(about.includes("site-footer"), false, "the footer is not hidden inside the About dialog");
+
+  const formSupport = 'href="https://docs.google.com/forms/d/e/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg/viewform"';
+  const formFeedback = 'href="https://docs.google.com/forms/d/e/1FAIpQLSfP29vqlwt3UX1rbguiLEsR7t5ONZbEpuWoix0_7aDF2eMXDg/viewform"';
+  const emailSupport = 'href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20problem%20report"';
+  const emailFeedback = 'href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20feature%20request"';
+  const guide = 'href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>';
+  const allApps = 'href="https://apps.backwerdrhythmshop.com/">All free apps</a>';
+  const copyright = "© 2026 Backwerd Rimshot, LLC. All rights reserved.";
+
+  const steps = [
+    'aria-label="Backwerd Rhythm Shop on Facebook"',
+    'aria-label="Backwerd Rhythm Shop on Instagram"',
+    'aria-label="Backwerd Rhythm Shop on YouTube"',
+    formSupport,
+    formFeedback,
+    emailSupport,
+    emailFeedback,
+    guide,
+    allApps,
+    copyright,
+  ];
+  let at = -1;
+  for (const step of steps) {
+    const found = footer.indexOf(step);
+    assert.ok(found > -1, `the footer has ${step}`);
+    assert.ok(found > at, `${step} comes in the footer's order`);
+    at = found;
+  }
+  assert.match(footer.slice(at), /Build \d{4}-\d{2}-\d{2}/, "the build stamp follows the copyright");
+
+  const marks = footer.match(/<a class="foot-ico"[\s\S]*?<\/a>/g) ?? [];
+  assert.equal(marks.length, 3, "three social marks");
+  for (const mark of marks) assert.match(mark, /width="16" height="16"/, "each social mark is 16px");
+});
+
+/* About: the app's build, More apps, the guide, and the copyright. No support links: those
+   live in the footer and the Feedback dialog. */
+test("About has the More apps link, the guide, the build and the copyright, and no support links", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
+  const about = html.match(/<dialog id="workspace-about"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.ok(about, "the About dialog is server-rendered");
+  assert.match(about, /<a class="text-action" href="https:\/\/apps\.backwerdrhythmshop\.com\/">More apps<\/a>/);
+  assert.match(about, /<a class="text-action" href="https:\/\/guides\.backwerdrhythmshop\.com\/count-it\/">Guide<\/a>/);
+  assert.match(about, /Build <span class="build-id">\d{4}-\d{2}-\d{2}(?:\.\d+)?<\/span>/);
+  assert.match(about, /© 2026 Backwerd Rimshot, LLC\. All rights reserved\./);
+  assert.doesNotMatch(about, /mailto:|docs\.google\.com|Report a problem|Request a feature/, "support links are not in About");
+});
+
+/* Feedback holds the two forms and the two email links. Help holds the help text and the
+   guide, and no support links. */
+test("Feedback has the two forms and two email links; Help has the guide and no support links", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
+  const feedback = html.match(/<dialog id="workspace-feedback"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.ok(feedback, "the Feedback dialog is server-rendered");
+  assert.match(feedback, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg\/viewform"[^>]*>Report a problem</);
+  assert.match(feedback, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSfP29vqlwt3UX1rbguiLEsR7t5ONZbEpuWoix0_7aDF2eMXDg\/viewform"[^>]*>Request a feature</);
+  assert.match(feedback, /href="mailto:support@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20problem%20report">Email support</);
+  assert.match(feedback, /href="mailto:feedback@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20feature%20request">Email feedback</);
+
+  const help = html.match(/<dialog id="workspace-help"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.match(help, /Read the full guide/, "Help links to the guide");
+  assert.doesNotMatch(help, /mailto:|docs\.google\.com|Report a problem|Request a feature/, "Help holds help and the guide only");
+});
+
+/* The secondary pages share the practice screen's header and footer: the same Help, Feedback
+   and About buttons and the same forms and email links. */
+test("/build, /assignments and /notation carry the same header nav and footer forms as the practice screen", async () => {
+  for (const path of ["/build", "/assignments", "/notation"]) {
+    const html = (await (await render(path)).text()).replace(/<!-- -->/g, "");
+    const nav = html.match(/<nav class="workspace-actions" aria-label="Help and app information">[\s\S]*?<\/nav>/)?.[0] ?? "";
+    const buttons = [...nav.matchAll(/<button type="button" aria-label="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual(buttons, ["Help", "Feedback", "About"], `${path} has Help, Feedback and About`);
+    const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
+    assert.match(footer, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg\/viewform"[^>]*>Report a problem</, `${path} footer has the problem form`);
+    assert.match(footer, /href="mailto:feedback@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20feature%20request">Email feedback</, `${path} footer has the feedback email`);
+  }
+});
+
+test("the practice screen's settings help row has the guide and More apps, and no support links", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
+  const settingsHelp = html.match(/<nav class="setup-help"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  assert.ok(settingsHelp, "the settings help row is server-rendered");
+  assert.doesNotMatch(settingsHelp, /mailto:|docs\.google\.com/, "support links live in the footer and Feedback, not in settings");
+  assert.match(settingsHelp, />More apps</);
 });
