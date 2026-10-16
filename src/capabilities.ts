@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-16.1";
+export const COUNT_IT_BUILD = "2026-10-16.2";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -198,10 +198,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "to vary answer order use browser storage when available; browser settings may block it or " +
     "clearing site data may remove it. The optional assignment identifier is session-only and " +
     "never persisted. The assignments page reads the local tally to show how many times a step " +
-    "was finished on this device. Count It also loads Cloudflare Web Analytics and queries the " +
-    "shop's existing visit counter for site-traffic measurement; these requests do not carry " +
-    "practice answers or scores. The visit counter is progressive enhancement and its absence " +
-    "changes nothing.",
+    "was finished on this device. Count It also loads Cloudflare Web Analytics for site-traffic " +
+    "measurement; these requests do not carry practice answers or scores.",
   siblingApps: {
     "eight-time": "https://eight-time.backwerdrhythmshop.com/",
     "mallet-map": "https://mallet-map.backwerdrhythmshop.com/",
@@ -223,8 +221,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "Selectable counting profiles: Standard, Eastman (ti-te-ta), and Eastman variant (ta-te-ta). " +
       "Takadimi remains internal and is not selectable.",
     "Progress is device-local; no account, roster, or cross-device score sync. Site-traffic " +
-      "measurement uses Cloudflare Web Analytics and the shop's existing visit counter; neither " +
-      "receives practice answers or scores.",
+      "measurement uses Cloudflare Web Analytics; it never receives practice answers or scores.",
     "The assignment catalog, the builder and the notation reference are free and open: a named " +
       "assignment is a set of link settings anyone can rebuild, not a locked resource. A quiz " +
       "(guide hidden, answers held to the end, one attempt) is a knowledge check, not secure " +

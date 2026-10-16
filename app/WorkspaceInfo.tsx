@@ -3,16 +3,12 @@
 import { useEffect, useRef, type ReactNode, type MouseEvent } from "react";
 import { FeedbackIcon, HelpIcon, InfoIcon } from "./icons";
 
-/* `teachers` is a page worth one visible click from the practice screen, for an
-   audience that is not the student at the keyboard. Everything else a person might
-   look for lives in the Help, Feedback and About dialogs, which is right for links nobody
-   needs to find in a hurry and wrong for the one a teacher has to find at all. */
+/* Help, Feedback and About sit in one navigation, with the monogram after them. */
 // Each action shows its icon with its name. Below 600px the name is kept, visually
 // hidden, so the button still reads as Help, Feedback or About to a screen reader.
-export function WorkspaceActions({ teachers }: { teachers?: { href: string; label: string } }) {
+export function WorkspaceActions() {
   const open = (id: string) => (document.getElementById(id) as HTMLDialogElement | null)?.showModal();
   return <nav className="workspace-actions" aria-label="Help and app information">
-    {teachers && <a href={teachers.href}>{teachers.label}</a>}
     <button type="button" aria-label="Help" title="Help" onClick={() => open("workspace-help")}><HelpIcon /><span>Help</span></button>
     <button type="button" aria-label="Feedback" title="Send feedback" onClick={() => open("workspace-feedback")}><FeedbackIcon /><span>Feedback</span></button>
     <button type="button" aria-label="About" title="About" onClick={() => open("workspace-about")}><InfoIcon /><span>About</span></button>

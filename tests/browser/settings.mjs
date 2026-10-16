@@ -7,7 +7,7 @@ const eight = false;
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
 const errors = [];
 const context = await browser.newContext();
-await context.route(/cloudflareinsights|counter\.backwerdrhythmshop/, route => route.abort());
+await context.route(/cloudflareinsights/, route => route.abort());
 context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
 const page = await context.newPage();
 const toggle = () => page.locator(eight ? '#settings-toggle' : '.focus-toggle');

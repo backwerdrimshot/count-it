@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-16.1`
+- **Build:** `2026-10-16.2`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -55,7 +55,7 @@ Praxis Percussion Program integration now includes a director-led framing bridge
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
-- **Assignments page:** `/assignments` (one click from the practice screen, under **For teachers** beside Help, Feedback and About; the link shows from 480px wide, and below that a row under the header holds it, while the footer lists Assignments at every width) lists every published teaching-sequence step that runs here (and links the three that run in Eight Time) with Try it, Copy link, Customize in builder, and how many times this browser has finished each. Free and open.
+- **Assignments page:** `/assignments` (reached from the **About** dialog as **For teachers**, from a row under the header below 480px, and from the footer, which lists Assignments at every width) lists every published teaching-sequence step that runs here (and links the three that run in Eight Time) with Try it, Copy link, Customize in builder, and how many times this browser has finished each. Free and open.
 - **Notation reference:** `/notation` is a teacher's refresher on the clef, barlines, time signature, beams, rests and held notes, each with a live staff drawn by the same renderer the questions use.
 
 ### Assignment builder
@@ -301,10 +301,9 @@ off-device. Lightweight preferences, the personal best, a per-assignment attempt
 and an opaque random string used only to vary answer order use browser storage when
 available. Browser settings may block storage, and clearing site data may remove it.
 
-Count It loads a Cloudflare Web Analytics beacon from `app/layout.tsx` and uses the
-shop's existing visit counter, described below, for site-traffic measurement. These
-traffic requests do not carry practice answers or scores; answers and scores are not
-synced off-device. The Cloudflare beacon carries the same site token as the rest of
+Count It loads a Cloudflare Web Analytics beacon from `app/layout.tsx` for site-traffic
+measurement. Those requests do not carry practice answers or scores; answers and scores
+are not synced off-device. The Cloudflare beacon carries the same site token as the rest of
 backwerdrhythmshop.com so this app's page views land beside the page that describes it.
 The shop site's `/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
@@ -392,17 +391,6 @@ the whole thing locally without credentials.
 ## Design and provenance
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
-
-## Visit counter
-
-The footer shows a running visit count next to the build stamp. It comes from our own
-Cloudflare Worker at `counter.backwerdrhythmshop.com`, which stores exactly one thing:
-an integer per app. No IP, no user agent, no cookie, no timestamp — nothing tied to a
-visitor. Counted once per browser session; localhost and file:// only read the number
-so development never inflates it.
-
-It is progressive enhancement. If the endpoint is offline, blocked, or not yet
-deployed, the footer renders exactly as it did before and the app is unaffected.
 
 ## Follow
 

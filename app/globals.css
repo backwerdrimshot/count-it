@@ -2480,13 +2480,6 @@ header .brs-home { margin-left:4px; }
 
 @media (min-width:1000px) and (min-height:560px){.mode-wrap{min-height:calc(100dvh - var(--hdr))}}
 
-/* The "For teachers" link beside Help and About: it looks like the buttons next to it. */
-.workspace-actions a { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border:1px solid var(--line,var(--ink,#171717)); border-radius:8px; background:var(--card,var(--panel,var(--white,#fff))); color:var(--text,var(--ink,#171717)); font:600 1rem var(--body,system-ui); text-decoration:none; white-space:nowrap; }
-.workspace-actions a:hover { border-color: var(--forest-deep, #344d29); }
-.workspace-actions a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:700px) { .workspace-actions a {padding-inline:8px;font-size:.88rem;} }
-/* The full teacher link stays in the header where it fits; phones get a dedicated
-   entry below the header so the wordmark and Help/About controls keep their space. */
 .mobile-teacher-entry { display:none; }
 .mobile-teacher-entry a {
   display:flex;
@@ -2504,7 +2497,6 @@ header .brs-home { margin-left:4px; }
 }
 .mobile-teacher-entry a:hover { border-color:var(--forest-deep,#344d29); }
 .mobile-teacher-entry a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:479px) { .workspace-actions a { display:none; } }
 @media(max-width:479px) {
   .mobile-teacher-entry {
     display:flex;
@@ -2647,8 +2639,7 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
    caps at 1760px in column mode.
    ========================================================================== */
 
-.workspace-actions button span,
-.workspace-actions a { white-space: nowrap; }
+.workspace-actions button span { white-space: nowrap; }
 .workspace-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .workspace-actions svg { width: 18px; height: 18px; flex: none; }
 @media (max-width: 599px) {

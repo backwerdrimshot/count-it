@@ -1025,42 +1025,9 @@ function ChallengeMode({
   );
 }
 
-// Visit counter (progressive enhancement). Counts once per browser session via the
-// shared Backwerd counter Worker; dev machines only read, so local work never
-// inflates the number. Returns null until a real count arrives, so nothing renders
-// if the endpoint is offline, blocked, or not deployed yet.
-function useVisitCount(app: string) {
-  const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
-    const API = "https://counter.backwerdrhythmshop.com";
-    const dev = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)
-      || location.protocol === "file:";
-    let counted = false;
-    try { counted = sessionStorage.getItem("brs-counted") === "1"; } catch { /* private mode */ }
-
-    let live = true;
-    fetch(`${API}${dev || counted ? "/count" : "/hit"}?app=${app}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { count?: number } | null) => {
-        if (!live || !d || typeof d.count !== "number" || d.count < 1) return;
-        if (!dev) { try { sessionStorage.setItem("brs-counted", "1"); } catch { /* private mode */ } }
-        setCount(d.count);
-      })
-      .catch(() => { /* leave the footer exactly as it was */ });
-    return () => { live = false; };
-  }, [app]);
-  return count;
-}
-
-// Build stamp and visit count.
+// Build stamp. The shop no longer counts visits, so the stamp shows the build alone.
 function BuildStamp() {
-  const visits = useVisitCount("count-it");
-  return (
-    <span className="build-stamp">
-      Build {BUILD_ID}
-      {visits !== null && ` · ${visits.toLocaleString()} visit${visits === 1 ? "" : "s"}`}
-    </span>
-  );
+  return <span className="build-stamp">Build {BUILD_ID}</span>;
 }
 
 export default function CountItApp() {
@@ -1559,7 +1526,7 @@ export default function CountItApp() {
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
         </a>
         <p>Free percussion tools that teach.</p>
-        <WorkspaceActions teachers={{ href: "/assignments", label: "For teachers" }} />
+        <WorkspaceActions />
           <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brs-monogram.svg" alt="" width="28" height="28" />
@@ -1809,6 +1776,7 @@ export default function CountItApp() {
         <nav className="about-links" aria-label="More from Backwerd Rhythm Shop">
           <a className="text-action" href="https://apps.backwerdrhythmshop.com/">More apps</a>
           <a className="text-action" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
+          <a className="text-action" href="/assignments">For teachers</a>
         </nav>
         <p className="about-copyright">© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
       </WorkspaceInfo>

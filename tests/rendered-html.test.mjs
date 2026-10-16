@@ -114,15 +114,17 @@ test("the internal audit page navigates with a plain anchor", async () => {
   assert.match(html, /<a href="\/">Back to Count It<\/a>/);
 });
 
-test("the practice screen links teachers to the assignments page, beside Help and About", async () => {
-  /* The links to /assignments, /build and /notation also sit in the footer, which is
-     below the board, so a teacher on the main screen sees none of them without scrolling.
-     This one is in the page, in the same nav as the Help, Feedback and About buttons. */
-  const html = await (await render("/")).text();
+test("the practice screen links teachers from the About dialog, and the header holds only Help, Feedback and About", async () => {
+  /* For teachers moved out of the header into About, so the header nav holds the three buttons
+     and nothing else. The footer also lists Assignments and Build an assignment. */
+  const html = (await (await render("/")).text()).replace(/<!-- -->/g, "");
   const nav = html.match(/<nav class="workspace-actions"[\s\S]*?<\/nav>/)?.[0] ?? "";
-  assert.match(nav, /<a href="\/assignments">For teachers<\/a>/);
-  assert.match(nav, /<button type="button" aria-label="Help"[^>]*>[\s\S]*?<span>Help<\/span><\/button>/);
-  assert.match(nav, /<button type="button" aria-label="About"[^>]*>[\s\S]*?<span>About<\/span><\/button>/);
+  assert.deepEqual([...nav.matchAll(/<button type="button" aria-label="([^"]+)"/g)].map((m) => m[1]), ["Help", "Feedback", "About"]);
+  assert.doesNotMatch(nav, /For teachers/, "no teacher link in the header nav");
+  const about = html.match(/<dialog id="workspace-about"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.match(about, /<a class="text-action" href="\/assignments">For teachers<\/a>/, "For teachers is in About");
+  const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
+  assert.match(footer, /<a class="foot-btn" href="\/assignments"/, "the footer lists Assignments");
 });
 
 test("the free-practice screen includes a concise, profile-aware reading scaffold", async () => {
