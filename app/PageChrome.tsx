@@ -1,4 +1,5 @@
 import SupportLink from "./SupportLink";
+import { emailHref } from "../src/support-links";
 
 /* The header and footer the secondary pages (/build, /assignments) share.
  *
@@ -47,6 +48,7 @@ export function PageFooter({ page }: { page: PageName }) {
         <SupportLink kind="support" className="foot-btn">Report a problem</SupportLink>
         <SupportLink kind="feedback" className="foot-btn">Request a feature</SupportLink>
       </div>
+      <p><a className="shop-link" href={emailHref("support")}>Email support</a> · <a className="shop-link" href={emailHref("feedback")}>Email feedback</a></p>
       <p>© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
     </footer>
   );

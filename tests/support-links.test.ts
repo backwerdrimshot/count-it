@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   APP_NAME,
   FALLBACK_MAILTO,
+  SHOP_EMAIL,
   SHOP_FORMS,
+  emailHref,
   hasForm,
   requestBase,
   requestHref,
@@ -90,5 +92,31 @@ describe("the email fallback", () => {
     expect(requestHref("support", SETUP, badEntry)).toBe(FALLBACK_MAILTO.support);
 
     expect(FALLBACK_MAILTO.feedback).toMatch(/^mailto:feedback@backwerdrhythmshop\.com\?subject=/);
+  });
+});
+
+describe("the email links", () => {
+  it("name the shop's two addresses", () => {
+    expect(SHOP_EMAIL).toEqual({
+      support: "support@backwerdrhythmshop.com",
+      feedback: "feedback@backwerdrhythmshop.com",
+    });
+  });
+
+  it("carry the app name and the topic in the subject", () => {
+    const support = new URL(emailHref("support"));
+    expect(support.protocol).toBe("mailto:");
+    expect(support.pathname).toBe("support@backwerdrhythmshop.com");
+    expect(support.searchParams.get("subject")).toBe("Count It — problem report");
+
+    const feedback = new URL(emailHref("feedback"));
+    expect(feedback.protocol).toBe("mailto:");
+    expect(feedback.pathname).toBe("feedback@backwerdrhythmshop.com");
+    expect(feedback.searchParams.get("subject")).toBe("Count It — feature request");
+  });
+
+  it("are the same links the form falls back to, so the email path is always there", () => {
+    expect(FALLBACK_MAILTO.support).toBe(emailHref("support"));
+    expect(FALLBACK_MAILTO.feedback).toBe(emailHref("feedback"));
   });
 });

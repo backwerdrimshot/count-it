@@ -58,6 +58,15 @@ test("the served beacon carries nothing but its token", async () => {
 /* The pages other than the trainer. Each sets its own canonical, because the
    root layout names the trainer's, which would ask search engines to treat a
    second page as a duplicate of the first. */
+/* The email links are plain mailto anchors in the server-rendered page, so they
+   work with no JavaScript and exist whatever the forms are set to. */
+test("the practice footer carries the two plain email links", async () => {
+  const html = await (await render()).text();
+  const subject = (topic) => encodeURIComponent(`Count It — ${topic}`);
+  assert.match(html, new RegExp(`<a[^>]*href="mailto:support@backwerdrhythmshop\\.com\\?subject=${subject("problem report")}"[^>]*>Email support</a>`));
+  assert.match(html, new RegExp(`<a[^>]*href="mailto:feedback@backwerdrhythmshop\\.com\\?subject=${subject("feature request")}"[^>]*>Email feedback</a>`));
+});
+
 test("/build serves its own title and canonical", async () => {
   const response = await render("/build");
   assert.equal(response.status, 200);

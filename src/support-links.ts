@@ -35,10 +35,22 @@ export const SHOP_FORMS: Record<RequestKind, RequestForm | null> = {
   },
 };
 
+/** The shop's email address for each kind of request. */
+export const SHOP_EMAIL: Record<RequestKind, string> = {
+  support: "support@backwerdrhythmshop.com",
+  feedback: "feedback@backwerdrhythmshop.com",
+};
+
+/** A plain mailto link for a kind of request, with the app name in the subject. */
+export function emailHref(kind: RequestKind): string {
+  const topic = kind === "support" ? "problem report" : "feature request";
+  return `mailto:${SHOP_EMAIL[kind]}?subject=${encodeURIComponent(`${APP_NAME} — ${topic}`)}`;
+}
+
 /** The email address each kind of request goes to when its form is not set. */
 export const FALLBACK_MAILTO: Record<RequestKind, string> = {
-  support: `mailto:support@backwerdrhythmshop.com?subject=${encodeURIComponent(`${APP_NAME} — Support request`)}`,
-  feedback: `mailto:feedback@backwerdrhythmshop.com?subject=${encodeURIComponent(`${APP_NAME} — Feature request`)}`,
+  support: emailHref("support"),
+  feedback: emailHref("feedback"),
 };
 
 /** Only a Google Forms address and entry fields may be pre-filled. */
