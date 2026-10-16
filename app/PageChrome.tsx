@@ -1,3 +1,5 @@
+import SupportLink from "./SupportLink";
+
 /* The header and footer the secondary pages (/build, /assignments) share.
  *
  * Plain anchors, not next/link: under this vinext build next/link logs an RSC
@@ -24,7 +26,7 @@ export function PageHeader() {
 
 export type PageName = "build" | "assignments" | "notation";
 
-export function PageFooter({ page, feedbackSubject }: { page: PageName; feedbackSubject: string }) {
+export function PageFooter({ page }: { page: PageName }) {
   return (
     <footer className="site-footer">
       <div><strong>Count It.</strong><span>by <a className="shop-link" href="https://backwerdrhythmshop.com">Backwerd Rhythm Shop</a></span></div>
@@ -42,7 +44,8 @@ export function PageFooter({ page, feedbackSubject }: { page: PageName; feedback
         )}
         <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
         <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
-        <a className="foot-btn" href={`mailto:feedback@backwerdrhythmshop.com?subject=${encodeURIComponent(feedbackSubject)}`}>Send feedback</a>
+        <SupportLink kind="support" className="foot-btn">Report a problem</SupportLink>
+        <SupportLink kind="feedback" className="foot-btn">Request a feature</SupportLink>
       </div>
       <p>© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
     </footer>

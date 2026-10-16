@@ -165,7 +165,7 @@ export default function AssignmentCatalog() {
         </p>
       </main>
 
-      <PageFooter page="assignments" feedbackSubject="Count It — Assignments feedback" />
+      <PageFooter page="assignments" />
     </div>
   );
 }

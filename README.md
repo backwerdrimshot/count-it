@@ -386,10 +386,8 @@ the whole thing locally without credentials.
 
 ## Support and feedback
 
-- **Report a problem** emails `support@backwerdrhythmshop.com`.
-- **Request a feature** emails `feedback@backwerdrhythmshop.com`.
-- Both controls are available in the app footer and prefill the app name, build,
-  page URL, and browser details to make follow-up easier.
+- **Report a problem** and **Request a feature** open the shop's forms in a new tab, from the app footer and the Help and settings panels. Each form is pre-filled with the app name, the page URL, its settings and the build.
+- If a form is not set up, the same links fall back to email: `support@backwerdrhythmshop.com` for problems and `feedback@backwerdrhythmshop.com` for feature requests.
 
 ## Design and provenance
 

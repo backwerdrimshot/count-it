@@ -562,7 +562,7 @@ export default function AssignmentBuilder() {
         </div>
       </main>
 
-      <PageFooter page="build" feedbackSubject="Count It — Assignment builder feedback" />
+      <PageFooter page="build" />
     </div>
   );
 }

@@ -228,7 +228,7 @@ export default function NotationPage() {
         </p>
       </main>
 
-      <PageFooter page="notation" feedbackSubject="Count It — Notation reference feedback" />
+      <PageFooter page="notation" />
     </div>
   );
 }
