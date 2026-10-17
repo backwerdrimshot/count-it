@@ -2814,3 +2814,13 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .round-timer.is-over strong { font-style: italic; }
 .builder-time { margin-top: 14px; }
 .builder-time > span small { font-weight: 400; opacity: 0.75; }
+
+/* Badges: a small shelf on the history page and one line on a result card.
+   Theme colours only, so both stay readable in dark mode. */
+.result-earned { margin:16px auto 0; max-width:420px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:0.9rem; text-align:left; }
+.badge-shelf { margin:16px 0; padding:20px; border:1px solid var(--line); border-radius:14px; }
+.badge-shelf ul { list-style:none; padding:0; margin:12px 0; display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.badge-shelf li { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px dashed var(--line); border-radius:var(--radius-sm); }
+.badge-shelf li.is-earned { border-style:solid; }
+.badge-mark { font-size:1.2rem; line-height:1.2; }
+.badge-status, .badge-note { font-size:0.85rem; }

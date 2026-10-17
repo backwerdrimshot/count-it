@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-17.1`
+- **Build:** `2026-10-17.3`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -40,6 +40,7 @@ documentation.
 - **Listen to rhythm** provides synthesized playback, 40–200 BPM, a count-in, optional beat pulse and a cursor. Playback starts only after a click and stops on Stop, a prompt change or navigation. Scored assignments withhold playback; answer scores remain untimed.
 - **Rhythm workshop** (`/workshop`) is unscored practice for triplets, ties across beats, dotted spanning values, syncopation and explicit grouping (including 3+2 vs 2+3 in 5/4). It uses the same notation/guide/playback renderer. Triplets explicitly use `1 trip let` in all profiles; this is a workshop convention, not a claim about Eastman triplet syllables. The new material is not added to assignment cell IDs or the cumulative levels.
 - **Practice history** (`/history`) keeps the last 50 completed challenge summaries on-device, including conditions, attempts and rhythms to revisit, without names/class IDs. Current results and history cards download as PNG. Scores are not sent anywhere automatically.
+- **Badges and a practice streak** are earned only from finished rounds and kept on this device beside the history (no names). Eight badges: First Count (finish a round), Clean Round (all correct, 5+ questions, first time through), Steady Counter (80%+ in 3 rounds), No Guide Needed (80%+ with the guide hidden), Whole Measures (80%+ on whole-measure questions), Meter Explorer (80%+ in 3 meters), Goal Met (reach an assignment's goal, 5+ questions, first time through) and Three Days Running (finish a round on 3 days in a row). Score badges need 5+ questions and skip replays of a set whose answers were shown (including an assignment reloaded after an attempt); No Guide Needed requires the guide to stay hidden for the whole round. The current streak and the longest streak keep counting past the 120 stored days. The shelf is on `/history`; a result card adds one line when a badge is new or the streak is 2+ days. Badges never change scores, goals or copied summaries.
 
 Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
 
