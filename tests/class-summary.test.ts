@@ -116,6 +116,7 @@ describe("the CSV files", () => {
     const lines = result.csv.trim().split("\r\n");
     expect(lines[0]).toBe("Student,ID,SIS User ID,SIS Login ID,Section,Step 2");
     expect(lines).toContain("4b-07,,,,,11");
+    expect(result.csv).not.toContain("%");
     expect(lines).toContain(`"'=HYPERLINK(""x"")",,,,,10`);
     expect(result).toMatchObject({ included: 2, skipped: { noStudent: 1, codeFailed: 1, duplicates: 1, otherAssignment: 0 } });
   });
@@ -138,14 +139,15 @@ describe("the CSV files", () => {
     );
     expect(edited[0]).toMatchObject({ status: "valid", percent: 75 });
     const result = canvasCsv(edited, { column: "Step 2", score: "percent", onlyChecked: true, assignment: "Step 2" });
-    expect(result.csv).toContain("Ana,,,,,75");
+    expect(result.csv).toContain("Ana,,,,,75%");
   });
 
-  it("can hold percents, and can include unchecked rows when asked", () => {
+  it("writes percents with the sign, and can include unchecked rows when asked", () => {
     const result = canvasCsv(rows, { column: "", score: "percent", onlyChecked: false, assignment: "Step 2" });
     expect(result.csv.split("\r\n")[0]).toBe("Student,ID,SIS User ID,SIS Login ID,Section,Assignment");
-    expect(result.csv).toContain("Ana,,,,,100");
-    expect(result.csv).toContain("4b-07,,,,,92");
+    expect(result.csv).toContain("Ana,,,,,100%");
+    expect(result.csv).toContain("4b-07,,,,,92%");
+    expect(result.csv).not.toMatch(/,,,,,\d+\r\n/);
   });
 
   it("writes the whole table, with Time only when a summary has one", () => {
