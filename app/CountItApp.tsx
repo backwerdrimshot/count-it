@@ -67,6 +67,7 @@ import {
 import { copyTextOrFallback } from "../src/copy-text";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 import { readAttempts, writeAttempts } from "../src/attempt-tally";
+import { hintFor, hintsTicketLine } from "../src/hints";
 import { elapsedSeconds, timeResultText, timeTicketLine, timerAnnouncement, timerDisplay } from "../src/time-limit";
 
 type AppMode = "practice" | "challenge";
@@ -696,6 +697,8 @@ function ChallengeMode({
   holdFeedback,
   attempt,
   retryPolicy,
+  hinted,
+  onHint,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -723,6 +726,10 @@ function ChallengeMode({
   attempt: number;
   /** What the retry control offers, and whether it exists at all. */
   retryPolicy: RetryPolicy;
+  /** The questions of this round a hint was shown for. Null when the link did
+   *  not turn hints on: then there is no Hint button and no hints line. */
+  hinted: ReadonlySet<string> | null;
+  onHint: (questionId: string) => void;
   onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
@@ -798,6 +805,7 @@ function ChallengeMode({
       finishedAt: stamped,
       attempt,
       ...(timing ? { timing } : {}),
+      ...(hinted ? { hintsUsed: hinted.size } : {}),
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
@@ -821,6 +829,7 @@ function ChallengeMode({
       attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
       timing ? timeTicketLine(timing.elapsedSeconds, timing.limitMinutes) : null,
+      hinted ? hintsTicketLine(hinted.size) : null,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
       missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
       scope === "measure" && missedQuestionCount > 0
@@ -859,6 +868,10 @@ function ChallengeMode({
             // Recorded, not enforced: the round was finished either way, and
             // the teacher reads the time beside the score.
             <div><dt>Time</dt><dd>{timeResultText(timing.elapsedSeconds, timing.limitMinutes)}</dd></div>
+          )}
+          {hinted && (
+            // Beside the score, not in it: a right answer after a tip counts.
+            <div><dt>Hints used</dt><dd>{hinted.size}</dd></div>
           )}
         </dl>
         {missedLabels.length > 0 && (
@@ -982,6 +995,7 @@ function ChallengeMode({
   const response = getCurrentResponse(session);
   const selected = question.choices.find((choice) => choice.id === response?.choiceId);
   const accuracy = getAccuracy(session);
+  const hintShown = Boolean(hinted?.has(question.id));
   return (
     <section className="trainer-card challenge-card" aria-labelledby="challenge-title">
       <div className="challenge-progress">
@@ -1007,6 +1021,26 @@ function ChallengeMode({
           <h2 id="challenge-title" tabIndex={-1} ref={questionHeading}>Which count matches this rhythm?</h2>
         </div>
       </div>
+      {hinted && (
+        /* One tip per question, on request. The tip lives in a polite live
+           region that is always on the page, so a screen reader hears it when
+           it appears; pressing again, or after answering, uses no second hint. */
+        <div className="hint-row">
+          <button
+            type="button"
+            className="secondary-button hint-button"
+            aria-expanded={hintShown}
+            aria-controls="hint-text"
+            disabled={Boolean(response) || hintShown}
+            onClick={() => onHint(question.id)}
+          >
+            Hint
+          </button>
+          <p id="hint-text" className="hint-text" aria-live="polite">
+            {hintShown ? hintFor(question.prompt, system) : ""}
+          </p>
+        </div>
+      )}
       <div className="notation-panel">
         <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} revealed={Boolean(response) && !holdFeedback} playback={!assignment} />
       </div>
@@ -1178,9 +1212,17 @@ export default function CountItApp() {
   /** When the current run of a time-limited round was first shown. Null with no
    *  limit, and between runs; set by the effect below, never during a render. */
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  /** Which questions a hint was shown for, tied to the run it was asked in: the
+   *  attempt and the questions. A retry or a new round starts again at zero
+   *  without every place that builds a round resetting it, while a name typed
+   *  before the first answer (which only reorders the choices) keeps the count. */
+  const [hintLog, setHintLog] = useState<{ readonly run: string; readonly ids: ReadonlySet<string> }>(
+    () => ({ run: "", ids: new Set() }),
+  );
   /** Which run of this round the student is on. Reset by anything that builds a
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
+  const hintRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
   const [deviceVariant, setDeviceVariant] = useState("");
   /** The assignment's canonical link, used to key its attempt tally. */
   const [attemptKey, setAttemptKey] = useState("");
@@ -1853,6 +1895,11 @@ export default function CountItApp() {
                 holdFeedback={holdFeedback}
                 attempt={attempt}
                 retryPolicy={retryPolicy}
+                hinted={assignment?.hints ? (hintLog.run === hintRun ? hintLog.ids : new Set()) : null}
+                onHint={(questionId) => setHintLog((current) => ({
+                  run: hintRun,
+                  ids: new Set([...(current.run === hintRun ? current.ids : []), questionId]),
+                }))}
                 onStudentIdChange={changeStudentId}
                 onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
                 onAdvance={advanceChallenge}

@@ -2,7 +2,7 @@
   "schemaVersion": "1.1.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-10-17",
+  "version": "2026-10-17.2",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
@@ -24,6 +24,7 @@
     "n",
     "pass",
     "time",
+    "hints",
     "seed",
     "sys"
   ],
@@ -38,11 +39,12 @@
     "n",
     "pass",
     "time",
+    "hints",
     "seed",
     "sys"
   ],
-  "assignmentLink": "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, 3/4, 4/4, 5/4 or 7/4, `guide` fixes the subdivision-guide policy, `fb` chooses whether the correct answer appears after each question or only at the end, `retry` chooses what trying again means, `n` and `pass` set the length and the goal, `time` sets an optional time limit in whole minutes (recorded on the card against the limit, never enforced), and `seed` makes every student's questions identical. `level` is a shorthand for a cumulative vocabulary and is superseded when `cells` is present. `a` is a display name and `sys` pins one of the versioned counting profiles.",
-  "assignmentValidation": "Rejects loudly and never repairs: an unknown rhythm id, fewer than 2 rhythms after duplicates collapse, a question count outside 1–20, a pass mark the round cannot reach (measured against the round's real length, 5 when the link sets none), a full-measure round longer than the pool can fill without repeating, a meter this app does not read, a rhythm too long for the named meter's measure (a whole note in 2/4 or 3/4), a time limit outside 1–60 whole minutes, an unrecognized feedback or retry setting, or a counting profile this app does not support each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm missing teaches a different step, so dropping one silently would produce evidence for an assignment nobody set.",
+  "assignmentLink": "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, 3/4, 4/4, 5/4 or 7/4, `guide` fixes the subdivision-guide policy, `fb` chooses whether the correct answer appears after each question or only at the end, `retry` chooses what trying again means, `n` and `pass` set the length and the goal, `time` sets an optional time limit in whole minutes (recorded on the card against the limit, never enforced), `hints=on` offers one tip per question on request (the card counts the hints used), and `seed` makes every student's questions identical. `level` is a shorthand for a cumulative vocabulary and is superseded when `cells` is present. `a` is a display name and `sys` pins one of the versioned counting profiles.",
+  "assignmentValidation": "Rejects loudly and never repairs: an unknown rhythm id, fewer than 2 rhythms after duplicates collapse, a question count outside 1–20, a pass mark the round cannot reach (measured against the round's real length, 5 when the link sets none), a full-measure round longer than the pool can fill without repeating, a meter this app does not read, a rhythm too long for the named meter's measure (a whole note in 2/4 or 3/4), a time limit outside 1–60 whole minutes, a `hints` value other than on or off, an unrecognized feedback or retry setting, or a counting profile this app does not support each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm missing teaches a different step, so dropping one silently would produce evidence for an assignment nobody set.",
   "roundLengthRule": "A full-measure round never repeats a measure, so a pool of k ONE-BEAT rhythms can fill at most k^(beats per bar) questions: two rhythms make 4 in 2/4, 8 in 3/4, 16 in 4/4, 32 in 5/4 and 128 in 7/4. A pool holding a whole or half note makes FEWER, because one cell fills several beats, and the ceiling is computed from the pool's real spans rather than from its size. Asking for more is refused at the link rather than while the round is being built — the shape of failure that let a banner state one assignment while the student answered another.",
   "rhythmCellIds": [
     "quarter",
@@ -172,7 +174,7 @@
   "skillVocabularyStatus": "Not yet reconciled. Candidate ids exist in the Sequence 2 draft but the vocabulary is an owner decision, and an invented id would be a contract no one agreed to. Until it is settled this app emits no skill ids.",
   "resultSchemaVersion": "praxis.result.v0_1",
   "resultSchemaStatus": "Adopted 2026-08-08, last of the three apps, after Scale Trail and Mallet Map. This app had no result object at all — the card was assembled inline — so the envelope was built rather than renamed. `skillReferences` is null and says so: the field is nullable across the family precisely so an app with no reconciled vocabulary can decline rather than invent ids. `activity.contentVersion` is null because questions are generated from the conditions and a seed, which already reproduce the round. In measure scope a miss is attributed to every cell in the measure, because the question is answered as a whole — the finest attribution the format allows, not a claim that all four were misread. Emitting the shape does not send this result; site-traffic measurement is separate.",
-  "supportDimensions": "The subdivision guide is a support, not a preference: an assignment pins it, and a gate counts the assignment's policy rather than the learner's own toggle. Question size (one beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. Playback has a tempo control; scored answers remain untimed. A link may set a time limit: the student sees a calm countdown that runs on into overtime rather than stopping the round, and the card reports the time taken against the limit beside the score, never in it.",
+  "supportDimensions": "The subdivision guide is a support, not a preference: an assignment pins it, and a gate counts the assignment's policy rather than the learner's own toggle. Question size (one beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. Playback has a tempo control; scored answers remain untimed. A link may set a time limit: the student sees a calm countdown that runs on into overtime rather than stopping the round, and the card reports the time taken against the limit beside the score, never in it. A link may turn hints on: each question then has a Hint button that shows one tip on how the beat divides, never the answer; a right answer after a hint still scores, and the card, the copied summary and the verification code carry how many hints were used.",
   "integrityMeasures": "An assigned round varies the ORDER of the answer choices per student, from the seed plus an identifier, so the questions stay identical and comparable while a posted answer key does not transfer. Attempts are counted and reported on the card, in the copied summary and in the verification code, because a replay of an already-answered round is a different fact than a first attempt. Attempts are counted per assignment in browser storage, so the count survives a reload rather than resetting with the page. `fb=end` withholds the correct answer, the running score and the guide's highlighting until the round is over. `retry=reseed` gives a retake the same conditions on new questions, seeded from the link's own seed plus the attempt number so a teacher can regenerate any attempt; `retry=off` withdraws the retry control. Practice mode is closed while an assigned round is unfinished, since it reveals counts for the same vocabulary. None of this makes a score proof: the app has no accounts, `retry=off` cannot stop a page reload — it reports the further attempt rather than preventing it, which is the same posture this app takes toward a pass mark — and the verification code remains a deterrent rather than a signature.",
   "accessibility": [
     "keyboard-operation",

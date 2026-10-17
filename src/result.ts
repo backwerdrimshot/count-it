@@ -207,6 +207,7 @@ export function createPraxisEvidenceResult(options: {
        adding an outcome field would change the shape shared with the sibling
        apps, which is the family's decision rather than this file's. */
     if (assignment.timeLimit !== null) settings.time = String(assignment.timeLimit);
+    if (assignment.hints) settings.hints = "on";
     if (assignment.seed) settings.seed = assignment.seed;
     if (assignment.systemPinned) settings.sys = assignment.system;
   }
