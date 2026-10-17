@@ -1857,6 +1857,29 @@ a:focus-visible,
 .result-assignment { margin: 6px 0 0; color: var(--ink); font-size: 0.95rem; }
 .result-submit { margin: 14px 0 0; color: var(--ink-soft); font-size: 0.82rem; }
 
+/* An assigned round's one hand-in button, and the other ways to keep a result
+   folded beneath it. The button is wider than its row-mates so it reads as the
+   thing to do; the fold uses the review panel's look so the card has one kind
+   of disclosure, not two. */
+.turn-in-button { min-width: min(100%, 260px); font-size: 1.05rem; }
+.result-more {
+  margin: 14px auto 0;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+.result-more > summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+.result-more > summary:focus-visible { outline: 3px solid var(--forest); outline-offset: -3px; }
+.result-more[open] > summary { border-bottom: 1px solid var(--line); }
+.result-more > .result-actions { padding: 14px 16px; }
+
 .result-code {
   display: grid;
   gap: 4px;
