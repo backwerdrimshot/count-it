@@ -259,6 +259,21 @@ function SetupControls({
      the round into a different one (a whole note in 3/4 is never asked; two
      rhythms in 2/4 make four bars, not twelve). The parser's own rule says
      which choices those are, so they are greyed out rather than offered. */
+  // Keep keyboard selection immediate across native select implementations.
+  // Only unmodified navigation keys are handled; Alt+Down still opens the OS
+  // picker. Read the rendered disabled options, so assignment guards also apply
+  // to keyboard navigation and Home/End cannot enter an unavailable choice.
+  function moveChoice<T extends string>(event: ReactKeyboardEvent<HTMLSelectElement>, choose: (value: T) => void) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.currentTarget.disabled) return;
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    const options = Array.from(event.currentTarget.options).filter(option => !option.disabled);
+    if (!options.length) return;
+    const index = options.findIndex(option => option.value === event.currentTarget.value);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+      : Math.max(0, Math.min(options.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
+    event.preventDefault();
+    if (options[next].value !== event.currentTarget.value) choose(options[next].value as T);
+  }
   const unavailable = assignment ? unavailableChoices(assignment, { scope, meter, level }) : null;
   const metersOut = !locked.has("meter") && unavailable !== null && Object.keys(unavailable.meters).length > 0;
   const scopesOut = !locked.has("scope") && unavailable !== null && Object.keys(unavailable.scopes).length > 0;
@@ -298,6 +313,7 @@ function SetupControls({
             value={level}
             disabled={locked.has("level")}
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
+            onKeyDown={(event) => moveChoice(event, onLevelChange)}
           >
             {LEVELS.map((option) => (
               <option key={option.id} value={option.id} disabled={Boolean(unavailable?.levels[option.id])} title={unavailable?.levels[option.id]}>
@@ -317,6 +333,7 @@ function SetupControls({
           value={meter}
           disabled={locked.has("meter")}
           onChange={(event) => onMeterChange(event.target.value as MeterId)}
+          onKeyDown={(event) => moveChoice(event, onMeterChange)}
         >
           {METER_IDS.map((id) => (
             <option key={id} value={id} disabled={Boolean(unavailable?.meters[id])} title={unavailable?.meters[id]}>
