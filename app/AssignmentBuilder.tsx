@@ -28,6 +28,12 @@ import {
 import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
 import { classroomShareUrl } from "../src/classroom-share";
+import { CATALOG_ENTRIES } from "../src/assignment/catalog";
+
+/* Where a teacher who wants 3/8 goes: the first Eight Time step on the
+   assignments page. Derived from the catalog so a renumbered step cannot
+   leave a dead anchor. */
+const EIGHT_TIME_ASSIGNMENTS = `/assignments#${CATALOG_ENTRIES.find((entry) => entry.app === "eight-time")?.id ?? ""}`;
 
 type VocabularyKind = Vocabulary["kind"];
 
@@ -228,6 +234,16 @@ export default function AssignmentBuilder() {
             the link gets the same questions under the same conditions, and the result card they copy out says
             what those conditions were. Nothing about a student is stored.
           </p>
+          {/* 3/8 is refused here by design (it lives in Eight Time), so a teacher
+              looking for it was left at a dead end. Eight Time has no builder of
+              its own; its published steps are on the assignments page with the
+              same Try it, Copy link and Classroom buttons, and that is where
+              this sends them. The card id is the catalog's own entry id. */}
+          <p className="builder-eight-time">
+            <strong>Teaching 3/8?</strong> Eighth-note beats run in our sibling app, Eight Time.{" "}
+            <a href={EIGHT_TIME_ASSIGNMENTS}>Build an Eight Time assignment</a> from one of its published 3/8 steps:
+            try it, copy its link or post it to Google Classroom.
+          </p>
         </div>
 
         <div className="builder-grid">
@@ -420,7 +436,10 @@ export default function AssignmentBuilder() {
                       <option key={option.id} value={option.id}>{option.label}</option>
                     ))}
                   </select>
-                  <small>The beat is a quarter note in every one.</small>
+                  <small>
+                    The beat is a quarter note in every one. For 3/8, use{" "}
+                    <a href={EIGHT_TIME_ASSIGNMENTS}>an Eight Time assignment</a>.
+                  </small>
                 </label>
               </div>
             </fieldset>

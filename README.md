@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-17`
+- **Build:** `2026-10-17.1`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -72,6 +72,12 @@ calls valid is therefore one the app accepts, and there is no second copy of the
 rules to drift from the first. `tests/builder.test.ts` enumerates every
 combination of the choices and requires each to be either refused with a message
 or playable end to end.
+
+**3/8 lives in Eight Time.** This builder refuses eighth-note-beat meters by
+design, so the top of `/build` (and the note under Meter) carries a **Build an
+Eight Time assignment** link to Eight Time's published 3/8 steps on
+`/assignments`, where each has Try it, Copy link and Post to Google Classroom.
+Eight Time has no builder of its own yet.
 
 Three decisions worth knowing:
 
