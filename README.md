@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-16.2`
+- **Build:** `2026-10-17`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -385,7 +385,7 @@ the whole thing locally without credentials.
 
 ## Support and feedback
 
-- **Report a problem** and **Request a feature** open the shop's forms in a new tab, from the app footer and the Feedback dialog. Each form is pre-filled with the app name, the page URL, its settings and the build.
+- **Report a problem** and **Request a feature** open the shop's forms in a new tab, from the app footer and the Feedback dialog, which also lists the email addresses. Each form is pre-filled with the app name, the page URL, its settings and the build.
 - If a form is not set up, the same links fall back to email: `support@backwerdrhythmshop.com` for problems and `feedback@backwerdrhythmshop.com` for feature requests.
 
 ## Design and provenance

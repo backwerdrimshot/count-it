@@ -58,13 +58,17 @@ test("the served beacon carries nothing but its token", async () => {
 /* The pages other than the trainer. Each sets its own canonical, because the
    root layout names the trainer's, which would ask search engines to treat a
    second page as a duplicate of the first. */
-/* The email links are plain mailto anchors in the server-rendered page, so they
-   work with no JavaScript and exist whatever the forms are set to. */
-test("the practice footer carries the two plain email links", async () => {
-  const html = await (await render()).text();
+/* The email addresses are plain mailto anchors in the Feedback dialog, so they work with no
+   JavaScript. The footer shows only the two forms, so it carries no mailto link. */
+test("the Feedback dialog carries the two plain email links, and the footer carries none", async () => {
+  const html = (await (await render()).text()).replace(/<!-- -->/g, "");
   const subject = (topic) => encodeURIComponent(`Count It — ${topic}`);
-  assert.match(html, new RegExp(`<a[^>]*href="mailto:support@backwerdrhythmshop\\.com\\?subject=${subject("problem report")}"[^>]*>Email support</a>`));
-  assert.match(html, new RegExp(`<a[^>]*href="mailto:feedback@backwerdrhythmshop\\.com\\?subject=${subject("feature request")}"[^>]*>Email feedback</a>`));
+  const feedback = html.match(/<dialog id="workspace-feedback"[\s\S]*?<\/dialog>/)?.[0] ?? "";
+  assert.match(feedback, new RegExp(`<a[^>]*href="mailto:support@backwerdrhythmshop\\.com\\?subject=${subject("problem report")}"[^>]*>Email support</a>`));
+  assert.match(feedback, new RegExp(`<a[^>]*href="mailto:feedback@backwerdrhythmshop\\.com\\?subject=${subject("feature request")}"[^>]*>Email feedback</a>`));
+  const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
+  assert.ok(footer, "the footer is server-rendered");
+  assert.doesNotMatch(footer, /mailto:/, "the footer shows only the two forms");
 });
 
 test("/build serves its own title and canonical", async () => {
@@ -153,10 +157,10 @@ test("the header has Help, Feedback and About, then the monogram last", async ()
   assert.ok(header.indexOf("</nav>") < header.indexOf('class="brs-home"'), "the monogram comes after the nav");
 });
 
-/* The page footer, below the board: the social marks, then the two forms and two email
-   links with Guide and All free apps, then the copyright and build. It is a page footer,
+/* The page footer, below the board: the social marks, then the two forms with Guide and
+   All free apps, then the copyright and build. It is a page footer,
    not a block inside a dialog. */
-test("the footer carries the social marks, the forms, the emails, the guide and the copyright, in order", async () => {
+test("the footer carries the social marks, the two forms, the guide and the copyright, in order", async () => {
   const html = (await (await render()).text()).replace(/<!-- -->/g, "");
   const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
   assert.ok(footer, "the footer is server-rendered");
@@ -165,8 +169,6 @@ test("the footer carries the social marks, the forms, the emails, the guide and 
 
   const formSupport = 'href="https://docs.google.com/forms/d/e/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg/viewform"';
   const formFeedback = 'href="https://docs.google.com/forms/d/e/1FAIpQLSfP29vqlwt3UX1rbguiLEsR7t5ONZbEpuWoix0_7aDF2eMXDg/viewform"';
-  const emailSupport = 'href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20problem%20report"';
-  const emailFeedback = 'href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20feature%20request"';
   const guide = 'href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>';
   const allApps = 'href="https://apps.backwerdrhythmshop.com/">All free apps</a>';
   const copyright = "© 2026 Backwerd Rimshot, LLC. All rights reserved.";
@@ -177,8 +179,6 @@ test("the footer carries the social marks, the forms, the emails, the guide and 
     'aria-label="Backwerd Rhythm Shop on YouTube"',
     formSupport,
     formFeedback,
-    emailSupport,
-    emailFeedback,
     guide,
     allApps,
     copyright,
@@ -236,7 +236,7 @@ test("/build, /assignments and /notation carry the same header nav and footer fo
     assert.deepEqual(buttons, ["Help", "Feedback", "About"], `${path} has Help, Feedback and About`);
     const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
     assert.match(footer, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg\/viewform"[^>]*>Report a problem</, `${path} footer has the problem form`);
-    assert.match(footer, /href="mailto:feedback@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20feature%20request">Email feedback</, `${path} footer has the feedback email`);
+    assert.doesNotMatch(footer, /mailto:/, `${path} footer shows only the two forms`);
   }
 });
 

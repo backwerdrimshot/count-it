@@ -1791,8 +1791,6 @@ export default function CountItApp() {
         <nav className="foot-links" aria-label="Count It links">
           <SupportLink kind="support" className="foot-btn">Report a problem</SupportLink>
           <SupportLink kind="feedback" className="foot-btn">Request a feature</SupportLink>
-          <a className="foot-btn" href={emailHref("support")}>Email support</a>
-          <a className="foot-btn" href={emailHref("feedback")}>Email feedback</a>
           <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
           {/* The app's own pages follow the shop links. A plain anchor: next/link throws on click in this vinext build. */}
