@@ -26,11 +26,11 @@ function download(name: string, text: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** The assignment most rows name, to start the Canvas column with. */
-function commonAssignment(rows: readonly ParsedSummary[]): string {
+/** Every assignment the pasted summaries name, most common first. */
+function assignmentsByCount(rows: readonly ParsedSummary[]): string[] {
   const counts = new Map<string, number>();
   for (const row of rows) if (row.assignment) counts.set(row.assignment, (counts.get(row.assignment) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
 }
 
 function fileName(base: string): string {
@@ -44,7 +44,12 @@ export default function ClassSummary() {
   const [onlyChecked, setOnlyChecked] = useState(true);
   const [notice, setNotice] = useState("");
   const rows = useMemo(() => parseSummaries(text), [text]);
-  const columnName = column ?? commonAssignment(rows);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const assignments = useMemo(() => assignmentsByCount(rows), [rows]);
+  /* The assignment whose results go in the Canvas column. Starts at the one most
+     summaries name; with none named, the practice rounds. */
+  const exported = chosen !== null && assignments.includes(chosen) ? chosen : (assignments[0] ?? null);
+  const columnName = column ?? exported ?? "";
   const withTime = rows.some((row) => row.time);
   const counts = useMemo(() => ({
     valid: rows.filter((row) => row.status === "valid").length,
@@ -52,9 +57,10 @@ export default function ClassSummary() {
   }), [rows]);
 
   function downloadCanvas() {
-    const result = canvasCsv(rows, { column: columnName, score, onlyChecked });
+    const result = canvasCsv(rows, { column: columnName, score, onlyChecked, assignment: exported });
     download(fileName(`canvas-${columnName}`), result.csv);
     const left = [
+      result.skipped.otherAssignment ? `${result.skipped.otherAssignment} for another assignment or practice` : "",
       result.skipped.codeFailed ? `${result.skipped.codeFailed} without a checked code` : "",
       result.skipped.noStudent ? `${result.skipped.noStudent} with no name or class ID` : "",
       result.skipped.duplicates ? `${result.skipped.duplicates} repeat results (best score kept)` : "",
@@ -160,6 +166,18 @@ export default function ClassSummary() {
                   pick the right student there. If the column name is not the name of a Canvas assignment, Canvas
                   offers to create a new one.
                 </p>
+                {assignments.length > 1 && (
+                  <label className="level-control">
+                    <span>Assignment to export</span>
+                    <select
+                      value={exported ?? ""}
+                      onChange={(event) => { setChosen(event.target.value); setColumn(null); }}
+                    >
+                      {assignments.map((name) => <option key={name} value={name}>{name}</option>)}
+                    </select>
+                    <small>These summaries name more than one assignment. The file holds one; download again for each.</small>
+                  </label>
+                )}
                 <label className="builder-field">
                   <span>Assignment column name (as it is in Canvas)</span>
                   <input type="text" value={columnName} onChange={(event) => setColumn(event.target.value)} />

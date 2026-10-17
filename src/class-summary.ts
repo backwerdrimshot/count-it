@@ -119,7 +119,10 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   const score = /^(\d+)\/(\d+)(?:\s*\((\d+)%\))?/.exec(fields.get("Score")?.trim() ?? "");
   const correct = score ? Number(score[1]) : null;
   const total = score ? Number(score[2]) : null;
-  const percent = score?.[3] !== undefined ? Number(score[3]) : correct !== null && total ? Math.round((correct / total) * 100) : null;
+  /* Always from the numbers the code covers, never from the "(92%)" text beside
+     them: that text is not in the code, so a copy that edited only it would
+     otherwise still say "Code checks" and export the edited percent. */
+  const percent = correct !== null && total ? Math.round((correct / total) * 100) : correct !== null ? 0 : null;
   const attemptRaw = fields.get("Attempt")?.trim();
   const attempt = attemptRaw && /^\d+$/.test(attemptRaw) ? Number(attemptRaw) : 1;
   const result = fields.get("Result")?.trim() ?? null;
@@ -222,7 +225,13 @@ export interface CanvasExport {
   readonly csv: string;
   readonly included: number;
   /** Rows left out, and why, so the page can say so. */
-  readonly skipped: { readonly noStudent: number; readonly codeFailed: number; readonly duplicates: number };
+  readonly skipped: {
+    readonly noStudent: number;
+    readonly codeFailed: number;
+    readonly duplicates: number;
+    /** Summaries for a different assignment (or practice) than the one exported. */
+    readonly otherAssignment: number;
+  };
 }
 
 /** Canvas's gradebook import layout: Student, ID, SIS User ID, Section, then
@@ -232,12 +241,21 @@ export interface CanvasExport {
  *  a student turned in more than one result, the best score is kept. */
 export function canvasCsv(
   rows: readonly ParsedSummary[],
-  options: { readonly column: string; readonly score: CanvasScore; readonly onlyChecked: boolean },
+  options: {
+    readonly column: string;
+    readonly score: CanvasScore;
+    readonly onlyChecked: boolean;
+    /** Which assignment's results go in the column; null for practice rounds.
+     *  Every other summary is left out, so one assignment's score can never
+     *  land in another assignment's column. */
+    readonly assignment: string | null;
+  },
 ): CanvasExport {
-  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0 };
+  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0, otherAssignment: 0 };
   const best = new Map<string, { name: string; score: number }>();
   for (const row of rows) {
     if (row.correct === null || row.total === null) continue;
+    if ((row.assignment ?? null) !== options.assignment) { skipped.otherAssignment += 1; continue; }
     if (options.onlyChecked && row.status !== "valid") { skipped.codeFailed += 1; continue; }
     const name = row.studentId.trim();
     if (!name) { skipped.noStudent += 1; continue; }

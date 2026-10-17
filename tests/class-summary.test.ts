@@ -102,16 +102,37 @@ describe("the CSV files", () => {
   ].join("\n"));
 
   it("writes Canvas's import layout with the student's own ID and blank Canvas IDs", () => {
-    const result = canvasCsv(rows, { column: "Step 2", score: "correct", onlyChecked: true });
+    const result = canvasCsv(rows, { column: "Step 2", score: "correct", onlyChecked: true, assignment: "Step 2" });
     const lines = result.csv.trim().split("\r\n");
     expect(lines[0]).toBe("Student,ID,SIS User ID,Section,Step 2");
     expect(lines).toContain("4b-07,,,,11");
     expect(lines).toContain(`"'=HYPERLINK(""x"")",,,,10`);
-    expect(result).toMatchObject({ included: 2, skipped: { noStudent: 1, codeFailed: 1, duplicates: 1 } });
+    expect(result).toMatchObject({ included: 2, skipped: { noStudent: 1, codeFailed: 1, duplicates: 1, otherAssignment: 0 } });
+  });
+
+  it("exports only the chosen assignment's results", () => {
+    const mixed = parseSummaries([
+      summary({ assignment: "Step 2", student: "Ana", correct: 6, total: 12 }),
+      summary({ assignment: "Step 3", student: "Ana", correct: 12, total: 12 }),
+      summary({ assignment: "Step 3", student: "Ben", correct: 10, total: 12 }),
+    ].join("\n"));
+    const result = canvasCsv(mixed, { column: "Step 2", score: "correct", onlyChecked: true, assignment: "Step 2" });
+    const lines = result.csv.trim().split("\r\n");
+    expect(lines).toEqual(["Student,ID,SIS User ID,Section,Step 2", "Ana,,,,6"]);
+    expect(result).toMatchObject({ included: 1, skipped: { otherAssignment: 2 } });
+  });
+
+  it("takes the percent from the checked score, not the text beside it", () => {
+    const edited = parseSummaries(
+      summary({ assignment: "Step 2", student: "Ana", correct: 9, total: 12 }).replace("(75%)", "(100%)"),
+    );
+    expect(edited[0]).toMatchObject({ status: "valid", percent: 75 });
+    const result = canvasCsv(edited, { column: "Step 2", score: "percent", onlyChecked: true, assignment: "Step 2" });
+    expect(result.csv).toContain("Ana,,,,75");
   });
 
   it("can hold percents, and can include unchecked rows when asked", () => {
-    const result = canvasCsv(rows, { column: "", score: "percent", onlyChecked: false });
+    const result = canvasCsv(rows, { column: "", score: "percent", onlyChecked: false, assignment: "Step 2" });
     expect(result.csv.split("\r\n")[0]).toBe("Student,ID,SIS User ID,Section,Assignment");
     expect(result.csv).toContain("Ana,,,,100");
     expect(result.csv).toContain("4b-07,,,,92");
