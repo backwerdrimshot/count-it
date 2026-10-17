@@ -2,17 +2,19 @@ import { describe, expect, it } from "vitest";
 import { verificationCode } from "../src/assignment";
 import { canvasCsv, csvCell, parseSummaries, stampLine, summaryCsv } from "../src/class-summary";
 import { timeTicketLine } from "../src/time-limit";
+import { hintsTicketLine } from "../src/hints";
 
 /* A summary laid out the way the result card writes it, with its real code. */
 function summary(options: {
   assignment?: string; student?: string; correct: number; total: number; attempt?: number;
-  at?: string; pass?: boolean; timing?: { elapsedSeconds: number; limitMinutes: number };
+  at?: string; pass?: boolean; timing?: { elapsedSeconds: number; limitMinutes: number }; hints?: number;
 }): string {
   const at = new Date(options.at ?? "2026-10-17T15:04:05.123Z");
   const code = verificationCode({
     assignment: options.assignment ?? "", studentId: options.student ?? "", correct: options.correct,
     total: options.total, finishedAt: at, attempt: options.attempt ?? 1,
     ...(options.timing ? { timing: options.timing } : {}),
+    ...(options.hints !== undefined ? { hintsUsed: options.hints } : {}),
   });
   return [
     "Count It — Choose the Count",
@@ -22,6 +24,7 @@ function summary(options: {
     (options.attempt ?? 1) > 1 ? `Attempt: ${options.attempt}` : null,
     "Conditions: Level 1 · one beat · 5 questions",
     options.timing ? timeTicketLine(options.timing.elapsedSeconds, options.timing.limitMinutes) : null,
+    options.hints !== undefined ? hintsTicketLine(options.hints) : null,
     options.pass === undefined ? null : `Result: ${options.pass ? "met the goal" : "not yet at the goal"}`,
     "Missed: quarter, eighths",
     `Finished: ${at.toLocaleString()}`,
@@ -31,6 +34,13 @@ function summary(options: {
 }
 
 describe("reading pasted summaries", () => {
+  it("checks the hints count on a summary from a hints-on assignment", () => {
+    const text = summary({ assignment: "Step 2", student: "Ana", correct: 10, total: 12, hints: 2 });
+    expect(parseSummaries(text)[0]).toMatchObject({ status: "valid", hintsUsed: 2 });
+    expect(parseSummaries(text.replace("Hints used: 2", "Hints used: 0"))[0].status).toBe("invalid");
+    expect(parseSummaries(text.replace("Hints used: 2\n", ""))[0].status).toBe("invalid");
+  });
+
   it("splits several summaries and reads every column", () => {
     const text = [
       summary({ assignment: "Step 2", student: "4B-07", correct: 11, total: 12, pass: true }),

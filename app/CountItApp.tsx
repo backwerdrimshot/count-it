@@ -7,6 +7,7 @@ import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePo
 import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
 import { stampLine } from '../src/class-summary';
+import { currentStreak, readBadges, recordRound, saveBadges, streakText } from '../src/badges';
 import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
@@ -68,9 +69,11 @@ import {
 import { copyTextOrFallback } from "../src/copy-text";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 import { readAttempts, writeAttempts } from "../src/attempt-tally";
+import { hintFor, hintsTicketLine } from "../src/hints";
 import { elapsedSeconds, timeResultText, timeTicketLine, timerAnnouncement, timerDisplay } from "../src/time-limit";
 
 type AppMode = "practice" | "challenge";
+interface BadgeNews { earned: string[]; streak: number }
 
 const SESSION_LENGTH = DEFAULT_QUESTIONS;
 const INITIAL_SEED = 20260715;
@@ -697,6 +700,9 @@ function ChallengeMode({
   holdFeedback,
   attempt,
   retryPolicy,
+  hinted,
+  onHint,
+  badgeNews,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -724,6 +730,13 @@ function ChallengeMode({
   attempt: number;
   /** What the retry control offers, and whether it exists at all. */
   retryPolicy: RetryPolicy;
+  /** The questions of this round a hint was shown for. Null when the link did
+   *  not turn hints on: then there is no Hint button and no hints line. */
+  hinted: ReadonlySet<string> | null;
+  onHint: (questionId: string) => void;
+  /** Badges this round newly earned and the streak it extends; null when
+   *  storage is unavailable or before the round is saved. Never in the summary. */
+  badgeNews: BadgeNews | null;
   onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
@@ -799,6 +812,7 @@ function ChallengeMode({
       finishedAt: stamped,
       attempt,
       ...(timing ? { timing } : {}),
+      ...(hinted ? { hintsUsed: hinted.size } : {}),
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
@@ -822,6 +836,7 @@ function ChallengeMode({
       attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
       timing ? timeTicketLine(timing.elapsedSeconds, timing.limitMinutes) : null,
+      hinted ? hintsTicketLine(hinted.size) : null,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
       missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
       scope === "measure" && missedQuestionCount > 0
@@ -833,6 +848,28 @@ function ChallengeMode({
       finishedAt ? stampLine(finishedAt) : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
+    const copySummary = async (turningIn: boolean) => {
+      setCopyFallback("");
+      const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
+      setCopyNotice(turningIn
+        ? copied
+          ? "Copied. Now paste it wherever your teacher asked."
+          : "Copy unavailable. Select the summary below, copy it and paste it wherever your teacher asked."
+        : copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
+    };
+    const saveButtons = (
+      <>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const copied = await copyResultImage(summary);
+          setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
+        }}>Copy result image</button>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const downloaded = await downloadResultImage(summary);
+          setCopyNotice(downloaded ? "PNG download started." : `PNG unavailable. Use ${assignment ? "Turn this in" : "Copy summary"} instead.`);
+        }}>Download PNG</button>
+        <a className="secondary-button" href="/history">Practice history</a>
+      </>
+    );
     return (
       <section className="trainer-card result-card" aria-labelledby="result-title">
         <div className="result-badge" aria-hidden="true"><span>{accuracy}%</span></div>
@@ -864,6 +901,10 @@ function ChallengeMode({
             // the teacher reads the time beside the score.
             <div><dt>Time</dt><dd>{timeResultText(timing.elapsedSeconds, timing.limitMinutes)}</dd></div>
           )}
+          {hinted && (
+            // Beside the score, not in it: a right answer after a tip counts.
+            <div><dt>Hints used</dt><dd>{hinted.size}</dd></div>
+          )}
         </dl>
         {missedLabels.length > 0 && (
           <p className="result-missed">
@@ -875,6 +916,12 @@ function ChallengeMode({
           <p className="result-missed">
             <strong>Measure questions to revisit</strong>
             <span>{missedQuestionCount}</span>
+          </p>
+        )}
+        {badgeNews && (badgeNews.earned.length > 0 || badgeNews.streak > 1) && (
+          <p className="result-earned">
+            {badgeNews.earned.length > 0 && <><strong>New badge{badgeNews.earned.length > 1 ? "s" : ""}:</strong> {badgeNews.earned.join(" · ")}. </>}
+            {badgeNews.streak > 1 && streakText(badgeNews.streak)}
           </p>
         )}
         {assignment && (
@@ -890,27 +937,22 @@ function ChallengeMode({
             />
           </label>
         )}
+        {/* An assigned round has one job left: get the result to the teacher.
+            So it gets one obvious button, which is the same copy-the-summary
+            hand-in as before under a name a student does not have to decode,
+            and the other ways to keep a result fold away below it. Practice
+            rounds keep their row of buttons exactly as it was. */}
         <div className="result-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={async () => {
-              setCopyFallback("");
-              const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
-              setCopyNotice(copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
-            }}
-          >
-            Copy summary
-          </button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const copied = await copyResultImage(summary);
-            setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
-          }}>Copy result image</button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const downloaded = await downloadResultImage(summary);
-            setCopyNotice(downloaded ? "PNG download started." : "PNG unavailable. Use Copy summary instead.");
-          }}>Download PNG</button>
-          <a className="secondary-button" href="/history">Practice history</a>
+          {assignment ? (
+            <button type="button" className="primary-button turn-in-button" onClick={() => copySummary(true)}>
+              Turn this in
+            </button>
+          ) : (
+            <button type="button" className="secondary-button" onClick={() => copySummary(false)}>
+              Copy summary
+            </button>
+          )}
+          {!assignment && saveButtons}
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
               would be a false one. */}
@@ -923,6 +965,12 @@ function ChallengeMode({
             <button type="button" className="primary-button" onClick={onNewSession}>New questions <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {assignment && (
+          <details className="result-more">
+            <summary>More ways to save this result</summary>
+            <div className="result-actions">{saveButtons}</div>
+          </details>
+        )}
         {!assignment && missedQuestions.length > 0 && (
           <FocusedQuestionPractice
             questions={missedQuestions}
@@ -941,7 +989,7 @@ function ChallengeMode({
           <p className="result-retry-note">This assignment asks for one attempt, so there is no retry here.</p>
         )}
         {assignment && (
-          <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
+          <p className="result-submit">Turn this in copies your result and its verification code. Paste it wherever your teacher asked.</p>
         )}
         {/* Every question, what they chose, and what it should have been. When
             feedback was held to the end this is where the round is learned
@@ -986,6 +1034,7 @@ function ChallengeMode({
   const response = getCurrentResponse(session);
   const selected = question.choices.find((choice) => choice.id === response?.choiceId);
   const accuracy = getAccuracy(session);
+  const hintShown = Boolean(hinted?.has(question.id));
   return (
     <section className="trainer-card challenge-card" aria-labelledby="challenge-title">
       <div className="challenge-progress">
@@ -1011,6 +1060,26 @@ function ChallengeMode({
           <h2 id="challenge-title" tabIndex={-1} ref={questionHeading}>Which count matches this rhythm?</h2>
         </div>
       </div>
+      {hinted && (
+        /* One tip per question, on request. The tip lives in a polite live
+           region that is always on the page, so a screen reader hears it when
+           it appears; pressing again, or after answering, uses no second hint. */
+        <div className="hint-row">
+          <button
+            type="button"
+            className="secondary-button hint-button"
+            aria-expanded={hintShown}
+            aria-controls="hint-text"
+            disabled={Boolean(response) || hintShown}
+            onClick={() => onHint(question.id)}
+          >
+            Hint
+          </button>
+          <p id="hint-text" className="hint-text" aria-live="polite">
+            {hintShown ? hintFor(question.prompt, system) : ""}
+          </p>
+        </div>
+      )}
       <div className="notation-panel">
         <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} revealed={Boolean(response) && !holdFeedback} playback={!assignment} />
       </div>
@@ -1162,6 +1231,16 @@ export default function CountItApp() {
     makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const savedHistorySession = useRef<ChallengeSession | null>(null);
+  /** The run (attempt and question ids) a reseed retry just built. Only that
+   *  run counts as fresh for badges after attempt 1: a reload rebuilds the
+   *  original seeded set, which the student has already seen answered. */
+  const reseededRun = useRef("");
+  /** Whether the counting guide was on screen at any point in the current run,
+   *  so switching it off just before the last answer does not count as a round
+   *  done without it. */
+  const guideUsed = useRef<{ run: string; used: boolean }>({ run: "", used: false });
+  /* What the round just finished earned, for one calm line on its card. */
+  const [badgeNews, setBadgeNews] = useState<(BadgeNews & { session: ChallengeSession }) | null>(null);
   const { protect, confirmation } = useRoundChangeGuard(session.status === "active" && session.responses.length > 0);
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
@@ -1182,9 +1261,17 @@ export default function CountItApp() {
   /** When the current run of a time-limited round was first shown. Null with no
    *  limit, and between runs; set by the effect below, never during a render. */
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  /** Which questions a hint was shown for, tied to the run it was asked in: the
+   *  attempt and the questions. A retry or a new round starts again at zero
+   *  without every place that builds a round resetting it, while a name typed
+   *  before the first answer (which only reorders the choices) keeps the count. */
+  const [hintLog, setHintLog] = useState<{ readonly run: string; readonly ids: ReadonlySet<string> }>(
+    () => ({ run: "", ids: new Set() }),
+  );
   /** Which run of this round the student is on. Reset by anything that builds a
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
+  const hintRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
   const [deviceVariant, setDeviceVariant] = useState("");
   /** The assignment's canonical link, used to key its attempt tally. */
   const [attemptKey, setAttemptKey] = useState("");
@@ -1425,6 +1512,13 @@ export default function CountItApp() {
   /* The clock for a time-limited round starts when the round is first on
      screen, and keeps running if the student renames themselves before their
      first answer (that rebuilds the round's answer order, not the attempt). */
+  const badgeRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
+  useEffect(() => {
+    if (mode !== "challenge" || session.status === "complete") return;
+    if (guideUsed.current.run !== badgeRun) guideUsed.current = { run: badgeRun, used: showReference };
+    else if (showReference) guideUsed.current.used = true;
+  }, [mode, session.status, badgeRun, showReference]);
+
   const timeLimit = assignment?.timeLimit ?? null;
   useEffect(() => {
     if (timeLimit === null || mode !== "challenge" || session.status !== "active" || startedAt !== null) return;
@@ -1448,6 +1542,17 @@ export default function CountItApp() {
         rhythms: [...new Set(session.questions.flatMap(q => q.prompt.cells.map(c => c.id)))],
         missed: [...new Set(getMissedQuestions(session).flatMap(q => q.prompt.cells.map(c => c.id)))],
         assignment: assignment?.name ?? null, attempt });
+      try {
+        const { state, earned } = recordRound(readBadges(localStorage), {
+          finishedAt: finished, score: session.score, total: session.questions.length, meter, scope,
+          guide: showReference || (guideUsed.current.run === badgeRun && guideUsed.current.used),
+          metGoal: assignment?.passing != null ? session.score >= assignment.passing : null,
+          fresh: attempt === 1 || (retryPolicy === "reseed" && reseededRun.current === badgeRun),
+        });
+        setBadgeNews(saveBadges(state, localStorage)
+          ? { session, earned: earned.map((badge) => badge.name), streak: currentStreak(state.days, finished) }
+          : null);
+      } catch { setBadgeNews(null); /* optional, like the history */ }
       }
       if (attemptKey) writeAttempts(attemptKey, attempt);
       setPersonalBests((current) => {
@@ -1460,7 +1565,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment]);
+  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment, retryPolicy, badgeRun]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -1598,7 +1703,7 @@ export default function CountItApp() {
     setAttempt(nextAttempt);
     setMode("challenge");
     if (retryPolicy === "reseed") {
-      setSession(makeSession({
+      const reseeded = makeSession({
         level,
         scope,
         meter,
@@ -1608,7 +1713,9 @@ export default function CountItApp() {
         count: sessionLength,
         ...(assignedCells ? { cells: assignedCells } : {}),
         ...(assignment && variant ? { variant } : {}),
-      }));
+      });
+      reseededRun.current = `${nextAttempt}|${reseeded.questions.map((question) => question.id).join(",")}`;
+      setSession(reseeded);
       return;
     }
     setSession((current) => resetSession(current));
@@ -1857,6 +1964,12 @@ export default function CountItApp() {
                 holdFeedback={holdFeedback}
                 attempt={attempt}
                 retryPolicy={retryPolicy}
+                hinted={assignment?.hints ? (hintLog.run === hintRun ? hintLog.ids : new Set()) : null}
+                onHint={(questionId) => setHintLog((current) => ({
+                  run: hintRun,
+                  ids: new Set([...(current.run === hintRun ? current.ids : []), questionId]),
+                }))}
+                badgeNews={badgeNews?.session === session ? badgeNews : null}
                 onStudentIdChange={changeStudentId}
                 onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
                 onAdvance={advanceChallenge}

@@ -50,6 +50,8 @@ export interface ParsedSummary {
   readonly metGoal: boolean | null;
   /** The ticket's own words, e.g. `4:12 (limit 5:00, within limit)`. */
   readonly time: string | null;
+  /** Hints asked for, when the assignment turned hints on; null otherwise. */
+  readonly hintsUsed: number | null;
   readonly finished: string | null;
   readonly code: string | null;
   readonly status: CodeStatus;
@@ -128,12 +130,14 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   const result = fields.get("Result")?.trim() ?? null;
   const metGoal = result === "met the goal" ? true : result === "not yet at the goal" ? false : null;
   const time = fields.get("Time")?.trim() || null;
+  const hintsRaw = fields.get("Hints used")?.trim();
+  const hintsUsed = hintsRaw !== undefined && /^\d+$/.test(hintsRaw) ? Number(hintsRaw) : null;
   const assignment = practice ? null : (fields.get("Assignment") ?? null);
   /* Exactly what the student typed, spaces included: the code was made from it. */
   const studentId = fields.get("Student") ?? "";
 
   const base = {
-    app, assignment, studentId, correct, total, percent, attempt, metGoal, time,
+    app, assignment, studentId, correct, total, percent, attempt, metGoal, time, hintsUsed,
     finished: fields.get("Finished")?.trim() || null, code,
   };
   if (!code) return { ...base, status: "missing" };
@@ -145,6 +149,7 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   }
   if (correct === null || total === null) return { ...base, status: "invalid" };
   if (attemptRaw !== undefined && !/^\d+$/.test(attemptRaw)) return { ...base, status: "invalid" };
+  if (hintsRaw !== undefined && hintsUsed === null) return { ...base, status: "invalid" };
 
   let timing: { elapsedSeconds: number; limitMinutes: number } | undefined;
   if (time) {
@@ -161,6 +166,9 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
     finishedAt,
     attempt,
     ...(timing ? { timing } : {}),
+    /* A "Hints used" line is written exactly when the link turned hints on,
+       and the code covers the count then, so it is checked the same way. */
+    ...(hintsUsed !== null ? { hintsUsed } : {}),
   });
   /* `BRS-XX-yyMMdd-percent-digest`. Everything but the date must match
      exactly; the date may be the student's local date instead of ours. */

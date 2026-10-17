@@ -150,6 +150,7 @@ export interface AssignmentError {
     | "retry"
     | "measure-pool"
     | "time"
+    | "hints"
     /** Raised by the app, not the parser: a round that refused to build for a
      *  reason validation did not anticipate. The link is still rejected whole. */
     | "round";
@@ -182,6 +183,10 @@ export interface Assignment {
    *  which means no countdown at all — every link written before this existed.
    *  Recorded on the card, never enforced. */
   readonly timeLimit: number | null;
+  /** True only when the link said `hints=on`: each question then offers one
+   *  tip on request, and the card counts the hints used. Off for every link
+   *  written before hints existed, and for `hints=off`. */
+  readonly hints: boolean;
   readonly seed: string | null;
   readonly system: CountingSystemParam;
   /** True only when the URL explicitly chose `sys`; links without it remain Standard. */
@@ -633,6 +638,24 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("time");
   }
 
+  /* Hints. Only `on` turns them on; `off` says what the default already is. Any
+     other value is refused like every other setting here, so a typo cannot
+     quietly hand out tips the teacher did not mean to, or withhold ones they did. */
+  const hintsRaw = params.get("hints");
+  if (hintsRaw !== null && hintsRaw !== "on" && hintsRaw !== "off") {
+    return {
+      ok: false,
+      error: {
+        code: "hints",
+        entry: hintsRaw,
+        message:
+          `This practice link sets hints to \u201c${hintsRaw}\u201d. Hints are either \u201con\u201d or \u201coff\u201d.`,
+      },
+    };
+  }
+  const hints = hintsRaw === "on";
+  if (hints) locked.push("hints");
+
   const seedRaw = params.get("seed");
   const seed = seedRaw !== null && /^[\w-]{1,32}$/.test(seedRaw) ? seedRaw : null;
   if (seed) locked.push("seed");
@@ -654,6 +677,7 @@ export function parseAssignment(search: string): AssignmentResult {
       count,
       passing,
       timeLimit,
+      hints,
       seed,
       system: system as CountingProfileId,
       systemPinned: systemRaw !== null,
@@ -706,6 +730,7 @@ export function serializeAssignment(assignment: Assignment): string {
   if (assignment.count !== null) parts.push(`n=${assignment.count}`);
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
   if (assignment.timeLimit !== null) parts.push(`time=${assignment.timeLimit}`);
+  if (assignment.hints) parts.push("hints=on");
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
   if (assignment.systemPinned) parts.push(`sys=${assignment.system}`);
   return parts.length ? `?${parts.join("&")}` : "";
@@ -738,6 +763,7 @@ export function describeAssignment(assignment: Assignment): string {
   if (assignment.count !== null) parts.push(`${assignment.count} questions`);
   if (assignment.passing !== null) parts.push(`pass at ${assignment.passing}`);
   if (assignment.timeLimit !== null) parts.push(`${assignment.timeLimit}-minute time limit`);
+  if (assignment.hints) parts.push("hints on request");
   return parts.join(" · ");
 }
 
@@ -773,6 +799,10 @@ export interface VerificationInput {
    *  card cannot claim a different time — or a different limit — than the one
    *  its code was made for. Absent, the code is exactly what it always was. */
   readonly timing?: { readonly elapsedSeconds: number; readonly limitMinutes: number };
+  /** Only when the link turned hints on: how many questions the student asked
+   *  a hint for. In the code, so a card cannot claim fewer than it used.
+   *  Absent, the code is exactly what it always was. */
+  readonly hintsUsed?: number;
 }
 
 function twoDigit(value: number): string {
@@ -788,6 +818,7 @@ export function verificationCode({
   finishedAt,
   attempt = 1,
   timing,
+  hintsUsed,
 }: VerificationInput): string {
   const percent = total === 0 ? 0 : Math.round((correct / total) * 100);
   const stamp =
@@ -796,7 +827,8 @@ export function verificationCode({
     twoDigit(finishedAt.getDate());
   const digest = fnv1a(
     `count-it|${assignment}|${studentId}|${correct}/${total}|#${attempt}|${finishedAt.toISOString()}` +
-      (timing ? `|t${Math.floor(timing.elapsedSeconds)}/${timing.limitMinutes * 60}` : ""),
+      (timing ? `|t${Math.floor(timing.elapsedSeconds)}/${timing.limitMinutes * 60}` : "") +
+      (hintsUsed !== undefined ? `|h${hintsUsed}` : ""),
   )
     .toString(36)
     .toUpperCase()

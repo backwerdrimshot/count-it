@@ -6,7 +6,7 @@ The focus popover groups **Rhythms and meter**, **Counting and help**, and **Rem
 
 **Save this profile on this device** remembers syllables. **Save my practice setup** independently remembers practice settings. Unchecking a box clears its saved default. Reset setup keeps the counting profile and personal bests; while setup saving is enabled it updates the saved setup. Assignment links override saved defaults and do not overwrite them.
 
-Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. **Copy result image** creates the same local PNG as **Download PNG**, writes only after its button is pressed, and announces success or a download fallback when unsupported or denied. It uploads nothing and adds no identity fields; the image and checksum are browser-generated records, not proof of authentic work. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable.
+Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. **Copy result image** creates the same local PNG as **Download PNG**, writes only after its button is pressed, and announces success or a download fallback when unsupported or denied. It uploads nothing and adds no identity fields; the image and checksum are browser-generated records, not proof of authentic work. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable. On a round opened from an assignment link the card leads with one **Turn this in** button, which is that same copy-summary hand-in (summary, score and verification code); Copy result image, Download PNG and Practice history fold under **More ways to save this result**. Practice rounds keep their row of buttons unchanged.
 
 **Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
 
@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-17.1`
+- **Build:** `2026-10-17.6`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -40,6 +40,7 @@ documentation.
 - **Listen to rhythm** provides synthesized playback, 40–200 BPM, a count-in, optional beat pulse and a cursor. Playback starts only after a click and stops on Stop, a prompt change or navigation. Scored assignments withhold playback; answer scores remain untimed.
 - **Rhythm workshop** (`/workshop`) is unscored practice for triplets, ties across beats, dotted spanning values, syncopation and explicit grouping (including 3+2 vs 2+3 in 5/4). It uses the same notation/guide/playback renderer. Triplets explicitly use `1 trip let` in all profiles; this is a workshop convention, not a claim about Eastman triplet syllables. The new material is not added to assignment cell IDs or the cumulative levels.
 - **Practice history** (`/history`) keeps the last 50 completed challenge summaries on-device, including conditions, attempts and rhythms to revisit, without names/class IDs. Current results and history cards download as PNG. Scores are not sent anywhere automatically.
+- **Badges and a practice streak** are earned only from finished rounds and kept on this device beside the history (no names). Eight badges: First Count (finish a round), Clean Round (all correct, 5+ questions, first time through), Steady Counter (80%+ in 3 rounds), No Guide Needed (80%+ with the guide hidden), Whole Measures (80%+ on whole-measure questions), Meter Explorer (80%+ in 3 meters), Goal Met (reach an assignment's goal, 5+ questions, first time through) and Three Days Running (finish a round on 3 days in a row). Score badges need 5+ questions and skip replays of a set whose answers were shown (including an assignment reloaded after an attempt); No Guide Needed requires the guide to stay hidden for the whole round. The current streak and the longest streak keep counting past the 120 stored days. The shelf is on `/history`; a result card adds one line when a badge is new or the streak is 2+ days. Badges never change scores, goals or copied summaries.
 
 Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
 
@@ -63,7 +64,7 @@ Praxis Percussion Program integration now includes a director-led framing bridge
 Writing the link by hand is the hard part, so the app writes it: **`/build`** is a
 form where a teacher chooses a level or the exact rhythms, the meter, one beat or
 a measure, the guide, when answers show, what trying again means, the length, the
-pass mark, an optional time limit and a seed, and gets the link to post.
+pass mark, an optional time limit, whether hints are offered and a seed, and gets the link to post.
 
 It never judges a link itself. The choices are composed into a query string and
 handed to `parseAssignment` — the function the student's browser runs — and
@@ -203,11 +204,12 @@ be a contract nobody signed up to.
 | `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
 | `time` | Optional time limit in whole minutes, `1`–`60`. The student sees a calm countdown (`m:ss`) that runs on into overtime (`+0:42 over`) instead of stopping the round. The card and copied summary add a line such as `Time: 4:12 (limit 5:00, within limit)` or `Time: 6:30 (limit 5:00, over by 1:30)`, and the verification code covers both the time and the limit. Absent means no timer. Recorded, never enforced, and never part of the score. |
+| `hints` | `on` or `off`; absent means off. With `hints=on` each question has a **Hint** button that shows one tip, in a polite live region, on how to count it: the meter, which beat to look at, and how that beat divides ("Split the beat into four sixteenths: the beat number, e, &, a. Say only the ones where a note starts."). A tip never says which syllables sound, so two beats that divide the same way get the same tip. A right answer after a hint still scores. The card and copied summary add `Hints used: N`, and the verification code covers that number; codes for links without hints are unchanged. Any other value is refused. The builder's **Hints** menu and the assignments page's **Hints** toggle write it. |
 | `seed` | Same questions for every student who opens the link. |
 | `sys` | Optional versioned counting profile: `standard`, `eastman-ti-te-ta`, or `eastman-ta-te-ta`. Absent means historical Standard. The legacy alias `eastman` is accepted and canonicalized to `eastman-ti-te-ta`. |
 
 An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
-under two, an impossible pass mark, a time limit outside 1–60 whole minutes, a full-measure round longer than the pool
+under two, an impossible pass mark, a time limit outside 1–60 whole minutes, a `hints` value other than `on` or `off`, a full-measure round longer than the pool
 can fill, an unrecognized feedback setting or an unsupported counting system
 each invalidate the whole link with a plain-language message, and the app keeps
 working normally underneath it. A rhythm pool with a rhythm missing teaches a
@@ -338,6 +340,8 @@ Keyboard shortcuts, visible focus, semantic controls, live feedback, and respons
 layouts support phone, tablet, and desktop use. An assignment's optional time-limit
 countdown is a `timer` that screen readers do not read out every second; a separate
 polite live line changes at most once a minute ("3 minutes left", "Time limit reached").
+An assignment's optional hint appears in a polite live region under the question, and the
+Hint button reports whether its tip is showing (`aria-expanded`).
 
 ## Deployment
 
