@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-17.5`
+- **Build:** `2026-10-17.6`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -115,6 +115,32 @@ Three decisions worth knowing:
   `src/assignment/builder.ts` holds the rule; `tests/builder.test.ts` checks it
   against the real generator. It is a knowledge check, not secure testing: one
   attempt cannot stop a page reload, and the pass mark is shown, never enforced.
+
+### Class summary
+
+**`/class-summary`** is for collecting results. A teacher pastes the summaries
+students turned in, as many as they like, one after another, and gets a table:
+student ID, assignment, score, whether the pass mark was met, the time when the
+link set a limit, and whether the verification code checks. It downloads as a
+plain CSV, or as a **Canvas gradebook** CSV in Canvas's import layout (`Student`,
+`ID`, `SIS User ID`, `SIS Login ID`, `Section`, then one column named for the assignment holding
+the score, as questions correct or percent). The apps never know a Canvas user,
+so `Student` holds the name or class ID the student typed and the ID columns are
+blank; the page says plainly that the teacher matches names in Canvas, which
+lists anyone it cannot find at import. One row per student (best score kept);
+by default only summaries whose code checks are included. Nothing pasted leaves
+the browser or is saved. Linked from the footer of the teacher pages and from
+`/assignments`.
+
+The check is `verificationCode` itself, run again on the facts the summary
+states (`src/class-summary.ts`). That needs the exact finishing instant the code
+was made from, which the readable `Finished:` line does not carry, so summaries
+now end with a `Stamp:` line (the ISO instant) just before `Code:`. Summaries
+from before it show "Cannot check" rather than "does not match". Nothing about
+the code was loosened: every fact it covers must recompute to the same digest;
+only the calendar date printed in the code may be the student's local date for
+that instant rather than the teacher's. An Eight Time summary is named as one
+and left for Eight Time's own class summary page to check.
 
 ### Assignment catalog
 

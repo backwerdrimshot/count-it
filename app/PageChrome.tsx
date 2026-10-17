@@ -22,7 +22,7 @@ export function PageHeader() {
   );
 }
 
-export type PageName = "build" | "assignments" | "notation";
+export type PageName = "build" | "assignments" | "notation" | "class-summary";
 
 export function PageFooter({ page, feedbackSubject }: { page: PageName; feedbackSubject: string }) {
   return (
@@ -36,6 +36,9 @@ export function PageFooter({ page, feedbackSubject }: { page: PageName; feedback
         )}
         {page !== "build" && (
           <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
+        )}
+        {page !== "class-summary" && (
+          <a className="foot-btn" href="/class-summary" title="Paste what students turned in, check their codes, download a CSV or a Canvas gradebook file">Class summary</a>
         )}
         {page !== "notation" && (
           <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>

@@ -93,7 +93,8 @@ export default function AssignmentCatalog() {
             builder and change what you need. They are all free, and nothing about a student is stored.
           </p>
           <p className="catalog-lede-link">
-            Want your own rhythms or a quiz? <a href="/build">Build an assignment</a>.
+            Want your own rhythms or a quiz? <a href="/build">Build an assignment</a>. Collecting results?{" "}
+            <a href="/class-summary">Class summary</a> checks the codes and makes a CSV for Canvas.
           </p>
           <div className="catalog-hints">
             <button
