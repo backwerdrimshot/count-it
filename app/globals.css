@@ -2784,3 +2784,10 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .setup-popover .setup-panel { display: flex; flex-direction: column; gap: 10px; }
 
 .setup-panel > p { margin-block: 0; }
+
+/* The time-limit countdown. Calm on purpose: the same weight as the question
+   counter, and overtime is stated rather than alarmed — no red, no flashing. */
+.round-timer { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.round-timer.is-over strong { font-style: italic; }
+.builder-time { margin-top: 14px; }
+.builder-time > span small { font-weight: 400; opacity: 0.75; }

@@ -164,6 +164,10 @@ function looseSummary(query: string): { summary: string; count: number; passing:
     `${count} questions`,
     `pass at ${passing}`,
   ];
+  /* The same words Count It's own summary uses, so a limit on any step reads
+     the same wherever the catalog shows it. */
+  const time = params.get("time");
+  if (time) parts.push(`${time}-minute time limit`);
   return { summary: parts.join(" · "), count, passing };
 }
 
