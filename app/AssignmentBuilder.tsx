@@ -7,7 +7,9 @@ import {
   BUILDER_METERS,
   MAX_NAME_LENGTH,
   MAX_QUESTIONS,
+  MAX_TIME_LIMIT,
   MIN_QUESTIONS,
+  MIN_TIME_LIMIT,
   PRODUCTION_ORIGIN,
   applyQuiz,
   cellsForLevel,
@@ -25,6 +27,13 @@ import {
 } from "../src/assignment/presets";
 import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
+import { classroomShareUrl } from "../src/classroom-share";
+import { CATALOG_ENTRIES } from "../src/assignment/catalog";
+
+/* Where a teacher who wants 3/8 goes: the first Eight Time step on the
+   assignments page. Derived from the catalog so a renumbered step cannot
+   leave a dead anchor. */
+const EIGHT_TIME_ASSIGNMENTS = `/assignments#${CATALOG_ENTRIES.find((entry) => entry.app === "eight-time")?.id ?? ""}`;
 
 type VocabularyKind = Vocabulary["kind"];
 
@@ -78,6 +87,8 @@ export default function AssignmentBuilder() {
   const [retry, setRetry] = useState<"free" | "reseed" | "off" | null>(null);
   const [countText, setCountText] = useState("10");
   const [passText, setPassText] = useState("8");
+  const [timeText, setTimeText] = useState("");
+  const [hints, setHints] = useState(false);
   const [seed, setSeed] = useState("");
   const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
@@ -104,9 +115,11 @@ export default function AssignmentBuilder() {
       retry,
       count: numberOrNull(countText),
       passing: numberOrNull(passText),
+      timeLimit: numberOrNull(timeText),
+      hints,
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, seed],
+    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -135,6 +148,8 @@ export default function AssignmentBuilder() {
     setRetry(next.retry);
     setCountText(next.count === null ? "" : String(next.count));
     setPassText(next.passing === null ? "" : String(next.passing));
+    setTimeText(next.timeLimit == null ? "" : String(next.timeLimit));
+    setHints(Boolean(next.hints));
     setSeed(next.seed);
   }, []);
 
@@ -221,6 +236,16 @@ export default function AssignmentBuilder() {
             Choose what your students practise and Count It writes a link that pins it. Every student who opens
             the link gets the same questions under the same conditions, and the result card they copy out says
             what those conditions were. Nothing about a student is stored.
+          </p>
+          {/* 3/8 is refused here by design (it lives in Eight Time), so a teacher
+              looking for it was left at a dead end. Eight Time has no builder of
+              its own; its published steps are on the assignments page with the
+              same Try it, Copy link and Classroom buttons, and that is where
+              this sends them. The card id is the catalog's own entry id. */}
+          <p className="builder-eight-time">
+            <strong>Teaching 3/8?</strong> Eighth-note beats run in our sibling app, Eight Time.{" "}
+            <a href={EIGHT_TIME_ASSIGNMENTS}>Build an Eight Time assignment</a> from one of its published 3/8 steps:
+            try it, copy its link or post it to Google Classroom.
           </p>
         </div>
 
@@ -414,7 +439,10 @@ export default function AssignmentBuilder() {
                       <option key={option.id} value={option.id}>{option.label}</option>
                     ))}
                   </select>
-                  <small>The beat is a quarter note in every one.</small>
+                  <small>
+                    The beat is a quarter note in every one. For 3/8, use{" "}
+                    <a href={EIGHT_TIME_ASSIGNMENTS}>an Eight Time assignment</a>.
+                  </small>
                 </label>
               </div>
             </fieldset>
@@ -466,6 +494,17 @@ export default function AssignmentBuilder() {
                   <small>One attempt can’t stop a page reload.</small>
                 </label>
               </div>
+              <label className="level-control builder-time">
+                <span>Hints</span>
+                <select value={hints ? "on" : ""} onChange={(event) => setHints(event.target.value === "on")}>
+                  <option value="">Off</option>
+                  <option value="on">On: one tip per question, on request</option>
+                </select>
+                <small>
+                  A tip says how to count the beat, never the answer. A right answer after a hint still scores; the
+                  card says how many hints were used.
+                </small>
+              </label>
             </fieldset>
 
             <fieldset className="builder-group">
@@ -498,6 +537,22 @@ export default function AssignmentBuilder() {
                   <small>Correct answers needed. Shown on the card, never enforced.</small>
                 </label>
               </div>
+              <label className="level-control builder-time">
+                <span>Time limit <small>optional</small></span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_TIME_LIMIT}
+                  max={MAX_TIME_LIMIT}
+                  value={timeText}
+                  placeholder="none"
+                  onChange={(event) => setTimeText(event.target.value)}
+                />
+                <small>
+                  Minutes, {MIN_TIME_LIMIT}–{MAX_TIME_LIMIT}. Blank means no timer. Students see a countdown; at zero
+                  it counts overtime and they can still finish. The card records their time.
+                </small>
+              </label>
               <div className="builder-seed">
                 <label className="level-control">
                   <span>Seed</span>
@@ -539,6 +594,14 @@ export default function AssignmentBuilder() {
                   <button type="button" className="primary-button" onClick={copyLink}>Copy link</button>
                   <a className="secondary-button" href={result.link} target="_blank" rel="noopener noreferrer">
                     Try it as a student
+                  </a>
+                  <a
+                    className="secondary-button"
+                    href={classroomShareUrl(result.link, result.assignment.name || "Count It assignment")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Post to Google Classroom
                   </a>
                 </div>
                 <p className="builder-copied" role="status" aria-live="polite">{copyMessage}</p>

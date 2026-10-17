@@ -106,6 +106,15 @@ const { note, results } = reporter();
   await shot(pp, "build-phone.png", { fullPage: false });
   await phone.close();
 
+  // F2. A teacher who wants 3/8 is sent to Eight Time's published steps, not left at a refused meter.
+  await page.goto(BASE + "/build", { waitUntil: "networkidle" });
+  await page.getByRole("link", { name: "Build an Eight Time assignment" }).click();
+  await page.waitForURL((u) => u.pathname === "/assignments", { timeout: 10000 }).catch(() => {});
+  const target = new URL(page.url()).hash.slice(1);
+  note("'Build an Eight Time assignment' opens an Eight Time step on the assignments page",
+    new URL(page.url()).pathname === "/assignments" && target !== "" &&
+      /Opens in Eight Time/i.test(await page.locator(`[id="${target}"]`).innerText()), page.url());
+
   // G. Reachable from the app, and the screenshot
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
   await page.waitForLoadState("networkidle");

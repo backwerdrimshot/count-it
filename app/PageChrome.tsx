@@ -4,20 +4,21 @@ import { SOCIAL_LINKS, SocialGlyph } from "./BrandFooterBits";
 import { COUNT_IT_BUILD } from "../src/capabilities";
 import { emailHref } from "../src/support-links";
 
-/* The header and footer the secondary pages (/build, /assignments, /notation) share. They
+/* The header and footer the secondary pages (/build, /assignments, /notation, /class-summary) share. They
  * match the practice screen: the same Help, Feedback and About dialogs, the same footer order.
  *
  * Plain anchors, not next/link: under this vinext build next/link logs an RSC
  * prefetch error on mount and throws on click, so the navigation never happens.
  * Small pages lose nothing to a full page load, and one place explains it. */
 
-export type PageName = "build" | "assignments" | "notation";
+export type PageName = "build" | "assignments" | "notation" | "class-summary";
 
 /* What each page is for, as its Help text. */
 const PAGE_HELP: Record<PageName, string> = {
   build: "Choose the rhythms, meter and pass mark, then copy the link. Every student who opens it gets the same round.",
   assignments: "Every published teaching-sequence step. Try one, copy its link, or customize it in the builder.",
   notation: "The clef, barlines, time signature, beams and rests, each with a live example drawn by the same renderer the questions use.",
+  "class-summary": "Paste what students turned in. Each code is checked, and you can download the table as a CSV or a Canvas gradebook file.",
 };
 
 export function PageHeader({ page }: { page: PageName }) {
@@ -83,6 +84,9 @@ export function PageFooter({ page }: { page: PageName }) {
         )}
         {page !== "build" && (
           <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
+        )}
+        {page !== "class-summary" && (
+          <a className="foot-btn" href="/class-summary" title="Paste what students turned in, check their codes, download a CSV or a Canvas gradebook file">Class summary</a>
         )}
         {page !== "notation" && (
           <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>

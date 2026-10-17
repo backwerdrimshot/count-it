@@ -5,10 +5,12 @@ import { parseAssignment, serializeAssignment } from "../src/assignment";
 import {
   CATALOG_SEQUENCES,
   entriesForSequence,
+  withHints,
   type CatalogEntry,
 } from "../src/assignment/catalog";
 import { readAllAttempts } from "../src/attempt-tally";
 import { PageFooter, PageHeader } from "./PageChrome";
+import { classroomShareUrl } from "../src/classroom-share";
 
 /* The key this browser's attempt tally uses for a Count It step: the same string
    the trainer writes under when the round finishes (tests/catalog.test.ts holds
@@ -34,6 +36,9 @@ export default function AssignmentCatalog() {
   const [copied, setCopied] = useState<{ id: string; text: string; field: boolean } | null>(null);
   const copyTimer = useRef<number | undefined>(undefined);
   const fallbackField = useRef<HTMLInputElement>(null);
+  /* Off by default. On, every Try it, Copy link and Classroom link below carries
+     `hints=on`, so students get one tip per question on request. */
+  const [hints, setHints] = useState(false);
 
   useEffect(() => {
     const id = window.setTimeout(() => setAttempts(readAllAttempts()), 0);
@@ -62,7 +67,7 @@ export default function AssignmentCatalog() {
   async function copyLink(entry: CatalogEntry) {
     window.clearTimeout(copyTimer.current);
     try {
-      await navigator.clipboard.writeText(entry.link);
+      await navigator.clipboard.writeText(withHints(entry.link, hints));
       setCopied({ id: entry.id, text: "Copied. Paste it wherever you post assignments.", field: false });
       copyTimer.current = window.setTimeout(() => setCopied(null), 6000);
     } catch {
@@ -88,8 +93,25 @@ export default function AssignmentCatalog() {
             builder and change what you need. They are all free, and nothing about a student is stored.
           </p>
           <p className="catalog-lede-link">
-            Want your own rhythms or a quiz? <a href="/build">Build an assignment</a>.
+            Want your own rhythms or a quiz? <a href="/build">Build an assignment</a>. Collecting results?{" "}
+            <a href="/class-summary">Class summary</a> checks the codes and makes a CSV for Canvas.
           </p>
+          <div className="catalog-hints">
+            <button
+              type="button"
+              className="secondary-button"
+              aria-pressed={hints}
+              aria-describedby="catalog-hints-note"
+              onClick={() => setHints((current) => !current)}
+            >
+              Hints: {hints ? "on" : "off"}
+            </button>
+            <p id="catalog-hints-note" aria-live="polite">
+              {hints
+                ? "On: every link below gives one tip per question, on request. Tips say how to count, never the answer, and the result card counts the hints used."
+                : "Off: links below give no hints. Turn on to add a Hint button to each question."}
+            </p>
+          </div>
         </div>
 
         {CATALOG_SEQUENCES.map((sequence) => {
@@ -104,7 +126,7 @@ export default function AssignmentCatalog() {
               <ol className="catalog-list">
                 {entries.map((entry) => {
                   const key = keys.get(entry.id) ?? null;
-                  const href = entry.app === "count-it" ? `/${entry.query}` : entry.link;
+                  const href = withHints(entry.app === "count-it" ? `/${entry.query}` : entry.link, hints);
                   return (
                     <li key={entry.id} className="catalog-card" id={entry.id}>
                       <div className="catalog-step" aria-hidden="true">{entry.step}</div>
@@ -131,6 +153,15 @@ export default function AssignmentCatalog() {
                           >
                             Copy link
                           </button>
+                          <a
+                            className="secondary-button"
+                            href={classroomShareUrl(withHints(entry.link, hints), entry.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Post step ${entry.step}: ${entry.title} to Google Classroom`}
+                          >
+                            Post to Google Classroom
+                          </a>
                           {entry.presetId && (
                             <a
                               className="quiet-button"
@@ -147,7 +178,7 @@ export default function AssignmentCatalog() {
                         {copied?.id === entry.id && copied.field && (
                           <label className="builder-linkbox catalog-linkbox">
                             <span className="builder-visually-hidden">Link for step {entry.step}: {entry.title}</span>
-                            <input ref={fallbackField} type="text" readOnly value={entry.link} />
+                            <input ref={fallbackField} type="text" readOnly value={withHints(entry.link, hints)} />
                           </label>
                         )}
                       </div>

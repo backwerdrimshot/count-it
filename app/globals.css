@@ -1715,6 +1715,29 @@ a:focus-visible,
 .result-assignment { margin: 6px 0 0; color: var(--ink); font-size: 0.95rem; }
 .result-submit { margin: 14px 0 0; color: var(--ink-soft); font-size: 0.82rem; }
 
+/* An assigned round's one hand-in button, and the other ways to keep a result
+   folded beneath it. The button is wider than its row-mates so it reads as the
+   thing to do; the fold uses the review panel's look so the card has one kind
+   of disclosure, not two. */
+.turn-in-button { min-width: min(100%, 260px); font-size: 1.05rem; }
+.result-more {
+  margin: 14px auto 0;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+.result-more > summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+.result-more > summary:focus-visible { outline: 3px solid var(--forest); outline-offset: -3px; }
+.result-more[open] > summary { border-bottom: 1px solid var(--line); }
+.result-more > .result-actions { padding: 14px 16px; }
+
 .result-code {
   display: grid;
   gap: 4px;
@@ -2715,3 +2738,85 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
   .brand-lockup strong { font-size: 1.25rem; }
   .brand-mark { width: 30px; height: 30px; flex-basis: 30px; }
 }
+/* The time-limit countdown. Calm on purpose: the same weight as the question
+   counter, and overtime is stated rather than alarmed — no red, no flashing. */
+.round-timer { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.round-timer.is-over strong { font-style: italic; }
+.builder-time { margin-top: 14px; }
+.builder-time > span small { font-weight: 400; opacity: 0.75; }
+
+/* Class summary (/class-summary): the paste box, the table and the downloads. */
+.class-summary-input { display: grid; gap: 6px; font-weight: 800; }
+.class-summary-input textarea {
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--tan-line);
+  border-radius: 11px;
+  padding: 12px;
+  font: 0.85rem/1.45 "Cascadia Mono", Consolas, monospace;
+  background: var(--white);
+  color: var(--ink);
+}
+.class-summary-count { margin: 10px 0 16px; color: var(--ink-soft); font-weight: 700; }
+.class-summary-table { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--white); }
+.class-summary-table:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+.class-summary-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.class-summary-table th, .class-summary-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.class-summary-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--forest-deep); }
+.class-summary-table tbody tr:last-child td { border-bottom: 0; }
+.class-summary-table td code { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--ink-soft); }
+.code-status { font-weight: 800; }
+.code-valid .code-status { color: var(--green-ink); }
+.code-invalid .code-status { color: var(--red); }
+.class-summary-help { margin: 12px 0 0; color: var(--ink-soft); font-size: 0.88rem; }
+.class-summary-help summary { cursor: pointer; font-weight: 800; color: var(--ink); padding: 6px 0; }
+.class-summary-downloads { display: grid; gap: 14px; margin-top: 24px; max-width: 760px; }
+.class-summary-downloads h2 { margin: 0; }
+.class-summary-downloads > button { justify-self: start; }
+.class-summary-downloads fieldset { display: grid; gap: 12px; }
+.class-summary-downloads fieldset p { margin: 0; }
+.class-summary-downloads fieldset > button { justify-self: start; }
+.class-summary-note { border-left: 4px solid var(--forest); border-radius: 0 10px 10px 0; background: var(--tan-soft); padding: 10px 14px; }
+.class-summary-check { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.class-summary-check input { width: 20px; height: 20px; }
+@media (max-width: 600px) {
+  .class-summary-downloads > button, .class-summary-downloads fieldset > button { justify-self: stretch; }
+  /* On a phone each summary becomes a small card of labelled lines, so the code
+     column is not hidden off the side of a scrolling table. */
+  .class-summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .class-summary-table table, .class-summary-table tbody, .class-summary-table tr, .class-summary-table td { display: block; }
+  .class-summary-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .class-summary-table tbody tr:last-child { border-bottom: 0; }
+  .class-summary-table td { display: grid; grid-template-columns: 7.5em 1fr; gap: 8px; padding: 4px 12px; border: 0; }
+  .class-summary-table td::before { content: attr(data-label); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--forest-deep); }
+  .class-summary-table td code { grid-column: 2; }
+}
+
+/* The builder's pointer to Eight Time for 3/8, which this builder refuses by design. */
+.builder-intro p.builder-eight-time {
+  margin-top: 12px;
+  border-left: 4px solid var(--forest);
+  border-radius: 0 10px 10px 0;
+  background: var(--tan-soft);
+  padding: 10px 14px;
+  font-size: 0.94rem;
+}
+.builder-eight-time a { color: var(--forest-deep); font-weight: 700; }
+
+/* Optional hints (hints=on). The tip sits quietly under the question: the same
+   size as the feedback text, and empty until it is asked for. */
+.hint-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-block: 8px 12px; }
+.hint-row .hint-button { flex: none; }
+.hint-text { flex: 1 1 16rem; margin: 0; line-height: 1.45; }
+.catalog-hints { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.catalog-hints p { flex: 1 1 18rem; margin: 0; }
+
+/* Badges: a small shelf on the history page and one line on a result card.
+   Theme colours only, so both stay readable in dark mode. */
+.result-earned { margin:16px auto 0; max-width:420px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:0.9rem; text-align:left; }
+.badge-shelf { margin:16px 0; padding:20px; border:1px solid var(--line); border-radius:14px; }
+.badge-shelf ul { list-style:none; padding:0; margin:12px 0; display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.badge-shelf li { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px dashed var(--line); border-radius:var(--radius-sm); }
+.badge-shelf li.is-earned { border-style:solid; }
+.badge-mark { font-size:1.2rem; line-height:1.2; }
+.badge-status, .badge-note { font-size:0.85rem; }

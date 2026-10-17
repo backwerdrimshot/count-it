@@ -23,6 +23,11 @@ try {
     const code = document.querySelector('.result-code code')?.textContent ?? '';
     return /^BRS-/.test(code) && code.split('-')[2] !== stamp;
   });
+  // An assigned round shows one primary hand-in button; the image buttons are folded beneath it.
+  const actions = await page.locator('.result-card > .result-actions').first().locator('button, a').allInnerTexts();
+  assert.equal(actions[0], 'Turn this in');
+  assert.equal(await page.getByRole('button', { name: 'Copy result image', exact: true }).isVisible(), false);
+  await page.locator('.result-more > summary').click();
   const resultBefore = await page.locator('.result-stats').innerText();
   const codeBefore = await page.locator('.result-code code').innerText();
   assert.match(await page.locator('.result-code').innerText(), /not proof of authentic work/);

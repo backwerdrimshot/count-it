@@ -36,6 +36,7 @@ Analytics (Cloudflare Insights) is blocked in every context, so a run never coun
 | `catalog.mjs` | `/assignments`: sixteen steps, their links, Copy, a step played from the catalog to its result, the finished count. |
 | `notation.mjs` | `/notation`: the seven topics, every example staff drawn, the one-beat example without a closing barline and every measure example with one (as the page says), the contents links, phone width. |
 | `teachers-link.mjs` | The **For teachers** entry: in the About dialog at every width and in a dedicated phone row below 480px, with the header holding only Help, Feedback and About; 44px targets, keyboard access and routes to Assignments. |
+| `class-summary.mjs` | `/class-summary`: two real hand-ins checked, an edited one caught, the table and Canvas CSVs downloaded and read back, phone width. |
 
 ## Keeping them true
 
