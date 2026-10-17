@@ -88,6 +88,7 @@ export default function AssignmentBuilder() {
   const [countText, setCountText] = useState("10");
   const [passText, setPassText] = useState("8");
   const [timeText, setTimeText] = useState("");
+  const [hints, setHints] = useState(false);
   const [seed, setSeed] = useState("");
   const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
@@ -115,9 +116,10 @@ export default function AssignmentBuilder() {
       count: numberOrNull(countText),
       passing: numberOrNull(passText),
       timeLimit: numberOrNull(timeText),
+      hints,
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, seed],
+    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -147,6 +149,7 @@ export default function AssignmentBuilder() {
     setCountText(next.count === null ? "" : String(next.count));
     setPassText(next.passing === null ? "" : String(next.passing));
     setTimeText(next.timeLimit == null ? "" : String(next.timeLimit));
+    setHints(Boolean(next.hints));
     setSeed(next.seed);
   }, []);
 
@@ -491,6 +494,17 @@ export default function AssignmentBuilder() {
                   <small>One attempt can’t stop a page reload.</small>
                 </label>
               </div>
+              <label className="level-control builder-time">
+                <span>Hints</span>
+                <select value={hints ? "on" : ""} onChange={(event) => setHints(event.target.value === "on")}>
+                  <option value="">Off</option>
+                  <option value="on">On: one tip per question, on request</option>
+                </select>
+                <small>
+                  A tip says how to count the beat, never the answer. A right answer after a hint still scores; the
+                  card says how many hints were used.
+                </small>
+              </label>
             </fieldset>
 
             <fieldset className="builder-group">

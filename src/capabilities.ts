@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-17.1";
+export const COUNT_IT_BUILD = "2026-10-17.5";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -56,8 +56,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
-  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "seed", "sys"],
-  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "seed", "sys"],
+  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys"],
+  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, " +
@@ -65,7 +65,8 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "subdivision-guide policy, `fb` chooses whether the correct answer appears after each " +
     "question or only at the end, `retry` chooses what trying again means, `n` and `pass` set " +
     "the length and the goal, `time` sets an optional time limit in whole minutes (recorded " +
-    "on the card against the limit, never enforced), and `seed` makes " +
+    "on the card against the limit, never enforced), `hints=on` offers one tip per question on " +
+    "request (the card counts the hints used), and `seed` makes " +
     "every student's questions identical. `level` is a shorthand for a cumulative vocabulary " +
     "and is superseded when `cells` is present. `a` is a display name and `sys` pins one of " +
     "the versioned counting profiles.",
@@ -76,7 +77,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "when the link sets none), a full-measure round longer than the pool can fill without " +
     "repeating, a meter this app does not read, a rhythm too long for the named meter's " +
     "measure (a whole note in 2/4 or 3/4), " +
-    "a time limit outside 1–60 whole minutes, " +
+    "a time limit outside 1–60 whole minutes, a `hints` value other than on or off, " +
     "an unrecognized feedback or retry setting, or a counting profile this app does " +
     "not support each invalidate the whole link with a plain-language message. A rhythm pool with a rhythm " +
     "missing teaches a different step, so dropping one silently would produce evidence for an " +
@@ -172,7 +173,10 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "beat or one measure) and rhythm vocabulary are the other two difficulty dimensions. " +
     "Playback has a tempo control; scored answers remain untimed. A link may set a time limit: " +
     "the student sees a calm countdown that runs on into overtime rather than stopping the " +
-    "round, and the card reports the time taken against the limit beside the score, never in it.",
+    "round, and the card reports the time taken against the limit beside the score, never in it. " +
+    "A link may turn hints on: each question then has a Hint button that shows one tip on how the " +
+    "beat divides, never the answer; a right answer after a hint still scores, and the card, the " +
+    "copied summary and the verification code carry how many hints were used.",
   integrityMeasures:
     "An assigned round varies the ORDER of the answer choices per student, from the seed plus " +
     "an identifier, so the questions stay identical and comparable while a posted answer key " +
