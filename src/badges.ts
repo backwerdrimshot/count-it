@@ -28,8 +28,12 @@ export interface BadgeState {
   version: 1;
   /** Badge id → the local date (YYYY-MM-DD) it was earned. */
   earned: Record<string, string>;
-  /** Local dates with at least one finished round, newest first. */
+  /** Local dates with at least one finished round, newest first. The current
+   *  run of days is always kept whole; older days are trimmed past MAX_DAYS. */
   days: string[];
+  /** The longest run of days ever recorded, kept separately so trimming old
+   *  days can never shrink it. */
+  longest: number;
   /** Fresh rounds of 5+ questions at 80% or better. */
   strongRounds: number;
   /** Meters with a fresh round at 80% or better. */
@@ -62,14 +66,14 @@ export const BADGES: readonly BadgeDefinition[] = [
     met: (_, round, strong) => strong && round.scope === 'measure' },
   { id: 'meter-explorer', name: 'Meter Explorer', rule: 'Score 80% or better in 3 different meters.',
     met: state => state.strongMeters.length >= 3 },
-  { id: 'goal-met', name: 'Goal Met', rule: "Reach the goal your teacher set on an assignment.",
-    met: (_, round) => round.metGoal === true },
+  { id: 'goal-met', name: 'Goal Met', rule: "Reach the goal your teacher set on an assignment of 5 or more questions, first time through.",
+    met: (_, round) => round.metGoal === true && round.fresh && round.total >= MIN_QUESTIONS },
   { id: 'three-days', name: 'Three Days Running', rule: 'Finish a round on 3 days in a row.',
-    met: state => longestStreak(state.days) >= 3 },
+    met: state => bestStreak(state) >= 3 },
 ];
 
 export function emptyBadgeState(): BadgeState {
-  return { version: 1, earned: {}, days: [], strongRounds: 0, strongMeters: [] };
+  return { version: 1, earned: {}, days: [], longest: 0, strongRounds: 0, strongMeters: [] };
 }
 
 /** The local calendar date, so a streak follows the student's own days. */
@@ -88,7 +92,8 @@ export function readBadges(storage: Pick<Storage, 'getItem'>): BadgeState {
     for (const badge of BADGES) if (typeof value.earned[badge.id] === 'string' && DAY.test(value.earned[badge.id])) earned[badge.id] = value.earned[badge.id];
     return {
       version: 1, earned,
-      days: value.days.filter((d: unknown): d is string => typeof d === 'string' && DAY.test(d)).slice(0, MAX_DAYS),
+      days: trimDays(value.days.filter((d: unknown): d is string => typeof d === 'string' && DAY.test(d))),
+      longest: Number.isInteger(value.longest) && value.longest > 0 ? value.longest : 0,
       strongRounds: Number.isInteger(value.strongRounds) && value.strongRounds > 0 ? value.strongRounds : 0,
       strongMeters: Array.isArray(value.strongMeters) ? value.strongMeters.filter((m: unknown) => typeof m === 'string') : [],
     };
@@ -103,16 +108,32 @@ export function saveBadges(state: BadgeState, storage: Pick<Storage, 'setItem'>)
 export function recordRound(current: BadgeState, round: BadgeRound): { state: BadgeState; earned: BadgeDefinition[] } {
   const today = localDay(round.finishedAt);
   const strong = round.fresh && round.total >= MIN_QUESTIONS && round.score / round.total >= STRONG;
+  const allDays = [...new Set([today, ...current.days])].sort().reverse();
   const state: BadgeState = {
     version: 1,
     earned: { ...current.earned },
-    days: [...new Set([today, ...current.days])].sort().reverse().slice(0, MAX_DAYS),
+    days: trimDays(allDays),
+    longest: Math.max(current.longest, longestStreak(allDays)),
     strongRounds: current.strongRounds + (strong ? 1 : 0),
     strongMeters: strong && !current.strongMeters.includes(round.meter) ? [...current.strongMeters, round.meter] : current.strongMeters,
   };
   const earned = BADGES.filter(badge => !state.earned[badge.id] && badge.met(state, round, strong));
   for (const badge of earned) state.earned[badge.id] = today;
   return { state, earned };
+}
+
+/** Newest first, at most MAX_DAYS, except that the newest unbroken run of days
+ *  is never cut, so the current streak keeps counting past the window. */
+function trimDays(days: readonly string[]): string[] {
+  const sorted = [...new Set(days)].sort().reverse();
+  let run = sorted.length ? 1 : 0;
+  while (run < sorted.length && sorted[run] === previousDay(sorted[run - 1])) run += 1;
+  return sorted.slice(0, Math.max(MAX_DAYS, run));
+}
+
+/** The longest streak this device has seen, including days since trimmed. */
+export function bestStreak(state: Pick<BadgeState, 'days' | 'longest'>): number {
+  return Math.max(state.longest, longestStreak(state.days));
 }
 
 function previousDay(day: string): string {

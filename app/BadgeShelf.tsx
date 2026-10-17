@@ -1,12 +1,12 @@
 'use client';
-import { BADGES, currentStreak, longestStreak, streakText, type BadgeState } from '../src/badges';
+import { BADGES, bestStreak, currentStreak, streakText, type BadgeState } from '../src/badges';
 
 /* The quiet record of what has been earned on this device. Every badge is
    listed with its rule, so "Not yet" says what to do rather than hiding it,
    and earned/not-yet is written out, never shown by colour alone. */
 export default function BadgeShelf({ state }: { state: BadgeState }) {
   const earned = BADGES.filter(badge => state.earned[badge.id]).length;
-  const best = longestStreak(state.days);
+  const best = bestStreak(state);
   return <section className="badge-shelf" aria-labelledby="badge-shelf-title">
     <h2 id="badge-shelf-title">Badges</h2>
     <p>{earned} of {BADGES.length} earned on this device. {streakText(currentStreak(state.days))}{best > 1 ? ` Longest: ${best} days.` : ''}</p>

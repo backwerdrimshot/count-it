@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BADGES,
+  bestStreak,
   currentStreak,
   emptyBadgeState,
   localDay,
@@ -76,6 +77,9 @@ describe("badges", () => {
   it("awards Goal Met only when the teacher's goal was reached", () => {
     expect(play([{ metGoal: false }]).earned).not.toContain("goal-met");
     expect(play([{ metGoal: true }]).earned).toContain("goal-met");
+    // Like the other score badges: five or more questions, answered fresh.
+    expect(play([{ metGoal: true, total: 1, score: 1 }]).earned).not.toContain("goal-met");
+    expect(play([{ metGoal: true, fresh: false }]).earned).not.toContain("goal-met");
   });
 
   it("awards Three Days Running for three days in a row, not three rounds in a day", () => {
@@ -104,5 +108,21 @@ describe("badges", () => {
     const broken = { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); } };
     expect(readBadges(broken)).toEqual(emptyBadgeState());
     expect(saveBadges(state, broken)).toBe(false);
+  });
+
+  it("keeps the current and longest streak past the stored-day window", () => {
+    const days = Array.from({ length: 150 }, (_, i) => ({ finishedAt: new Date(2026, 0, 1 + i, 10) }));
+    const { state } = play(days);
+    const last = new Date(2026, 0, 150, 12);
+    expect(currentStreak(state.days, last)).toBe(150);
+    expect(bestStreak(state)).toBe(150);
+    // A gap, then new days: the old record must not shrink as old days are trimmed.
+    const later = Array.from({ length: 130 }, (_, i) => ({ finishedAt: new Date(2026, 6, 1 + i * 2, 10) }));
+    const after = play(later, state).state;
+    expect(after.days.length).toBeLessThanOrEqual(150);
+    expect(bestStreak(after)).toBe(150);
+    const storage = memoryStorage();
+    saveBadges(after, storage);
+    expect(bestStreak(readBadges(storage))).toBe(150);
   });
 });

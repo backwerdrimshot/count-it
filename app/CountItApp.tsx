@@ -1193,6 +1193,14 @@ export default function CountItApp() {
     makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const savedHistorySession = useRef<ChallengeSession | null>(null);
+  /** The run (attempt and question ids) a reseed retry just built. Only that
+   *  run counts as fresh for badges after attempt 1: a reload rebuilds the
+   *  original seeded set, which the student has already seen answered. */
+  const reseededRun = useRef("");
+  /** Whether the counting guide was on screen at any point in the current run,
+   *  so switching it off just before the last answer does not count as a round
+   *  done without it. */
+  const guideUsed = useRef<{ run: string; used: boolean }>({ run: "", used: false });
   /* What the round just finished earned, for one calm line on its card. */
   const [badgeNews, setBadgeNews] = useState<(BadgeNews & { session: ChallengeSession }) | null>(null);
   const { protect, confirmation } = useRoundChangeGuard(session.status === "active" && session.responses.length > 0);
@@ -1458,6 +1466,13 @@ export default function CountItApp() {
   /* The clock for a time-limited round starts when the round is first on
      screen, and keeps running if the student renames themselves before their
      first answer (that rebuilds the round's answer order, not the attempt). */
+  const badgeRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
+  useEffect(() => {
+    if (mode !== "challenge" || session.status === "complete") return;
+    if (guideUsed.current.run !== badgeRun) guideUsed.current = { run: badgeRun, used: showReference };
+    else if (showReference) guideUsed.current.used = true;
+  }, [mode, session.status, badgeRun, showReference]);
+
   const timeLimit = assignment?.timeLimit ?? null;
   useEffect(() => {
     if (timeLimit === null || mode !== "challenge" || session.status !== "active" || startedAt !== null) return;
@@ -1483,9 +1498,10 @@ export default function CountItApp() {
         assignment: assignment?.name ?? null, attempt });
       try {
         const { state, earned } = recordRound(readBadges(localStorage), {
-          finishedAt: finished, score: session.score, total: session.questions.length, meter, scope, guide: showReference,
+          finishedAt: finished, score: session.score, total: session.questions.length, meter, scope,
+          guide: showReference || (guideUsed.current.run === badgeRun && guideUsed.current.used),
           metGoal: assignment?.passing != null ? session.score >= assignment.passing : null,
-          fresh: attempt === 1 || retryPolicy === "reseed",
+          fresh: attempt === 1 || (retryPolicy === "reseed" && reseededRun.current === badgeRun),
         });
         setBadgeNews(saveBadges(state, localStorage)
           ? { session, earned: earned.map((badge) => badge.name), streak: currentStreak(state.days, finished) }
@@ -1503,7 +1519,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment, retryPolicy]);
+  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment, retryPolicy, badgeRun]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -1641,7 +1657,7 @@ export default function CountItApp() {
     setAttempt(nextAttempt);
     setMode("challenge");
     if (retryPolicy === "reseed") {
-      setSession(makeSession({
+      const reseeded = makeSession({
         level,
         scope,
         meter,
@@ -1651,7 +1667,9 @@ export default function CountItApp() {
         count: sessionLength,
         ...(assignedCells ? { cells: assignedCells } : {}),
         ...(assignment && variant ? { variant } : {}),
-      }));
+      });
+      reseededRun.current = `${nextAttempt}|${reseeded.questions.map((question) => question.id).join(",")}`;
+      setSession(reseeded);
       return;
     }
     setSession((current) => resetSession(current));
