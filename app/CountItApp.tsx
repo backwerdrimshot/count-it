@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboa
 import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool, PRACTICE_LENGTHS, supportedPracticeLength, type PracticeLength } from '../src/practice-settings';
 import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
+import { stampLine } from '../src/class-summary';
 import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
@@ -827,6 +828,9 @@ function ChallengeMode({
         ? `Measure questions to revisit: ${missedQuestionCount}`
         : null,
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
+      /* The exact moment the code was made from, so the class summary page
+         can check a pasted summary with the same function that made it. */
+      finishedAt ? stampLine(finishedAt) : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
     return (

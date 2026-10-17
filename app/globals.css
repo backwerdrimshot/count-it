@@ -2791,3 +2791,50 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .round-timer.is-over strong { font-style: italic; }
 .builder-time { margin-top: 14px; }
 .builder-time > span small { font-weight: 400; opacity: 0.75; }
+
+/* Class summary (/class-summary): the paste box, the table and the downloads. */
+.class-summary-input { display: grid; gap: 6px; font-weight: 800; }
+.class-summary-input textarea {
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--tan-line);
+  border-radius: 11px;
+  padding: 12px;
+  font: 0.85rem/1.45 "Cascadia Mono", Consolas, monospace;
+  background: var(--white);
+  color: var(--ink);
+}
+.class-summary-count { margin: 10px 0 16px; color: var(--ink-soft); font-weight: 700; }
+.class-summary-table { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--white); }
+.class-summary-table:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+.class-summary-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.class-summary-table th, .class-summary-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.class-summary-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--forest-deep); }
+.class-summary-table tbody tr:last-child td { border-bottom: 0; }
+.class-summary-table td code { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--ink-soft); }
+.code-status { font-weight: 800; }
+.code-valid .code-status { color: var(--green-ink); }
+.code-invalid .code-status { color: var(--red); }
+.class-summary-help { margin: 12px 0 0; color: var(--ink-soft); font-size: 0.88rem; }
+.class-summary-help summary { cursor: pointer; font-weight: 800; color: var(--ink); padding: 6px 0; }
+.class-summary-downloads { display: grid; gap: 14px; margin-top: 24px; max-width: 760px; }
+.class-summary-downloads h2 { margin: 0; }
+.class-summary-downloads > button { justify-self: start; }
+.class-summary-downloads fieldset { display: grid; gap: 12px; }
+.class-summary-downloads fieldset p { margin: 0; }
+.class-summary-downloads fieldset > button { justify-self: start; }
+.class-summary-note { border-left: 4px solid var(--forest); border-radius: 0 10px 10px 0; background: var(--tan-soft); padding: 10px 14px; }
+.class-summary-check { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.class-summary-check input { width: 20px; height: 20px; }
+@media (max-width: 600px) {
+  .class-summary-downloads > button, .class-summary-downloads fieldset > button { justify-self: stretch; }
+  /* On a phone each summary becomes a small card of labelled lines, so the code
+     column is not hidden off the side of a scrolling table. */
+  .class-summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .class-summary-table table, .class-summary-table tbody, .class-summary-table tr, .class-summary-table td { display: block; }
+  .class-summary-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .class-summary-table tbody tr:last-child { border-bottom: 0; }
+  .class-summary-table td { display: grid; grid-template-columns: 7.5em 1fr; gap: 8px; padding: 4px 12px; border: 0; }
+  .class-summary-table td::before { content: attr(data-label); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--forest-deep); }
+  .class-summary-table td code { grid-column: 2; }
+}
