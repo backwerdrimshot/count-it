@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboa
 import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool, PRACTICE_LENGTHS, supportedPracticeLength, type PracticeLength } from '../src/practice-settings';
 import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
+import { currentStreak, readBadges, recordRound, saveBadges, streakText } from '../src/badges';
 import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
 import SupportFallbackDialog from "./SupportFallbackDialog";
@@ -71,6 +72,7 @@ import { hintFor, hintsTicketLine } from "../src/hints";
 import { elapsedSeconds, timeResultText, timeTicketLine, timerAnnouncement, timerDisplay } from "../src/time-limit";
 
 type AppMode = "practice" | "challenge";
+interface BadgeNews { earned: string[]; streak: number }
 
 const SESSION_LENGTH = DEFAULT_QUESTIONS;
 const INITIAL_SEED = 20260715;
@@ -699,6 +701,7 @@ function ChallengeMode({
   retryPolicy,
   hinted,
   onHint,
+  badgeNews,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -730,6 +733,9 @@ function ChallengeMode({
    *  not turn hints on: then there is no Hint button and no hints line. */
   hinted: ReadonlySet<string> | null;
   onHint: (questionId: string) => void;
+  /** Badges this round newly earned and the streak it extends; null when
+   *  storage is unavailable or before the round is saved. Never in the summary. */
+  badgeNews: BadgeNews | null;
   onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
@@ -838,6 +844,28 @@ function ChallengeMode({
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
+    const copySummary = async (turningIn: boolean) => {
+      setCopyFallback("");
+      const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
+      setCopyNotice(turningIn
+        ? copied
+          ? "Copied. Now paste it wherever your teacher asked."
+          : "Copy unavailable. Select the summary below, copy it and paste it wherever your teacher asked."
+        : copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
+    };
+    const saveButtons = (
+      <>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const copied = await copyResultImage(summary);
+          setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
+        }}>Copy result image</button>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const downloaded = await downloadResultImage(summary);
+          setCopyNotice(downloaded ? "PNG download started." : `PNG unavailable. Use ${assignment ? "Turn this in" : "Copy summary"} instead.`);
+        }}>Download PNG</button>
+        <a className="secondary-button" href="/history">Practice history</a>
+      </>
+    );
     return (
       <section className="trainer-card result-card" aria-labelledby="result-title">
         <div className="result-badge" aria-hidden="true"><span>{accuracy}%</span></div>
@@ -886,6 +914,12 @@ function ChallengeMode({
             <span>{missedQuestionCount}</span>
           </p>
         )}
+        {badgeNews && (badgeNews.earned.length > 0 || badgeNews.streak > 1) && (
+          <p className="result-earned">
+            {badgeNews.earned.length > 0 && <><strong>New badge{badgeNews.earned.length > 1 ? "s" : ""}:</strong> {badgeNews.earned.join(" · ")}. </>}
+            {badgeNews.streak > 1 && streakText(badgeNews.streak)}
+          </p>
+        )}
         {assignment && (
           <label className="student-id-field">
             <span>Your name or class ID (optional)</span>
@@ -899,27 +933,22 @@ function ChallengeMode({
             />
           </label>
         )}
+        {/* An assigned round has one job left: get the result to the teacher.
+            So it gets one obvious button, which is the same copy-the-summary
+            hand-in as before under a name a student does not have to decode,
+            and the other ways to keep a result fold away below it. Practice
+            rounds keep their row of buttons exactly as it was. */}
         <div className="result-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={async () => {
-              setCopyFallback("");
-              const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
-              setCopyNotice(copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
-            }}
-          >
-            Copy summary
-          </button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const copied = await copyResultImage(summary);
-            setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
-          }}>Copy result image</button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const downloaded = await downloadResultImage(summary);
-            setCopyNotice(downloaded ? "PNG download started." : "PNG unavailable. Use Copy summary instead.");
-          }}>Download PNG</button>
-          <a className="secondary-button" href="/history">Practice history</a>
+          {assignment ? (
+            <button type="button" className="primary-button turn-in-button" onClick={() => copySummary(true)}>
+              Turn this in
+            </button>
+          ) : (
+            <button type="button" className="secondary-button" onClick={() => copySummary(false)}>
+              Copy summary
+            </button>
+          )}
+          {!assignment && saveButtons}
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
               would be a false one. */}
@@ -932,6 +961,12 @@ function ChallengeMode({
             <button type="button" className="primary-button" onClick={onNewSession}>New questions <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {assignment && (
+          <details className="result-more">
+            <summary>More ways to save this result</summary>
+            <div className="result-actions">{saveButtons}</div>
+          </details>
+        )}
         {!assignment && missedQuestions.length > 0 && (
           <FocusedQuestionPractice
             questions={missedQuestions}
@@ -950,7 +985,7 @@ function ChallengeMode({
           <p className="result-retry-note">This assignment asks for one attempt, so there is no retry here.</p>
         )}
         {assignment && (
-          <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
+          <p className="result-submit">Turn this in copies your result and its verification code. Paste it wherever your teacher asked.</p>
         )}
         {/* Every question, what they chose, and what it should have been. When
             feedback was held to the end this is where the round is learned
@@ -1192,6 +1227,16 @@ export default function CountItApp() {
     makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const savedHistorySession = useRef<ChallengeSession | null>(null);
+  /** The run (attempt and question ids) a reseed retry just built. Only that
+   *  run counts as fresh for badges after attempt 1: a reload rebuilds the
+   *  original seeded set, which the student has already seen answered. */
+  const reseededRun = useRef("");
+  /** Whether the counting guide was on screen at any point in the current run,
+   *  so switching it off just before the last answer does not count as a round
+   *  done without it. */
+  const guideUsed = useRef<{ run: string; used: boolean }>({ run: "", used: false });
+  /* What the round just finished earned, for one calm line on its card. */
+  const [badgeNews, setBadgeNews] = useState<(BadgeNews & { session: ChallengeSession }) | null>(null);
   const { protect, confirmation } = useRoundChangeGuard(session.status === "active" && session.responses.length > 0);
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
@@ -1463,6 +1508,13 @@ export default function CountItApp() {
   /* The clock for a time-limited round starts when the round is first on
      screen, and keeps running if the student renames themselves before their
      first answer (that rebuilds the round's answer order, not the attempt). */
+  const badgeRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
+  useEffect(() => {
+    if (mode !== "challenge" || session.status === "complete") return;
+    if (guideUsed.current.run !== badgeRun) guideUsed.current = { run: badgeRun, used: showReference };
+    else if (showReference) guideUsed.current.used = true;
+  }, [mode, session.status, badgeRun, showReference]);
+
   const timeLimit = assignment?.timeLimit ?? null;
   useEffect(() => {
     if (timeLimit === null || mode !== "challenge" || session.status !== "active" || startedAt !== null) return;
@@ -1486,6 +1538,17 @@ export default function CountItApp() {
         rhythms: [...new Set(session.questions.flatMap(q => q.prompt.cells.map(c => c.id)))],
         missed: [...new Set(getMissedQuestions(session).flatMap(q => q.prompt.cells.map(c => c.id)))],
         assignment: assignment?.name ?? null, attempt });
+      try {
+        const { state, earned } = recordRound(readBadges(localStorage), {
+          finishedAt: finished, score: session.score, total: session.questions.length, meter, scope,
+          guide: showReference || (guideUsed.current.run === badgeRun && guideUsed.current.used),
+          metGoal: assignment?.passing != null ? session.score >= assignment.passing : null,
+          fresh: attempt === 1 || (retryPolicy === "reseed" && reseededRun.current === badgeRun),
+        });
+        setBadgeNews(saveBadges(state, localStorage)
+          ? { session, earned: earned.map((badge) => badge.name), streak: currentStreak(state.days, finished) }
+          : null);
+      } catch { setBadgeNews(null); /* optional, like the history */ }
       }
       if (attemptKey) writeAttempts(attemptKey, attempt);
       setPersonalBests((current) => {
@@ -1498,7 +1561,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment]);
+  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment, retryPolicy, badgeRun]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -1636,7 +1699,7 @@ export default function CountItApp() {
     setAttempt(nextAttempt);
     setMode("challenge");
     if (retryPolicy === "reseed") {
-      setSession(makeSession({
+      const reseeded = makeSession({
         level,
         scope,
         meter,
@@ -1646,7 +1709,9 @@ export default function CountItApp() {
         count: sessionLength,
         ...(assignedCells ? { cells: assignedCells } : {}),
         ...(assignment && variant ? { variant } : {}),
-      }));
+      });
+      reseededRun.current = `${nextAttempt}|${reseeded.questions.map((question) => question.id).join(",")}`;
+      setSession(reseeded);
       return;
     }
     setSession((current) => resetSession(current));
@@ -1900,6 +1965,7 @@ export default function CountItApp() {
                   run: hintRun,
                   ids: new Set([...(current.run === hintRun ? current.ids : []), questionId]),
                 }))}
+                badgeNews={badgeNews?.session === session ? badgeNews : null}
                 onStudentIdChange={changeStudentId}
                 onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
                 onAdvance={advanceChallenge}
