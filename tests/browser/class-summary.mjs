@@ -53,6 +53,14 @@ async function handIn(browser, student) {
   const lines = canvas.trim().split("\r\n");
   note("Canvas CSV uses the gradebook columns and the assignment name", lines[0] === "Student,ID,SIS User ID,SIS Login ID,Section,Class check", lines[0]);
   note("Canvas CSV holds only the checked students, with blank Canvas IDs", lines.length === 3 && lines.slice(1).every((l) => /^4B-(07|12),,,,,\d$/.test(l)), lines.slice(1).join(" | "));
+  note("questions correct stay bare counts (Canvas reads them as points)", !canvas.includes("%"));
+
+  await page.getByLabel("Score in the column").selectOption("percent");
+  const percentDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download Canvas gradebook CSV" }).click();
+  const percents = (await readFile(await (await percentDownload).path(), "utf8")).trim().split("\r\n");
+  note("percent mode writes the percent with its sign, so Canvas scales it", percents.length === 3 && percents.slice(1).every((l) => /^4B-(07|12),,,,,\d{1,3}%$/.test(l)), percents.slice(1).join(" | "));
+  note("the page says any point value works with percents", /any point value works/.test(await page.locator(".class-summary-downloads").innerText()));
   note("the page says the teacher matches names in Canvas", /You match the names in Canvas/.test(await page.locator(".class-summary-note").innerText()));
   note("the download is announced", /Canvas file downloaded with 2 students\. Left out: 1 without a checked code/.test(await page.locator(".class-summary-downloads [role=status]").innerText()));
 

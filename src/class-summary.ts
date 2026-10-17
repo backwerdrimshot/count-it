@@ -247,7 +247,10 @@ export interface CanvasExport {
  *  one column named for the assignment. The apps never know a Canvas user, so
  *  Student holds what the student typed and the ID columns stay blank; Canvas
  *  asks the teacher to match anyone it cannot find. One row per student: when
- *  a student turned in more than one result, the best score is kept. */
+ *  a student turned in more than one result, the best score is kept.
+ *  Canvas's importer reads a bare `75` as 75 points but scales `75%` to the
+ *  assignment's points, so percents are written with the sign and questions
+ *  correct stay bare counts (points). */
 export function canvasCsv(
   rows: readonly ParsedSummary[],
   options: {
@@ -278,7 +281,8 @@ export function canvasCsv(
   return {
     csv: csv([
       ["Student", "ID", "SIS User ID", "SIS Login ID", "Section", column],
-      ...[...best.values()].map(({ name, score }) => [name, "", "", "", "", score]),
+      /* Canvas reads a bare number as points; a percent has to say so. */
+      ...[...best.values()].map(({ name, score }) => [name, "", "", "", "", options.score === "percent" ? `${score}%` : score]),
     ]),
     included: best.size,
     skipped,
