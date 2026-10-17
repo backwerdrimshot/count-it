@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-11.3`
+- **Build:** `2026-10-17`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -63,7 +63,7 @@ Praxis Percussion Program integration now includes a director-led framing bridge
 Writing the link by hand is the hard part, so the app writes it: **`/build`** is a
 form where a teacher chooses a level or the exact rhythms, the meter, one beat or
 a measure, the guide, when answers show, what trying again means, the length, the
-pass mark and a seed, and gets the link to post.
+pass mark, an optional time limit and a seed, and gets the link to post.
 
 It never judges a link itself. The choices are composed into a query string and
 handed to `parseAssignment` — the function the student's browser runs — and
@@ -176,11 +176,12 @@ be a contract nobody signed up to.
 | `retry` | `free`, `reseed` or `off`. What trying again means: the same round back (the default), the same conditions on new questions, or no retry control at all. |
 | `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
+| `time` | Optional time limit in whole minutes, `1`–`60`. The student sees a calm countdown (`m:ss`) that runs on into overtime (`+0:42 over`) instead of stopping the round. The card and copied summary add a line such as `Time: 4:12 (limit 5:00, within limit)` or `Time: 6:30 (limit 5:00, over by 1:30)`, and the verification code covers both the time and the limit. Absent means no timer. Recorded, never enforced, and never part of the score. |
 | `seed` | Same questions for every student who opens the link. |
 | `sys` | Optional versioned counting profile: `standard`, `eastman-ti-te-ta`, or `eastman-ta-te-ta`. Absent means historical Standard. The legacy alias `eastman` is accepted and canonicalized to `eastman-ti-te-ta`. |
 
 An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
-under two, an impossible pass mark, a full-measure round longer than the pool
+under two, an impossible pass mark, a time limit outside 1–60 whole minutes, a full-measure round longer than the pool
 can fill, an unrecognized feedback setting or an unsupported counting system
 each invalidate the whole link with a plain-language message, and the app keeps
 working normally underneath it. A rhythm pool with a rhythm missing teaches a
@@ -291,7 +292,7 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - A profile can be saved optionally on this device for free practice when browser storage is available and retained. A teacher's assignment profile takes precedence and does not overwrite the saved preference.
 - Progress is device-local and intentionally lightweight.
 - Results can be copied or downloaded as PNG cards. The last 50 completed challenges are saved on this device without names or class IDs. No automatic submission to an LMS.
-- Nothing is timed and no duration is recorded, so a score says what was answered but not how long it took.
+- Answers are never timed or scored for speed. Only when a teacher's link sets `time` is a duration recorded: the card reports it beside the score, against the limit, and the round is never stopped. Without `time`, no duration is recorded.
 - Free practice opens in Practice / Level 1 / full 4/4 measure / guide on. Saving the practice setup is opt-in; it restores level, question size, meter, guide and an optional rhythm pool. A counting profile is saved separately. Assignment links take precedence and never overwrite either saved default.
 
 ## Privacy and accessibility
@@ -308,7 +309,9 @@ synced off-device. The Cloudflare beacon carries the same site token as the rest
 backwerdrhythmshop.com so this app's page views land beside the page that describes it.
 The shop site's `/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
-layouts support phone, tablet, and desktop use.
+layouts support phone, tablet, and desktop use. An assignment's optional time-limit
+countdown is a `timer` that screen readers do not read out every second; a separate
+polite live line changes at most once a minute ("3 minutes left", "Time limit reached").
 
 ## Deployment
 

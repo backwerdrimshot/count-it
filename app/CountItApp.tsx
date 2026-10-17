@@ -67,6 +67,7 @@ import {
 import { copyTextOrFallback } from "../src/copy-text";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 import { readAttempts, writeAttempts } from "../src/attempt-tally";
+import { elapsedSeconds, timeResultText, timeTicketLine, timerAnnouncement, timerDisplay } from "../src/time-limit";
 
 type AppMode = "practice" | "challenge";
 
@@ -647,6 +648,38 @@ function FocusedQuestionPractice({
   );
 }
 
+/* The teacher's time limit, while the round runs.
+
+   Calm on purpose: no colour change to red, no sound, no stopping. At zero the
+   countdown simply becomes overtime ("+0:42 over") and the student finishes the
+   round they started; the card records the time against the limit.
+
+   The visible clock ticks every second and is a `timer`, which screen readers
+   do not announce as it changes. What they DO hear is a separate polite line
+   that changes at most once a minute — "3 minutes left", "Time limit reached" —
+   so nobody is read a number every second. */
+function RoundTimer({ startedAt, limitMinutes }: { startedAt: number; limitMinutes: number }) {
+  const [now, setNow] = useState(startedAt);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const every = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(every);
+    };
+  }, [startedAt]);
+  const elapsed = elapsedSeconds(startedAt, now);
+  const display = timerDisplay(elapsed, limitMinutes);
+  return (
+    <span className={`round-timer${display.over ? " is-over" : ""}`}>
+      {display.over ? "Time " : "Time left "}
+      <strong role="timer">{display.text}</strong>
+      <span className="visually-hidden" aria-live="polite">{timerAnnouncement(elapsed, limitMinutes)}</span>
+    </span>
+  );
+}
+
 function ChallengeMode({
   session,
   level,
@@ -659,6 +692,7 @@ function ChallengeMode({
   sequenceStep,
   studentId,
   finishedAt,
+  startedAt,
   holdFeedback,
   attempt,
   retryPolicy,
@@ -679,6 +713,9 @@ function ChallengeMode({
   sequenceStep: SequenceStep | null;
   studentId: string;
   finishedAt: Date | null;
+  /** When this run of the round began, for a link with a time limit; null
+   *  otherwise, or before the round has been shown. */
+  startedAt: number | null;
   /** `fb=end`: no correct answer, no running score, no highlighted guide until
    *  the round is over. Instant feedback teaches; a graded round cannot afford
    *  to hand over an answer key while it is still being answered. */
@@ -744,6 +781,15 @@ function ChallengeMode({
        teacher-facing code with its own published format and its own stated
        limits, and whether it generalizes across the three apps is still open.
        Making the two identical here would answer that by accident. */
+    /* How long the round took, when the teacher set a limit. Measured from
+       when this run was first shown to when it was stamped finished, and only
+       once both are known — a card that printed 0:00 while the stamp was
+       still landing would be a claim nobody made. */
+    const limitMinutes = assignment?.timeLimit ?? null;
+    const elapsed = limitMinutes !== null && finishedAt && startedAt !== null
+      ? elapsedSeconds(startedAt, finishedAt.getTime())
+      : null;
+    const timing = limitMinutes !== null && elapsed !== null ? { elapsedSeconds: elapsed, limitMinutes } : null;
     const code = verificationCode({
       assignment: assignment?.name ?? "",
       studentId,
@@ -751,6 +797,7 @@ function ChallengeMode({
       total: session.questions.length,
       finishedAt: stamped,
       attempt,
+      ...(timing ? { timing } : {}),
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
@@ -773,6 +820,7 @@ function ChallengeMode({
       `Score: ${session.score}/${session.questions.length} (${accuracy}%)`,
       attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
+      timing ? timeTicketLine(timing.elapsedSeconds, timing.limitMinutes) : null,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
       missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
       scope === "measure" && missedQuestionCount > 0
@@ -806,6 +854,11 @@ function ChallengeMode({
             // replayed after its answers have been shown, so a score that does
             // not say which run it came from claims more than it knows.
             <div><dt>Attempt</dt><dd>{attempt}</dd></div>
+          )}
+          {timing && (
+            // Recorded, not enforced: the round was finished either way, and
+            // the teacher reads the time beside the score.
+            <div><dt>Time</dt><dd>{timeResultText(timing.elapsedSeconds, timing.limitMinutes)}</dd></div>
           )}
         </dl>
         {missedLabels.length > 0 && (
@@ -940,6 +993,9 @@ function ChallengeMode({
           {holdFeedback
             ? <span>Answers at the end</span>
             : <span>Score <strong>{session.score}</strong> · Accuracy <strong>{accuracy}%</strong></span>}
+          {assignment?.timeLimit != null && startedAt !== null && (
+            <RoundTimer startedAt={startedAt} limitMinutes={assignment.timeLimit} />
+          )}
         </div>
         <progress value={session.currentIndex + (response ? 1 : 0)} max={session.questions.length}>
           {session.currentIndex + 1} of {session.questions.length}
@@ -1119,6 +1175,9 @@ export default function CountItApp() {
   const [linkError, setLinkError] = useState<AssignmentError | null>(null);
   const [studentId, setStudentId] = useState("");
   const [finishedAt, setFinishedAt] = useState<Date | null>(null);
+  /** When the current run of a time-limited round was first shown. Null with no
+   *  limit, and between runs; set by the effect below, never during a render. */
+  const [startedAt, setStartedAt] = useState<number | null>(null);
   /** Which run of this round the student is on. Reset by anything that builds a
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
@@ -1359,6 +1418,16 @@ export default function CountItApp() {
     } catch { /* optional; explicit save reports failures */ }
   }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells, freeLength]);
 
+  /* The clock for a time-limited round starts when the round is first on
+     screen, and keeps running if the student renames themselves before their
+     first answer (that rebuilds the round's answer order, not the attempt). */
+  const timeLimit = assignment?.timeLimit ?? null;
+  useEffect(() => {
+    if (timeLimit === null || mode !== "challenge" || session.status !== "active" || startedAt !== null) return;
+    const start = window.setTimeout(() => setStartedAt((current) => current ?? Date.now()), 0);
+    return () => window.clearTimeout(start);
+  }, [timeLimit, mode, session.status, startedAt]);
+
   useEffect(() => {
     if (session.status !== "complete") return;
     const saveBest = window.setTimeout(() => {
@@ -1409,6 +1478,7 @@ export default function CountItApp() {
     setPracticeIndex(0);
     setRevealed(false);
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
       level: nextLevel,
@@ -1491,6 +1561,7 @@ export default function CountItApp() {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
       level,
@@ -1519,6 +1590,7 @@ export default function CountItApp() {
     if (retryPolicy === "off") return;
     const nextAttempt = attempt + 1;
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(nextAttempt);
     setMode("challenge");
     if (retryPolicy === "reseed") {
@@ -1777,6 +1849,7 @@ export default function CountItApp() {
                 sequenceStep={sequenceStep}
                 studentId={studentId}
                 finishedAt={finishedAt}
+                startedAt={startedAt}
                 holdFeedback={holdFeedback}
                 attempt={attempt}
                 retryPolicy={retryPolicy}

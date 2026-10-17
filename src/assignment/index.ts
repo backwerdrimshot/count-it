@@ -19,8 +19,10 @@
  *     policy, never the student's own toggle. The same is true of when feedback
  *     arrives: instant feedback teaches and withheld feedback assesses, so `fb`
  *     is the assignment's call rather than the learner's.
- *   * Nothing here is a timer. Difficulty comes from cell vocabulary, scope,
- *     and the guide — never from speed.
+ *   * Nothing here scores speed. Difficulty comes from cell vocabulary, scope,
+ *     and the guide. A link MAY set a time limit (`time`), but it is recorded
+ *     on the card beside the score, never enforced and never part of it: the
+ *     countdown runs into overtime and the student still finishes.
  */
 import {
   ALL_RHYTHM_CELLS,
@@ -37,6 +39,7 @@ import {
   type LevelId,
   type MeterId,
 } from "../rhythm";
+import { MAX_TIME_LIMIT, MIN_TIME_LIMIT } from "../time-limit";
 
 export type GuidePolicy = "on" | "off";
 /** When the correct answer is shown. `each` teaches, `end` assesses. */
@@ -146,6 +149,7 @@ export interface AssignmentError {
     | "feedback"
     | "retry"
     | "measure-pool"
+    | "time"
     /** Raised by the app, not the parser: a round that refused to build for a
      *  reason validation did not anticipate. The link is still rejected whole. */
     | "round";
@@ -174,6 +178,10 @@ export interface Assignment {
   /** Questions needed to pass, as the teacher set it. Never enforced by the
    *  app — it is reported on the card so a human can read the gate. */
   readonly passing: number | null;
+  /** The teacher's time limit in whole minutes. Null when the link set none,
+   *  which means no countdown at all — every link written before this existed.
+   *  Recorded on the card, never enforced. */
+  readonly timeLimit: number | null;
   readonly seed: string | null;
   readonly system: CountingSystemParam;
   /** True only when the URL explicitly chose `sys`; links without it remain Standard. */
@@ -602,6 +610,29 @@ export function parseAssignment(search: string): AssignmentResult {
     passing = parsed;
   }
 
+  /* The time limit. Refused rather than clamped when it is out of range, like
+     every other number here: a link that said `time=90` and silently ran with
+     sixty would put a limit on the card the teacher never wrote. */
+  let timeLimit: number | null = null;
+  const timeRaw = params.get("time");
+  if (timeRaw !== null) {
+    const parsed = integerParam(timeRaw);
+    if (parsed === null || parsed < MIN_TIME_LIMIT || parsed > MAX_TIME_LIMIT) {
+      return {
+        ok: false,
+        error: {
+          code: "time",
+          entry: timeRaw,
+          message:
+            `This practice link sets a time limit of \u201c${timeRaw}\u201d minutes. A time limit ` +
+            `is a whole number of minutes, ${MIN_TIME_LIMIT}–${MAX_TIME_LIMIT}.`,
+        },
+      };
+    }
+    timeLimit = parsed;
+    locked.push("time");
+  }
+
   const seedRaw = params.get("seed");
   const seed = seedRaw !== null && /^[\w-]{1,32}$/.test(seedRaw) ? seedRaw : null;
   if (seed) locked.push("seed");
@@ -622,6 +653,7 @@ export function parseAssignment(search: string): AssignmentResult {
       retry,
       count,
       passing,
+      timeLimit,
       seed,
       system: system as CountingProfileId,
       systemPinned: systemRaw !== null,
@@ -673,6 +705,7 @@ export function serializeAssignment(assignment: Assignment): string {
   if (assignment.retry) parts.push(`retry=${assignment.retry}`);
   if (assignment.count !== null) parts.push(`n=${assignment.count}`);
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
+  if (assignment.timeLimit !== null) parts.push(`time=${assignment.timeLimit}`);
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
   if (assignment.systemPinned) parts.push(`sys=${assignment.system}`);
   return parts.length ? `?${parts.join("&")}` : "";
@@ -704,6 +737,7 @@ export function describeAssignment(assignment: Assignment): string {
   if (assignment.retry === "off") parts.push("one attempt");
   if (assignment.count !== null) parts.push(`${assignment.count} questions`);
   if (assignment.passing !== null) parts.push(`pass at ${assignment.passing}`);
+  if (assignment.timeLimit !== null) parts.push(`${assignment.timeLimit}-minute time limit`);
   return parts.join(" · ");
 }
 
@@ -734,6 +768,11 @@ export interface VerificationInput {
    *  a different fact about a student than a first attempt, and a code that
    *  cannot tell them apart attests to less than it appears to. */
   readonly attempt?: number;
+  /** Only when the link set a time limit: how long the round took, in whole
+   *  seconds, and the limit in minutes. Both go into the code together, so a
+   *  card cannot claim a different time — or a different limit — than the one
+   *  its code was made for. Absent, the code is exactly what it always was. */
+  readonly timing?: { readonly elapsedSeconds: number; readonly limitMinutes: number };
 }
 
 function twoDigit(value: number): string {
@@ -748,6 +787,7 @@ export function verificationCode({
   total,
   finishedAt,
   attempt = 1,
+  timing,
 }: VerificationInput): string {
   const percent = total === 0 ? 0 : Math.round((correct / total) * 100);
   const stamp =
@@ -755,7 +795,8 @@ export function verificationCode({
     twoDigit(finishedAt.getMonth() + 1) +
     twoDigit(finishedAt.getDate());
   const digest = fnv1a(
-    `count-it|${assignment}|${studentId}|${correct}/${total}|#${attempt}|${finishedAt.toISOString()}`,
+    `count-it|${assignment}|${studentId}|${correct}/${total}|#${attempt}|${finishedAt.toISOString()}` +
+      (timing ? `|t${Math.floor(timing.elapsedSeconds)}/${timing.limitMinutes * 60}` : ""),
   )
     .toString(36)
     .toUpperCase()

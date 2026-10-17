@@ -7,7 +7,9 @@ import {
   BUILDER_METERS,
   MAX_NAME_LENGTH,
   MAX_QUESTIONS,
+  MAX_TIME_LIMIT,
   MIN_QUESTIONS,
+  MIN_TIME_LIMIT,
   PRODUCTION_ORIGIN,
   applyQuiz,
   cellsForLevel,
@@ -78,6 +80,7 @@ export default function AssignmentBuilder() {
   const [retry, setRetry] = useState<"free" | "reseed" | "off" | null>(null);
   const [countText, setCountText] = useState("10");
   const [passText, setPassText] = useState("8");
+  const [timeText, setTimeText] = useState("");
   const [seed, setSeed] = useState("");
   const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
@@ -104,9 +107,10 @@ export default function AssignmentBuilder() {
       retry,
       count: numberOrNull(countText),
       passing: numberOrNull(passText),
+      timeLimit: numberOrNull(timeText),
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, seed],
+    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -135,6 +139,7 @@ export default function AssignmentBuilder() {
     setRetry(next.retry);
     setCountText(next.count === null ? "" : String(next.count));
     setPassText(next.passing === null ? "" : String(next.passing));
+    setTimeText(next.timeLimit == null ? "" : String(next.timeLimit));
     setSeed(next.seed);
   }, []);
 
@@ -498,6 +503,22 @@ export default function AssignmentBuilder() {
                   <small>Correct answers needed. Shown on the card, never enforced.</small>
                 </label>
               </div>
+              <label className="level-control builder-time">
+                <span>Time limit <small>optional</small></span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_TIME_LIMIT}
+                  max={MAX_TIME_LIMIT}
+                  value={timeText}
+                  placeholder="none"
+                  onChange={(event) => setTimeText(event.target.value)}
+                />
+                <small>
+                  Minutes, {MIN_TIME_LIMIT}–{MAX_TIME_LIMIT}. Blank means no timer. Students see a countdown; at zero
+                  it counts overtime and they can still finish. The card records their time.
+                </small>
+              </label>
               <div className="builder-seed">
                 <label className="level-control">
                   <span>Seed</span>
