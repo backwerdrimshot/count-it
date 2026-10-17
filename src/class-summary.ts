@@ -242,7 +242,8 @@ export interface CanvasExport {
   };
 }
 
-/** Canvas's gradebook import layout: Student, ID, SIS User ID, Section, then
+/** Canvas's gradebook import layout: Student, ID, SIS User ID, SIS Login ID,
+ *  Section, then
  *  one column named for the assignment. The apps never know a Canvas user, so
  *  Student holds what the student typed and the ID columns stay blank; Canvas
  *  asks the teacher to match anyone it cannot find. One row per student: when
@@ -276,8 +277,8 @@ export function canvasCsv(
   const column = options.column.trim() || "Assignment";
   return {
     csv: csv([
-      ["Student", "ID", "SIS User ID", "Section", column],
-      ...[...best.values()].map(({ name, score }) => [name, "", "", "", score]),
+      ["Student", "ID", "SIS User ID", "SIS Login ID", "Section", column],
+      ...[...best.values()].map(({ name, score }) => [name, "", "", "", "", score]),
     ]),
     included: best.size,
     skipped,

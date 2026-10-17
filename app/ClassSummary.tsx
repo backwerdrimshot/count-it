@@ -156,12 +156,12 @@ export default function ClassSummary() {
               <fieldset className="builder-group">
                 <legend>Canvas gradebook</legend>
                 <p>
-                  A file in Canvas&rsquo;s gradebook import layout: <code>Student, ID, SIS User ID, Section</code>, then one
+                  A file in Canvas&rsquo;s gradebook import layout: <code>Student, ID, SIS User ID, SIS Login ID, Section</code>, then one
                   column named for the assignment holding each student&rsquo;s score.
                 </p>
                 <p className="class-summary-note">
                   <strong>You match the names in Canvas.</strong> These apps never know who a student is, so the
-                  Student column holds whatever name or class ID the student typed, and ID, SIS User ID and Section
+                  Student column holds whatever name or class ID the student typed, and ID, SIS User ID, SIS Login ID and Section
                   are left blank. When you import it (Gradebook, then Import), Canvas lists anyone it cannot match and you
                   pick the right student there. If the column name is not the name of a Canvas assignment, Canvas
                   offers to create a new one.

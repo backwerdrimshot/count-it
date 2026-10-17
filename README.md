@@ -74,6 +74,12 @@ rules to drift from the first. `tests/builder.test.ts` enumerates every
 combination of the choices and requires each to be either refused with a message
 or playable end to end.
 
+**3/8 lives in Eight Time.** This builder refuses eighth-note-beat meters by
+design, so the top of `/build` (and the note under Meter) carries a **Build an
+Eight Time assignment** link to Eight Time's published 3/8 steps on
+`/assignments`, where each has Try it, Copy link and Post to Google Classroom.
+Eight Time has no builder of its own yet.
+
 Three decisions worth knowing:
 
 - **It writes only what was pinned.** A control left on "Student chooses" is
@@ -117,7 +123,7 @@ students turned in, as many as they like, one after another, and gets a table:
 student ID, assignment, score, whether the pass mark was met, the time when the
 link set a limit, and whether the verification code checks. It downloads as a
 plain CSV, or as a **Canvas gradebook** CSV in Canvas's import layout (`Student`,
-`ID`, `SIS User ID`, `Section`, then one column named for the assignment holding
+`ID`, `SIS User ID`, `SIS Login ID`, `Section`, then one column named for the assignment holding
 the score, as questions correct or percent). The apps never know a Canvas user,
 so `Student` holds the name or class ID the student typed and the ID columns are
 blank; the page says plainly that the teacher matches names in Canvas, which

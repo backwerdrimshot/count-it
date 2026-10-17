@@ -2862,6 +2862,17 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
   .class-summary-table td code { grid-column: 2; }
 }
 
+/* The builder's pointer to Eight Time for 3/8, which this builder refuses by design. */
+.builder-intro p.builder-eight-time {
+  margin-top: 12px;
+  border-left: 4px solid var(--forest);
+  border-radius: 0 10px 10px 0;
+  background: var(--tan-soft);
+  padding: 10px 14px;
+  font-size: 0.94rem;
+}
+.builder-eight-time a { color: var(--forest-deep); font-weight: 700; }
+
 /* Optional hints (hints=on). The tip sits quietly under the question: the same
    size as the feedback text, and empty until it is asked for. */
 .hint-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-block: 8px 12px; }

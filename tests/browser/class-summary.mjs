@@ -51,8 +51,8 @@ async function handIn(browser, student) {
   await page.getByRole("button", { name: "Download Canvas gradebook CSV" }).click();
   const canvas = await readFile(await (await canvasDownload).path(), "utf8");
   const lines = canvas.trim().split("\r\n");
-  note("Canvas CSV uses the gradebook columns and the assignment name", lines[0] === "Student,ID,SIS User ID,Section,Class check", lines[0]);
-  note("Canvas CSV holds only the checked students, with blank Canvas IDs", lines.length === 3 && lines.slice(1).every((l) => /^4B-(07|12),,,,\d$/.test(l)), lines.slice(1).join(" | "));
+  note("Canvas CSV uses the gradebook columns and the assignment name", lines[0] === "Student,ID,SIS User ID,SIS Login ID,Section,Class check", lines[0]);
+  note("Canvas CSV holds only the checked students, with blank Canvas IDs", lines.length === 3 && lines.slice(1).every((l) => /^4B-(07|12),,,,,\d$/.test(l)), lines.slice(1).join(" | "));
   note("the page says the teacher matches names in Canvas", /You match the names in Canvas/.test(await page.locator(".class-summary-note").innerText()));
   note("the download is announced", /Canvas file downloaded with 2 students\. Left out: 1 without a checked code/.test(await page.locator(".class-summary-downloads [role=status]").innerText()));
 
