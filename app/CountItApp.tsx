@@ -829,6 +829,28 @@ function ChallengeMode({
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
+    const copySummary = async (turningIn: boolean) => {
+      setCopyFallback("");
+      const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
+      setCopyNotice(turningIn
+        ? copied
+          ? "Copied. Now paste it wherever your teacher asked."
+          : "Copy unavailable. Select the summary below, copy it and paste it wherever your teacher asked."
+        : copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
+    };
+    const saveButtons = (
+      <>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const copied = await copyResultImage(summary);
+          setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
+        }}>Copy result image</button>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const downloaded = await downloadResultImage(summary);
+          setCopyNotice(downloaded ? "PNG download started." : `PNG unavailable. Use ${assignment ? "Turn this in" : "Copy summary"} instead.`);
+        }}>Download PNG</button>
+        <a className="secondary-button" href="/history">Practice history</a>
+      </>
+    );
     return (
       <section className="trainer-card result-card" aria-labelledby="result-title">
         <div className="result-badge" aria-hidden="true"><span>{accuracy}%</span></div>
@@ -886,27 +908,22 @@ function ChallengeMode({
             />
           </label>
         )}
+        {/* An assigned round has one job left: get the result to the teacher.
+            So it gets one obvious button, which is the same copy-the-summary
+            hand-in as before under a name a student does not have to decode,
+            and the other ways to keep a result fold away below it. Practice
+            rounds keep their row of buttons exactly as it was. */}
         <div className="result-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={async () => {
-              setCopyFallback("");
-              const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
-              setCopyNotice(copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
-            }}
-          >
-            Copy summary
-          </button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const copied = await copyResultImage(summary);
-            setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
-          }}>Copy result image</button>
-          <button type="button" className="secondary-button" onClick={async () => {
-            const downloaded = await downloadResultImage(summary);
-            setCopyNotice(downloaded ? "PNG download started." : "PNG unavailable. Use Copy summary instead.");
-          }}>Download PNG</button>
-          <a className="secondary-button" href="/history">Practice history</a>
+          {assignment ? (
+            <button type="button" className="primary-button turn-in-button" onClick={() => copySummary(true)}>
+              Turn this in
+            </button>
+          ) : (
+            <button type="button" className="secondary-button" onClick={() => copySummary(false)}>
+              Copy summary
+            </button>
+          )}
+          {!assignment && saveButtons}
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
               would be a false one. */}
@@ -919,6 +936,12 @@ function ChallengeMode({
             <button type="button" className="primary-button" onClick={onNewSession}>New questions <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {assignment && (
+          <details className="result-more">
+            <summary>More ways to save this result</summary>
+            <div className="result-actions">{saveButtons}</div>
+          </details>
+        )}
         {!assignment && missedQuestions.length > 0 && (
           <FocusedQuestionPractice
             questions={missedQuestions}
@@ -937,7 +960,7 @@ function ChallengeMode({
           <p className="result-retry-note">This assignment asks for one attempt, so there is no retry here.</p>
         )}
         {assignment && (
-          <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
+          <p className="result-submit">Turn this in copies your result and its verification code. Paste it wherever your teacher asked.</p>
         )}
         {/* Every question, what they chose, and what it should have been. When
             feedback was held to the end this is where the round is learned
