@@ -25,6 +25,7 @@ import {
 } from "../src/assignment/presets";
 import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
+import { classroomShareUrl } from "../src/classroom-share";
 
 type VocabularyKind = Vocabulary["kind"];
 
@@ -539,6 +540,14 @@ export default function AssignmentBuilder() {
                   <button type="button" className="primary-button" onClick={copyLink}>Copy link</button>
                   <a className="secondary-button" href={result.link} target="_blank" rel="noopener noreferrer">
                     Try it as a student
+                  </a>
+                  <a
+                    className="secondary-button"
+                    href={classroomShareUrl(result.link, result.assignment.name || "Count It assignment")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Post to Google Classroom
                   </a>
                 </div>
                 <p className="builder-copied" role="status" aria-live="polite">{copyMessage}</p>

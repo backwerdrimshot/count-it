@@ -9,6 +9,7 @@ import {
 } from "../src/assignment/catalog";
 import { readAllAttempts } from "../src/attempt-tally";
 import { PageFooter, PageHeader } from "./PageChrome";
+import { classroomShareUrl } from "../src/classroom-share";
 
 /* The key this browser's attempt tally uses for a Count It step: the same string
    the trainer writes under when the round finishes (tests/catalog.test.ts holds
@@ -131,6 +132,15 @@ export default function AssignmentCatalog() {
                           >
                             Copy link
                           </button>
+                          <a
+                            className="secondary-button"
+                            href={classroomShareUrl(entry.link, entry.title)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Post step ${entry.step}: ${entry.title} to Google Classroom`}
+                          >
+                            Post to Google Classroom
+                          </a>
                           {entry.presetId && (
                             <a
                               className="quiet-button"
