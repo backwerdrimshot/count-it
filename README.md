@@ -124,7 +124,10 @@ student ID, assignment, score, whether the pass mark was met, the time when the
 link set a limit, and whether the verification code checks. It downloads as a
 plain CSV, or as a **Canvas gradebook** CSV in Canvas's import layout (`Student`,
 `ID`, `SIS User ID`, `SIS Login ID`, `Section`, then one column named for the assignment holding
-the score, as questions correct or percent). The apps never know a Canvas user,
+the score, as questions correct or percent). A percent is written with its
+sign (`75%`), which Canvas scales to whatever the assignment is worth, so any
+point value works; questions correct stay bare counts, which Canvas imports as
+points. The apps never know a Canvas user,
 so `Student` holds the name or class ID the student typed and the ID columns are
 blank; the page says plainly that the teacher matches names in Canvas, which
 lists anyone it cannot find at import. One row per student (best score kept);
