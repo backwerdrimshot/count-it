@@ -229,3 +229,15 @@ export function catalogDocument() {
     entries: CATALOG_ENTRIES.map((entry) => ({ ...entry })),
   };
 }
+
+/** A step's link with hints turned on, or with any hints setting taken off.
+ *  Only the `hints` parameter changes: the rest of the link is kept character
+ *  for character, so the step still names the same round. */
+export function withHints(link: string, on: boolean): string {
+  const mark = link.indexOf("?");
+  const base = mark === -1 ? link : link.slice(0, mark);
+  const query = mark === -1 ? "" : link.slice(mark + 1);
+  const parts = query.split("&").filter((part) => part !== "" && !part.startsWith("hints="));
+  if (on) parts.push("hints=on");
+  return parts.length ? `${base}?${parts.join("&")}` : base;
+}

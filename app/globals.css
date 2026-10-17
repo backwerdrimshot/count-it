@@ -2815,6 +2815,14 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .builder-time { margin-top: 14px; }
 .builder-time > span small { font-weight: 400; opacity: 0.75; }
 
+/* Optional hints (hints=on). The tip sits quietly under the question: the same
+   size as the feedback text, and empty until it is asked for. */
+.hint-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-block: 8px 12px; }
+.hint-row .hint-button { flex: none; }
+.hint-text { flex: 1 1 16rem; margin: 0; line-height: 1.45; }
+.catalog-hints { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.catalog-hints p { flex: 1 1 18rem; margin: 0; }
+
 /* Badges: a small shelf on the history page and one line on a result card.
    Theme colours only, so both stay readable in dark mode. */
 .result-earned { margin:16px auto 0; max-width:420px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:0.9rem; text-align:left; }

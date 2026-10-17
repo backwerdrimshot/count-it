@@ -84,6 +84,8 @@ export interface BuilderState {
   /** Time limit in whole minutes. Null or absent: no limit, no countdown.
    *  Optional so the published presets, which have none, need not say so. */
   readonly timeLimit?: number | null;
+  /** One tip per question, on request. Optional for the same reason. */
+  readonly hints?: boolean;
   /** Empty string: none. */
   readonly seed: string;
 }
@@ -110,6 +112,7 @@ export function defaultBuilderState(seed: string): BuilderState {
     count: 10,
     passing: 8,
     timeLimit: null,
+    hints: false,
     seed,
   });
 }
@@ -183,6 +186,7 @@ export function buildQuery(state: BuilderState): string {
   if (state.count !== null) parts.push(`n=${state.count}`);
   if (state.passing !== null) parts.push(`pass=${state.passing}`);
   if (state.timeLimit != null) parts.push(`time=${state.timeLimit}`);
+  if (state.hints) parts.push("hints=on");
   if (state.seed) parts.push(`seed=${encodeURIComponent(state.seed)}`);
   return parts.length ? `?${parts.join("&")}` : "";
 }
@@ -280,6 +284,12 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
     notes.push(
       `Time limit: students see a ${assignment.timeLimit}-minute countdown. At zero it keeps counting as ` +
         "overtime and they can still finish; the result card records their time against the limit.",
+    );
+  }
+  if (assignment.hints) {
+    notes.push(
+      "Hints on: each question has a Hint button that shows one tip on how to count it, never the answer. " +
+        "A right answer after a hint still scores, and the result card says how many hints were used.",
     );
   }
   if (state.count === null) {
