@@ -123,12 +123,12 @@ try {
   }
   // Clipboard missing must produce selectable text and a live outcome.
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true }));
-  await page.getByRole('button', { name: 'Copy summary', exact: true }).click();
+  await page.getByRole('button', { name: 'Turn this in', exact: true }).click();
   assert.match(await page.locator('[role=status]').allTextContents().then(x => x.join(' ')), /Copy unavailable/);
   assert.match(await page.locator('textarea[readonly]').inputValue(), /Score:/);
   await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { value: { writeText: async text => { window.__copied = text; } }, configurable: true }));
-  await page.getByRole('button', { name: 'Copy summary', exact: true }).click();
-  assert.match(await page.locator('[role=status]').allTextContents().then(x => x.join(' ')), /Summary copied/);
+  await page.getByRole('button', { name: 'Turn this in', exact: true }).click();
+  assert.match(await page.locator('[role=status]').allTextContents().then(x => x.join(' ')), /Copied\. Now paste it wherever your teacher asked/);
   assert.match(await page.evaluate(() => window.__copied), /Score:/);
   console.log('PASS clipboard absence selectable fallback and successful live feedback');
   if (eight) {
