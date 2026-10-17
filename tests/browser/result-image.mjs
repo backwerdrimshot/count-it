@@ -4,7 +4,7 @@ import { chromium } from 'playwright-core';
 const base = process.env.BASE_URL || 'http://127.0.0.1:4319';
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
 const context = await browser.newContext({ acceptDownloads: true });
-await context.route(/cloudflareinsights|counter\.backwerdrhythmshop/, route => route.abort());
+await context.route(/cloudflareinsights/, route => route.abort());
 const page = await context.newPage(); const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 const notice = () => page.locator('[role=status]').allTextContents().then(x => x.join(' '));

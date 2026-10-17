@@ -81,7 +81,7 @@ export default function AssignmentCatalog() {
   return (
     <div className="builder-shell">
       <a className="skip-link" href="#catalog">Skip to the assignments</a>
-      <PageHeader />
+      <PageHeader page="assignments" />
 
       <main className="builder-main" id="catalog">
         <div className="builder-intro">
@@ -196,7 +196,7 @@ export default function AssignmentCatalog() {
         </p>
       </main>
 
-      <PageFooter page="assignments" feedbackSubject="Count It — Assignments feedback" />
+      <PageFooter page="assignments" />
     </div>
   );
 }

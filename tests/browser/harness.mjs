@@ -11,7 +11,7 @@ import { chromium } from "playwright-core";
     the deployed site); `pnpm test:browser` starts its own when it is unset. */
 export const BASE = (process.env.BASE_URL || process.env.BASE || "http://localhost:3000").replace(/\/$/, "");
 
-const ANALYTICS = /counter\.backwerdrhythmshop\.com|cloudflareinsights\.com/;
+const ANALYTICS = /cloudflareinsights\.com/;
 const APP_ORIGIN = /^https:\/\/count-it\.backwerdrhythmshop\.com\//;
 
 /* Node trusts a corporate or sandbox proxy's CA; headless Chromium may not.

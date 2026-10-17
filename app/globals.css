@@ -1127,136 +1127,6 @@ a:focus-visible,
   color: var(--on-ink-muted);
 }
 
-.site-footer {
-  display: grid;
-  gap: 18px;
-  background: var(--ink);
-  color: var(--on-ink-muted);
-  padding: 30px max(20px, calc((100% - 1180px) / 2));
-  font-size: 0.78rem;
-}
-
-.site-footer > div {
-  display: grid;
-}
-
-.site-footer .shop-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-.site-footer .shop-link:hover { color: var(--on-ink); }
-
-.site-footer strong {
-  color: var(--on-ink);
-  font-family: var(--display);
-  font-size: 1.25rem;
-}
-
-.site-footer span {
-  color: var(--on-ink-muted);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-}
-
-.site-footer .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
-.site-footer .foot-btn {
-  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-  background: var(--veil); color: var(--on-ink); border: 1px solid var(--veil-edge);
-  border-radius: 8px; padding: 7px 14px; font-size: 0.75rem; font-weight: 700; transition: 0.15s;
-}
-.site-footer .foot-btn:hover { background: var(--veil-line); border-color: var(--on-ink); }
-.site-footer .foot-btn.foot-ico{padding:8px;border-radius:50%;gap:0;line-height:0}
-.site-footer .foot-btn.foot-ico svg{width:16px;height:16px;display:block}
-
-/* Support fallback panel. A bare mailto: fails silently on machines without a
-   registered email app, so support links open this native dialog when available. */
-.support-dialog {
-  width: min(560px, calc(100vw - 32px));
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: var(--shadow);
-}
-
-.support-dialog::backdrop {
-  background: rgba(23, 23, 23, 0.56);
-}
-
-.support-dialog h2 {
-  margin: 0 0 8px;
-  color: var(--ink);
-  font: 800 1.15rem var(--display);
-}
-
-.support-dialog .support-dialog-lede,
-.support-dialog .support-dialog-hint {
-  margin: 0 0 12px;
-  color: var(--ink-soft);
-  font-size: 0.86rem;
-}
-
-.support-dialog .support-dialog-hint {
-  margin: 12px 0 0;
-}
-
-.support-dialog .support-dialog-label {
-  display: block;
-  color: var(--ink);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.support-dialog textarea {
-  display: block;
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--warm-white);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.85rem;
-  resize: vertical;
-}
-
-.support-dialog textarea:focus-visible {
-  outline: 3px solid var(--forest);
-  outline-offset: 3px;
-  border-color: var(--accent);
-}
-
-.support-dialog .support-dialog-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.support-dialog .foot-btn {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--veil-edge);
-  border-radius: 8px;
-  background: var(--ink);
-  color: var(--on-ink);
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.support-dialog .foot-btn:hover {
-  background: var(--ink);
-  border-color: var(--accent);
-}
-
-.site-footer p {
-  margin: 0;
-}
 
 /* Below the two-column breakpoint the hero was 518px of a 664px phone screen —
    an eyebrow, a two-line headline, a paragraph of description and three tall
@@ -1337,14 +1207,6 @@ a:focus-visible,
     padding: 30px 36px;
   }
 
-  .site-footer {
-    grid-template-columns: 1fr 1.35fr 1fr;
-    align-items: center;
-  }
-
-  .site-footer p:last-child {
-    text-align: right;
-  }
 }
 
 @media (min-width: 980px) {
@@ -1444,10 +1306,6 @@ a:focus-visible,
     display: grid;
   }
 
-  .site-footer {
-    padding-right: 20px;
-    padding-left: 20px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2623,8 +2481,6 @@ header .brs-home { margin-left:4px; }
 .workspace-dialog::backdrop { background:rgba(0,0,0,.5); }
 .workspace-dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
 .workspace-dialog-heading h2 { margin:0; padding:0; border:0; font-size:1.5rem; color:inherit; }
-dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0; border:0; text-align:left; color:inherit; }
-.workspace-dialog footer .foot-links { justify-content:flex-start; }
 .workspace-dialog .field-note,.workspace-dialog .area-about { margin:0; }
 .workspace-dialog .field-note { display:block; padding:0; border:0; }
 .workspace-dialog .kb-hint { display:block; }
@@ -2633,8 +2489,6 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 @media(max-width:700px) { .workspace-actions {gap:4px;} .workspace-actions button {padding-inline:8px;font-size:.88rem;} .workspace-dialog {padding:16px;} }
 @media print { .workspace-actions,.workspace-dialog {display:none;} }
 
-.workspace-dialog footer{display:flex;flex-direction:column;align-items:stretch;gap:18px;min-height:0;background:transparent}
-.workspace-dialog footer :is(strong,span,p){color:inherit}
 .workspace-dialog .hero{width:100%;min-height:0;padding:18px;margin:0 0 20px}
 .workspace-dialog .hero-lesson{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .workspace-dialog .hero-lesson>div{grid-template-columns:1fr;justify-items:center;text-align:center;gap:6px;padding:12px 8px}
@@ -2649,13 +2503,6 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 
 @media (min-width:1000px) and (min-height:560px){.mode-wrap{min-height:calc(100dvh - var(--hdr))}}
 
-/* The "For teachers" link beside Help and About: it looks like the buttons next to it. */
-.workspace-actions a { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border:1px solid var(--line,var(--ink,#171717)); border-radius:8px; background:var(--card,var(--panel,var(--white,#fff))); color:var(--text,var(--ink,#171717)); font:600 1rem var(--body,system-ui); text-decoration:none; white-space:nowrap; }
-.workspace-actions a:hover { border-color: var(--forest-deep, #344d29); }
-.workspace-actions a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:700px) { .workspace-actions a {padding-inline:8px;font-size:.88rem;} }
-/* The full teacher link stays in the header where it fits; phones get a dedicated
-   entry below the header so the wordmark and Help/About controls keep their space. */
 .mobile-teacher-entry { display:none; }
 .mobile-teacher-entry a {
   display:flex;
@@ -2673,7 +2520,6 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 }
 .mobile-teacher-entry a:hover { border-color:var(--forest-deep,#344d29); }
 .mobile-teacher-entry a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:479px) { .workspace-actions a { display:none; } }
 @media(max-width:479px) {
   .mobile-teacher-entry {
     display:flex;
@@ -2808,6 +2654,90 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 
 .setup-panel > p { margin-block: 0; }
 
+/* ==========================================================================
+   Shop layout standard, 2026-10-16. Mallet Board is the reference.
+   Labels show from 600px; below that each header button keeps its name,
+   visually hidden. The settings column sits beside the board from 1700px,
+   and below that the settings are one bar labelled Settings. The shell
+   caps at 1760px in column mode.
+   ========================================================================== */
+
+.workspace-actions button span { white-space: nowrap; }
+.workspace-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.workspace-actions svg { width: 18px; height: 18px; flex: none; }
+@media (max-width: 599px) {
+  .workspace-actions button { position: relative; min-width: 44px; justify-content: center; padding-inline: 8px; }
+  .workspace-actions button span { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+}
+
+.build-id {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.about-build,
+.about-copyright { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.about-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0; }
+.about-links a,
+.workspace-dialog p a { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink); font-weight: 700; text-underline-offset: 3px; }
+.workspace-dialog a:focus-visible { outline: 3px solid var(--accent, var(--forest, #416034)); outline-offset: 2px; }
+
+/* Footer: social marks, the links, then the copyright and build stamp. */
+.site-footer {
+  box-sizing: border-box;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.site-footer .foot-social,
+.site-footer .foot-links { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 13px; }
+.site-footer .foot-legal { flex-basis: 100%; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 13px; }
+.site-footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink-soft); font-weight: 700; text-underline-offset: 3px; }
+.site-footer a:hover { color: var(--ink); }
+.site-footer a.foot-ico { min-width: 44px; justify-content: center; line-height: 0; }
+.site-footer .foot-legal span { font-size: inherit; }
+@media print { .site-footer, .workspace-actions { display: none; } }
+
+/* Settings: one bar below 1700px; from 1700px the same panel is a 340px column beside the
+   board. The column is out of the grid flow, so its height cannot push the board down, and
+   it scrolls within the viewport. */
+.focus-toggle { min-height: 48px; }
+.focus-action { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 0.8rem; font-weight: 900; }
+.focus-action svg { width: 16px; height: 16px; }
+@media (min-width: 1700px) {
+  .site-header,
+  .mode-wrap,
+  .site-footer { width: min(1760px, calc(100% - 48px)); }
+  .mode-wrap { padding-right: 358px; }
+  .mode-wrap > .focus-bar { position: absolute; top: 0; right: 0; width: 340px; margin-top: 0; }
+  .focus-toggle { display: none; }
+  .setup-popover,
+  .setup-popover[hidden] { display: block; position: static; top: auto; left: auto; right: auto; max-height: calc(100dvh - var(--hdr) - 24px); overflow-y: auto; box-shadow: var(--shadow); }
+  .setup-popover .setup-panel { grid-template-columns: 1fr; }
+}
+
+/* Phones: the header stays on one row. The byline goes first, then the name shrinks;
+   the monogram and the app's own logo tile are never hidden. */
+@media (max-width: 539px) {
+  .site-header { gap: 12px; }
+  .brand-lockup small { display: none; }
+  .brand-lockup strong { font-size: 1.5rem; }
+  .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+}
+@media (max-width: 359px) {
+  .brand-lockup strong { font-size: 1.25rem; }
+  .brand-mark { width: 30px; height: 30px; flex-basis: 30px; }
+}
 /* The time-limit countdown. Calm on purpose: the same weight as the question
    counter, and overtime is stated rather than alarmed — no red, no flashing. */
 .round-timer { font-variant-numeric: tabular-nums; white-space: nowrap; }

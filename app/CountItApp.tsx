@@ -10,7 +10,10 @@ import { stampLine } from '../src/class-summary';
 import { currentStreak, readBadges, recordRound, saveBadges, streakText } from '../src/badges';
 import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
-import SupportFallbackDialog from "./SupportFallbackDialog";
+import SupportLink from "./SupportLink";
+import { ChevronIcon } from "./icons";
+import { SOCIAL_LINKS, SocialGlyph } from "./BrandFooterBits";
+import { emailHref } from "../src/support-links";
 import {
   ALL_RHYTHM_CELLS,
   LEVELS,
@@ -256,6 +259,21 @@ function SetupControls({
      the round into a different one (a whole note in 3/4 is never asked; two
      rhythms in 2/4 make four bars, not twelve). The parser's own rule says
      which choices those are, so they are greyed out rather than offered. */
+  // Keep keyboard selection immediate across native select implementations.
+  // Only unmodified navigation keys are handled; Alt+Down still opens the OS
+  // picker. Read the rendered disabled options, so assignment guards also apply
+  // to keyboard navigation and Home/End cannot enter an unavailable choice.
+  function moveChoice<T extends string>(event: ReactKeyboardEvent<HTMLSelectElement>, choose: (value: T) => void) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.currentTarget.disabled) return;
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    const options = Array.from(event.currentTarget.options).filter(option => !option.disabled);
+    if (!options.length) return;
+    const index = options.findIndex(option => option.value === event.currentTarget.value);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+      : Math.max(0, Math.min(options.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
+    event.preventDefault();
+    if (options[next].value !== event.currentTarget.value) choose(options[next].value as T);
+  }
   const unavailable = assignment ? unavailableChoices(assignment, { scope, meter, level }) : null;
   const metersOut = !locked.has("meter") && unavailable !== null && Object.keys(unavailable.meters).length > 0;
   const scopesOut = !locked.has("scope") && unavailable !== null && Object.keys(unavailable.scopes).length > 0;
@@ -295,6 +313,7 @@ function SetupControls({
             value={level}
             disabled={locked.has("level")}
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
+            onKeyDown={(event) => moveChoice(event, onLevelChange)}
           >
             {LEVELS.map((option) => (
               <option key={option.id} value={option.id} disabled={Boolean(unavailable?.levels[option.id])} title={unavailable?.levels[option.id]}>
@@ -314,6 +333,7 @@ function SetupControls({
           value={meter}
           disabled={locked.has("meter")}
           onChange={(event) => onMeterChange(event.target.value as MeterId)}
+          onKeyDown={(event) => moveChoice(event, onMeterChange)}
         >
           {METER_IDS.map((id) => (
             <option key={id} value={id} disabled={Boolean(unavailable?.meters[id])} title={unavailable?.meters[id]}>
@@ -1151,57 +1171,9 @@ function ChallengeMode({
   );
 }
 
-// Visit counter (progressive enhancement). Counts once per browser session via the
-// shared Backwerd counter Worker; dev machines only read, so local work never
-// inflates the number. Returns null until a real count arrives, so nothing renders
-// if the endpoint is offline, blocked, or not deployed yet.
-function useVisitCount(app: string) {
-  const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
-    const API = "https://counter.backwerdrhythmshop.com";
-    const dev = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)
-      || location.protocol === "file:";
-    let counted = false;
-    try { counted = sessionStorage.getItem("brs-counted") === "1"; } catch { /* private mode */ }
-
-    let live = true;
-    fetch(`${API}${dev || counted ? "/count" : "/hit"}?app=${app}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { count?: number } | null) => {
-        if (!live || !d || typeof d.count !== "number" || d.count < 1) return;
-        if (!dev) { try { sessionStorage.setItem("brs-counted", "1"); } catch { /* private mode */ } }
-        setCount(d.count);
-      })
-      .catch(() => { /* leave the footer exactly as it was */ });
-    return () => { live = false; };
-  }, [app]);
-  return count;
-}
-
-// Build stamp + self-documenting support/feedback emails (progressive enhancement).
+// Build stamp. The shop no longer counts visits, so the stamp shows the build alone.
 function BuildStamp() {
-  const visits = useVisitCount("count-it");
-  useEffect(() => {
-    document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
-      const href = a.getAttribute("href") || "";
-      if (/[?&]body=/.test(href)) return;
-      const match = href.match(/[?&]subject=([^&]*)/);
-      const subject = match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
-      const appName = (subject.split(/\s[—-]\s/)[0] || document.title || "this app").trim();
-      const body = (/support@/.test(href)
-          ? "Describe what went wrong — what you did, what you expected, and what actually happened:"
-          : "Describe your idea or request:")
-        + "\n\n\n\n─── details below help with troubleshooting ───\n"
-        + `App: ${appName}\nBuild: ${BUILD_ID}\nPage: ${location.href}\nBrowser: ${navigator.userAgent}`;
-      a.setAttribute("href", `${href}&body=${encodeURIComponent(body)}`);
-    });
-  }, []);
-  return (
-    <p className="build-stamp" style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.55, fontSize: "11px", margin: "4px 0 0" }}>
-      Build {BUILD_ID}
-      {visits !== null && ` · ${visits.toLocaleString()} visit${visits === 1 ? "" : "s"}`}
-    </p>
-  );
+  return <span className="build-stamp">Build {BUILD_ID}</span>;
 }
 
 export default function CountItApp() {
@@ -1754,7 +1726,7 @@ export default function CountItApp() {
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
         </a>
         <p>Free percussion tools that teach.</p>
-        <WorkspaceActions teachers={{ href: "/assignments", label: "For teachers" }} />
+        <WorkspaceActions />
           <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brs-monogram.svg" alt="" width="28" height="28" />
@@ -1835,7 +1807,6 @@ export default function CountItApp() {
               aria-controls="setup-popover"
               onClick={() => setSetupOpen((open) => !open)}
             >
-              <span className="focus-label">{assignment ? "Assigned" : "Set your focus"}</span>
               <span className="focus-summary">
                 {[
                   assignment?.name ?? (assignedCells ? `${assignedCells.length} rhythms` : getLevel(level).name),
@@ -1845,7 +1816,7 @@ export default function CountItApp() {
                   showReference ? "Guide on" : "Guide off",
                 ].join(" · ")}
               </span>
-              <span className="focus-action" aria-hidden="true">{setupOpen ? "Close" : "Change"} <i>▾</i></span>
+              <span className="focus-action">Settings<i><ChevronIcon /></i></span>
             </button>
             <div id="setup-popover" className="setup-popover" hidden={!setupOpen}>
               <SetupControls
@@ -1985,38 +1956,62 @@ export default function CountItApp() {
 
       </main>
 
-      <WorkspaceInfo name="Count It" guide="https://guides.backwerdrhythmshop.com/count-it/" help={<><section className="hero" aria-label="How Count It works">
-          <div className="hero-lesson">
-            <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
-            <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
-            <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
-          </div>
-        </section>
-<section className="quick-lesson" aria-labelledby="lesson-title">
-          <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
-          <p>The complete grid keeps time underneath every rhythm. Your answer names only the positions where a note begins; rests and held space stay silent.</p>
-        </section></>}><footer className="site-footer">
-        <div><strong>Count It.</strong><span>by <a className="shop-link" href="https://backwerdrhythmshop.com">Backwerd Rhythm Shop</a></span></div>
-        <div className="foot-links">
+      <WorkspaceInfo
+        name="Count It"
+        guide="https://guides.backwerdrhythmshop.com/count-it/"
+        help={<>
+          <section className="hero" aria-label="How Count It works">
+            <div className="hero-lesson">
+              <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
+              <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
+              <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
+            </div>
+          </section>
+          <section className="quick-lesson" aria-labelledby="lesson-title">
+            <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
+            <p>The complete grid keeps time underneath every rhythm. Your answer names only the positions where a note begins; rests and held space stay silent.</p>
+          </section>
+          <p>Forever free. No account required.</p>
+          <p>Standard, Eastman, and Eastman variant counts · quarter-note beats · Quarter, eighth, and sixteenth-note cells</p>
+        </>}
+        feedback={<>
+          <p><SupportLink kind="support">Report a problem</SupportLink> · <SupportLink kind="feedback">Request a feature</SupportLink></p>
+          <p><a href={emailHref("support")}>Email support</a> · <a href={emailHref("feedback")}>Email feedback</a></p>
+        </>}
+      >
+        <p className="about-build">Build <span className="build-id">{BUILD_ID}</span></p>
+        <nav className="about-links" aria-label="More from Backwerd Rhythm Shop">
+          <a className="text-action" href="https://apps.backwerdrhythmshop.com/">More apps</a>
+          <a className="text-action" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
+          <a className="text-action" href="/assignments">For teachers</a>
+        </nav>
+        <p className="about-copyright">© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
+      </WorkspaceInfo>
+      <footer className="site-footer">
+        <nav className="foot-social" aria-label="Backwerd Rhythm Shop on social media">
+          {SOCIAL_LINKS.map(({ network, href }) => (
+            <a key={network} className="foot-ico" href={href} target="_blank" rel="noreferrer" aria-label={`Backwerd Rhythm Shop on ${network}`} title={network}>
+              <SocialGlyph network={network} />
+            </a>
+          ))}
+        </nav>
+        <nav className="foot-links" aria-label="Count It links">
+          <SupportLink kind="support" className="foot-btn">Report a problem</SupportLink>
+          <SupportLink kind="feedback" className="foot-btn">Request a feature</SupportLink>
+          <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
-        <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
-          {/* A plain anchor: next/link throws on click in this vinext build. */}
+          {/* The app's own pages follow the shop links. A plain anchor: next/link throws on click in this vinext build. */}
           <a className="foot-btn" href="/assignments" title="Every published teaching-sequence step, ready to try, copy or customize">Assignments</a>
           <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
           <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
-          <a className="foot-btn" href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Support%20request">Report a problem</a>
-          <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>
-          <a className="foot-btn foot-ico" href="https://www.facebook.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Facebook" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
-          <a className="foot-btn foot-ico" href="https://www.instagram.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Instagram" title="Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm7.846-10.405a1.441 1.441 0 01-2.88 0 1.44 1.44 0 012.88 0z"/></svg></a>
-          <a className="foot-btn foot-ico" href="https://www.youtube.com/@backwerdrhythmshop" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on YouTube" title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        </nav>
+        <div className="foot-legal">
+          <span>© 2026 Backwerd Rimshot, LLC. All rights reserved.</span>
+          <BuildStamp />
         </div>
-        <p>Standard, Eastman, and Eastman variant counts · quarter-note beats · Quarter, eighth, and sixteenth-note cells</p>
-        <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
-        <BuildStamp />
-      </footer></WorkspaceInfo>
+      </footer>
       {confirmation}
-      <SupportFallbackDialog />
     </div>
   );
 }

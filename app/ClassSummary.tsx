@@ -72,7 +72,7 @@ export default function ClassSummary() {
   return (
     <div className="builder-shell">
       <a className="skip-link" href="#summary-input">Skip to the paste box</a>
-      <PageHeader />
+      <PageHeader page="class-summary" />
 
       <main className="builder-main class-summary">
         <div className="builder-intro">
@@ -186,8 +186,12 @@ export default function ClassSummary() {
                   <span>Score in the column</span>
                   <select value={score} onChange={(event) => setScore(event.target.value as CanvasScore)}>
                     <option value="correct">Questions correct (e.g. 11)</option>
-                    <option value="percent">Percent (e.g. 92)</option>
+                    <option value="percent">Percent (e.g. 92%)</option>
                   </select>
+                  <small>
+                    Canvas scales a percent to whatever the assignment is worth, so any point value works. Questions
+                    correct import as points, so the assignment should be worth as many points as there are questions.
+                  </small>
                 </label>
                 <label className="class-summary-check">
                   <input type="checkbox" checked={onlyChecked} onChange={(event) => setOnlyChecked(event.target.checked)} />
@@ -204,7 +208,7 @@ export default function ClassSummary() {
         )}
       </main>
 
-      <PageFooter page="class-summary" feedbackSubject="Count It — Class summary feedback" />
+      <PageFooter page="class-summary" />
     </div>
   );
 }

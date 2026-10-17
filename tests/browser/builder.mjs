@@ -119,8 +119,7 @@ const { note, results } = reporter();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(400); // let React attach the dialog handlers before clicking
-  await page.getByRole("button", { name: "About" }).click();
-  await page.getByRole("link", { name: "Build an assignment" }).click();
+  await page.getByRole("link", { name: "Build an assignment" }).click(); // in the page footer, below the board
   await page.waitForURL((u) => u.pathname === "/build", { timeout: 10000 }).catch(() => {});
   note("the trainer's footer link opens the builder", new URL(page.url()).pathname === "/build", page.url());
   await shot(page, "build-desktop.png", { fullPage: false });
@@ -131,8 +130,7 @@ const { note, results } = reporter();
   note("builder footer 'Back to Count It' lands on the trainer", new URL(page.url()).pathname === "/" && (await page.locator(".focus-toggle").count()) === 1, page.url());
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(400); // let React attach the dialog handlers before clicking
-  await page.getByRole("button", { name: "About" }).click();
-  await page.getByRole("link", { name: "Build an assignment" }).click();
+  await page.getByRole("link", { name: "Build an assignment" }).click(); // in the page footer, below the board
   await page.waitForURL((u) => u.pathname === "/build", { timeout: 10000 }).catch(() => {});
   await page.getByRole("link", { name: "Count It home" }).click();
   await page.waitForURL((u) => u.pathname === "/", { timeout: 10000 }).catch(() => {});
