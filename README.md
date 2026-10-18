@@ -1,12 +1,27 @@
 # Count It
 
+## Practice controls V1
+
+The focus popover groups **Rhythms and meter**, **Counting and help**, and **Remember on this device**. Counting examples stay visible; longer explanations are expandable. Rhythm/meter/counting changes start a new set. For an answered, unfinished challenge, **Continue** applies the change and clears the round; **Cancel** or Escape keeps all existing questions, answers, settings and seeds. Untouched practice updates immediately; guide visibility does not rebuild a round. Resetting an already-default setup does not discard answers.
+
+**Save this profile on this device** remembers syllables. **Save my practice setup** independently remembers practice settings. Unchecking a box clears its saved default. Reset setup keeps the counting profile and personal bests; while setup saving is enabled it updates the saved setup. Assignment links override saved defaults and do not overwrite them.
+
+Mode tabs use roving focus with ArrowLeft/ArrowRight/Home/End; Escape closes the focus popover and returns focus. Challenge length reflects the actual round. Free challenges default to Quick 5, with Standard 12 and Extended 20 available when capacity supports them; a smaller pool selects the largest supported size and shows any Quick 5 limit. Saved setup includes this length; assignment links keep their own fixed counts and legacy defaults. **Retry this set** repeats questions, **New questions** starts a new free set, and assignment reseeding says **Try new questions**. **Copy result image** creates the same local PNG as **Download PNG**, writes only after its button is pressed, and announces success or a download fallback when unsupported or denied. It uploads nothing and adds no identity fields; the image and checksum are browser-generated records, not proof of authentic work. Copy summary announces success or displays selectable fallback text when clipboard access is unavailable. On a round opened from an assignment link the card leads with one **Turn this in** button, which is that same copy-summary hand-in (summary, score and verification code); Copy result image, Download PNG and Practice history fold under **More ways to save this result**. Practice rounds keep their row of buttons unchanged.
+
+**Rhythm level** replaces the Beginner level label. **Practice starting points** reuses the first three existing Counting Rhythms preset pools for unscored practice with each preset’s guide policy. The “No Help” starting point hides the guide; the other two show it. History, playback, workshop and optional missed-question practice remain the existing implementations.
+
+The verified public-guide owner is `backwerdrimshot/backwerd-rhythm-shop-site`, commit `94fa68772f73e0790eacde9864ef6cdad92a1efc`. `docs/guide-update-v1.patch` contains exact changes for its `guides/` source; review/apply that patch alongside release. No public guide has been deployed here. `docs/followup-plan.md` captures the deferred shared shell, migration compatibility and pedagogical follow-ups.
+
+Regression checks: `tests/browser/settings.mjs` runs against a local build with isolated headless Chromium and blocked analytics. Set `BASE_URL` to the local trainer, and optionally `CHROMIUM_PATH` to an installed headless Chromium executable. It verifies cancellation and unchanged rounds, tab keyboard/focus/Escape, explicit persistence/assignment overrides, blocked setup storage, clipboard absence and feedback, and phone layout.
+
+
 Count It is a local-first rhythm-reading MVP for Backwerd Rhythm Shop. It helps musicians connect standard notation to spoken subdivision counts through guided practice and short, scored challenges.
 
 The app deliberately begins with a small, verified straight-subdivision catalog. Rhythm notation, timing, accepted answers, distractors, and explanations all come from the same structured data model; no answer is inferred from an SVG.
 
 ## Release information
 
-- **Build:** `2026-10-08.1`
+- **Build:** `2026-10-18.4`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -25,6 +40,7 @@ documentation.
 - **Listen to rhythm** provides synthesized playback, 40–200 BPM, a count-in, optional beat pulse and a cursor. Playback starts only after a click and stops on Stop, a prompt change or navigation. Scored assignments withhold playback; answer scores remain untimed.
 - **Rhythm workshop** (`/workshop`) is unscored practice for triplets, ties across beats, dotted spanning values, syncopation and explicit grouping (including 3+2 vs 2+3 in 5/4). It uses the same notation/guide/playback renderer. Triplets explicitly use `1 trip let` in all profiles; this is a workshop convention, not a claim about Eastman triplet syllables. The new material is not added to assignment cell IDs or the cumulative levels.
 - **Practice history** (`/history`) keeps the last 50 completed challenge summaries on-device, including conditions, attempts and rhythms to revisit, without names/class IDs. Current results and history cards download as PNG. Scores are not sent anywhere automatically.
+- **Badges and a practice streak** are earned only from finished rounds and kept on this device beside the history (no names). Eight badges: First Count (finish a round), Clean Round (all correct, 5+ questions, first time through), Steady Counter (80%+ in 3 rounds), No Guide Needed (80%+ with the guide hidden), Whole Measures (80%+ on whole-measure questions), Meter Explorer (80%+ in 3 meters), Goal Met (reach an assignment's goal, 5+ questions, first time through) and Three Days Running (finish a round on 3 days in a row). Score badges need 5+ questions and skip replays of a set whose answers were shown (including an assignment reloaded after an attempt); No Guide Needed requires the guide to stay hidden for the whole round. The current streak and the longest streak keep counting past the 120 stored days. The shelf is on `/history`; a result card adds one line when a badge is new or the streak is 2+ days. Badges never change scores, goals or copied summaries.
 
 Design research and implementation rationale: [docs/practice-workspace-design.md](docs/practice-workspace-design.md).
 
@@ -33,14 +49,14 @@ Praxis Percussion Program integration includes a director-led framing bridge. Th
 ## What is included
 
 - **Practice:** move through one-beat or full-measure prompts, reveal the count, inspect the subdivision guide, and read a short explanation.
-- **Challenge:** answer five multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
+- **Challenge:** choose Quick 5, Standard 12, or Extended 20 for free practice when the unique-measure pool supports it, then answer multiple-choice questions with immediate feedback, explanations, score, accuracy, retry, and a locally stored personal best. A round can also hold every answer to the end, and always finishes with a review of each question beside the count it wanted.
 - **Three cumulative levels:** quarter/eighth-note foundations, eighth-note placement with rests, and verified sixteenth-note cells.
 - **Whole and half notes:** the values the Notes & Rests poster teaches that a one-beat catalog could not express. A half note is two beats and a whole note is four, so they are the first rhythms that span rather than subdivide. They sound once, at the top of the span, and the beats underneath are silent because the note is held — this app counts the notes that sound, so a half note on beat one of 4/4 answers `1`. Measure scope only, and a whole note needs four beats so it appears in 4/4, 5/4 and 7/4 only.
 - **Five quarter-note-beat meters:** 2/4, 3/4, 4/4, 5/4 and 7/4, chosen per assignment link or in the setup panel. Each reads the same quarter-note beat as 4/4 with a different number of them per bar, so the whole sixteen-rhythm vocabulary carries over unchanged. A link that names no meter means 4/4 and generates exactly the round it always did. In 5/4 and 7/4 beams stay inside each beat, so the 3+2 or 2+3 grouping an odd meter is sometimes written with is not drawn or asked. That is the whole admission rule: **the beat is a quarter note.** Eighth-beat (3/8), half-note-beat (2/2) and compound (6/8) meters are different counting problems and are not read here. 3/8 was supported from build `2026-08-24.1` to `2026-08-29.1` and then removed: an eighth-note beat brought its own vocabulary, a whole-bar beaming exception, and a whole-bars-only rule, and that load earned [Eight Time](https://eight-time.backwerdrhythmshop.com/) its own app, live since 2026-09-02. It accepts legacy Count It 3/8 assignment links and generates byte-identical rounds; the apps share git ancestry and may be recombined later. Count It still refuses `meter=3-8` and retired eighth-beat cell ids here, with a plain-language message rather than repairing them.
 - **Responsive, accessible UI:** phone, tablet, and desktop layouts; keyboard shortcuts 1–4 for answers; visible focus; semantic controls; and live feedback.
 - **Deterministic rhythm engine:** seeded question generation, non-repeating prompts until vocabulary exhaustion, exactly one correct option, and misconception-based distractors.
 - **Assignment links:** a teacher pins a round in a URL — rhythm vocabulary, question size, subdivision-guide policy, feedback timing, question count, pass mark and seed — and every student who opens it gets the same questions under the same conditions. The pinned controls lock and say why; the result card reports the conditions, the goal, which rhythms were missed, and a verification code beside the score.
-- **Assignments page:** `/assignments` (one click from the practice screen, under **For teachers** beside Help and About; the link shows from 480px wide, and on a phone it stays in the About dialog because the header has no room for it) lists every published teaching-sequence step that runs here (and links the three that run in Eight Time) with Try it, Copy link, Customize in builder, and how many times this browser has finished each. Free and open.
+- **Assignments page:** `/assignments` (reached from the **About** dialog as **For teachers**, from a row under the header below 480px, and from the footer, which lists Assignments at every width) lists every published teaching-sequence step that runs here (and links the three that run in Eight Time) with Try it, Copy link, Customize in builder, and how many times this browser has finished each. Free and open.
 - **Notation reference:** `/notation` is a teacher's refresher on the clef, barlines, time signature, beams, rests and held notes, each with a live staff drawn by the same renderer the questions use.
 
 ### Assignment builder
@@ -48,7 +64,7 @@ Praxis Percussion Program integration includes a director-led framing bridge. Th
 Writing the link by hand is the hard part, so the app writes it: **`/build`** is a
 form where a teacher chooses a level or the exact rhythms, the meter, one beat or
 a measure, the guide, when answers show, what trying again means, the length, the
-pass mark and a seed, and gets the link to post.
+pass mark, an optional time limit, whether hints are offered and a seed, and gets the link to post.
 
 It never judges a link itself. The choices are composed into a query string and
 handed to `parseAssignment` — the function the student's browser runs — and
@@ -57,6 +73,12 @@ calls valid is therefore one the app accepts, and there is no second copy of the
 rules to drift from the first. `tests/builder.test.ts` enumerates every
 combination of the choices and requires each to be either refused with a message
 or playable end to end.
+
+**3/8 lives in Eight Time.** This builder refuses eighth-note-beat meters by
+design, so the top of `/build` (and the note under Meter) carries a **Build an
+Eight Time assignment** link to Eight Time's published 3/8 steps on
+`/assignments`, where each has Try it, Copy link and Post to Google Classroom.
+Eight Time has no builder of its own yet.
 
 Three decisions worth knowing:
 
@@ -93,6 +115,35 @@ Three decisions worth knowing:
   `src/assignment/builder.ts` holds the rule; `tests/builder.test.ts` checks it
   against the real generator. It is a knowledge check, not secure testing: one
   attempt cannot stop a page reload, and the pass mark is shown, never enforced.
+
+### Class summary
+
+**`/class-summary`** is for collecting results. A teacher pastes the summaries
+students turned in, as many as they like, one after another, and gets a table:
+student ID, assignment, score, whether the pass mark was met, the time when the
+link set a limit, and whether the verification code checks. It downloads as a
+plain CSV, or as a **Canvas gradebook** CSV in Canvas's import layout (`Student`,
+`ID`, `SIS User ID`, `SIS Login ID`, `Section`, then one column named for the assignment holding
+the score, as questions correct or percent). A percent is written with its
+sign (`75%`), which Canvas scales to whatever the assignment is worth, so any
+point value works; questions correct stay bare counts, which Canvas imports as
+points. The apps never know a Canvas user,
+so `Student` holds the name or class ID the student typed and the ID columns are
+blank; the page says plainly that the teacher matches names in Canvas, which
+lists anyone it cannot find at import. One row per student (best score kept);
+by default only summaries whose code checks are included. Nothing pasted leaves
+the browser or is saved. Linked from the footer of the teacher pages and from
+`/assignments`.
+
+The check is `verificationCode` itself, run again on the facts the summary
+states (`src/class-summary.ts`). That needs the exact finishing instant the code
+was made from, which the readable `Finished:` line does not carry, so summaries
+now end with a `Stamp:` line (the ISO instant) just before `Code:`. Summaries
+from before it show "Cannot check" rather than "does not match". Nothing about
+the code was loosened: every fact it covers must recompute to the same digest;
+only the calendar date printed in the code may be the student's local date for
+that instant rather than the teacher's. An Eight Time summary is named as one
+and left for Eight Time's own class summary page to check.
 
 ### Assignment catalog
 
@@ -161,11 +212,13 @@ be a contract nobody signed up to.
 | `retry` | `free`, `reseed` or `off`. What trying again means: the same round back (the default), the same conditions on new questions, or no retry control at all. |
 | `n` | Questions in the round, 1–20. Defaults to 5. |
 | `pass` | Questions needed to pass. Reported on the card, never enforced by the app. |
+| `time` | Optional time limit in whole minutes, `1`–`60`. The student sees a calm countdown (`m:ss`) that runs on into overtime (`+0:42 over`) instead of stopping the round. The card and copied summary add a line such as `Time: 4:12 (limit 5:00, within limit)` or `Time: 6:30 (limit 5:00, over by 1:30)`, and the verification code covers both the time and the limit. Absent means no timer. Recorded, never enforced, and never part of the score. |
+| `hints` | `on` or `off`; absent means off. With `hints=on` each question has a **Hint** button that shows one tip, in a polite live region, on how to count it: the meter, which beat to look at, and how that beat divides ("Split the beat into four sixteenths: the beat number, e, &, a. Say only the ones where a note starts."). A tip never says which syllables sound, so two beats that divide the same way get the same tip. A right answer after a hint still scores. The card and copied summary add `Hints used: N`, and the verification code covers that number; codes for links without hints are unchanged. Any other value is refused. The builder's **Hints** menu and the assignments page's **Hints** toggle write it. |
 | `seed` | Same questions for every student who opens the link. |
 | `sys` | Optional versioned counting profile: `standard`, `eastman-ti-te-ta`, or `eastman-ta-te-ta`. Absent means historical Standard. The legacy alias `eastman` is accepted and canonicalized to `eastman-ti-te-ta`. |
 
 An invalid link is **rejected, never repaired**: an unknown rhythm id, a pool
-under two, an impossible pass mark, a full-measure round longer than the pool
+under two, an impossible pass mark, a time limit outside 1–60 whole minutes, a `hints` value other than `on` or `off`, a full-measure round longer than the pool
 can fill, an unrecognized feedback setting or an unsupported counting system
 each invalidate the whole link with a plain-language message, and the app keeps
 working normally underneath it. A rhythm pool with a rhythm missing teaches a
@@ -276,7 +329,7 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - A profile can be saved optionally on this device for free practice when browser storage is available and retained. A teacher's assignment profile takes precedence and does not overwrite the saved preference.
 - Progress is device-local and intentionally lightweight.
 - Results can be copied or downloaded as PNG cards. The last 50 completed challenges are saved on this device without names or class IDs. No automatic submission to an LMS.
-- Nothing is timed and no duration is recorded, so a score says what was answered but not how long it took.
+- Answers are never timed or scored for speed. Only when a teacher's link sets `time` is a duration recorded: the card reports it beside the score, against the limit, and the round is never stopped. Without `time`, no duration is recorded.
 - Free practice opens in Practice / Level 1 / full 4/4 measure / guide on. Saving the practice setup is opt-in; it restores level, question size, meter, guide and an optional rhythm pool. A counting profile is saved separately. Assignment links take precedence and never overwrite either saved default.
 
 ## Privacy and accessibility
@@ -286,14 +339,17 @@ off-device. Lightweight preferences, the personal best, a per-assignment attempt
 and an opaque random string used only to vary answer order use browser storage when
 available. Browser settings may block storage, and clearing site data may remove it.
 
-Count It loads a Cloudflare Web Analytics beacon from `app/layout.tsx` and uses the
-shop's existing visit counter, described below, for site-traffic measurement. These
-traffic requests do not carry practice answers or scores; answers and scores are not
-synced off-device. The Cloudflare beacon carries the same site token as the rest of
+Count It loads a Cloudflare Web Analytics beacon from `app/layout.tsx` for site-traffic
+measurement. Those requests do not carry practice answers or scores; answers and scores
+are not synced off-device. The Cloudflare beacon carries the same site token as the rest of
 backwerdrhythmshop.com so this app's page views land beside the page that describes it.
 The shop site's `/privacy/` describes the beacon for visitors.
 Keyboard shortcuts, visible focus, semantic controls, live feedback, and responsive
-layouts support phone, tablet, and desktop use.
+layouts support phone, tablet, and desktop use. An assignment's optional time-limit
+countdown is a `timer` that screen readers do not read out every second; a separate
+polite live line changes at most once a minute ("3 minutes left", "Time limit reached").
+An assignment's optional hint appears in a polite live region under the question, and the
+Hint button reports whether its tip is showing (`aria-expanded`).
 
 ## Deployment
 
@@ -371,25 +427,12 @@ the whole thing locally without credentials.
 
 ## Support and feedback
 
-- **Report a problem** emails `support@backwerdrhythmshop.com`.
-- **Request a feature** emails `feedback@backwerdrhythmshop.com`.
-- Both controls are available in the app footer and prefill the app name, build,
-  page URL, and browser details to make follow-up easier.
+- **Report a problem** and **Request a feature** open the shop's forms in a new tab, from the app footer and the Feedback dialog, which also lists the email addresses. Each form is pre-filled with the app name, the page URL, its settings and the build.
+- If a form is not set up, the same links fall back to email: `support@backwerdrhythmshop.com` for problems and `feedback@backwerdrhythmshop.com` for feature requests.
 
 ## Design and provenance
 
 The navy/orange visual language and structured rhythm-recipe approach were adapted from the local Backwerd Rhythm Shop applications and the Rhythm Repper implementation. Count It owns its copied data and UI code and has no runtime dependency on those projects. Product scope follows the Count It product brief and the Backwerd Rhythm Shop app-portfolio notes supplied for this build.
-
-## Visit counter
-
-The footer shows a running visit count next to the build stamp. It comes from our own
-Cloudflare Worker at `counter.backwerdrhythmshop.com`, which stores exactly one thing:
-an integer per app. No IP, no user agent, no cookie, no timestamp — nothing tied to a
-visitor. Counted once per browser session; localhost and file:// only read the number
-so development never inflates it.
-
-It is progressive enhancement. If the endpoint is offline, blocked, or not yet
-deployed, the footer renders exactly as it did before and the app is unaffected.
 
 ## Follow
 

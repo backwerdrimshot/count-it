@@ -106,12 +106,20 @@ const { note, results } = reporter();
   await shot(pp, "build-phone.png", { fullPage: false });
   await phone.close();
 
+  // F2. A teacher who wants 3/8 is sent to Eight Time's published steps, not left at a refused meter.
+  await page.goto(BASE + "/build", { waitUntil: "networkidle" });
+  await page.getByRole("link", { name: "Build an Eight Time assignment" }).click();
+  await page.waitForURL((u) => u.pathname === "/assignments", { timeout: 10000 }).catch(() => {});
+  const target = new URL(page.url()).hash.slice(1);
+  note("'Build an Eight Time assignment' opens an Eight Time step on the assignments page",
+    new URL(page.url()).pathname === "/assignments" && target !== "" &&
+      /Opens in Eight Time/i.test(await page.locator(`[id="${target}"]`).innerText()), page.url());
+
   // G. Reachable from the app, and the screenshot
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(400); // let React attach the dialog handlers before clicking
-  await page.getByRole("button", { name: "About" }).click();
-  await page.getByRole("link", { name: "Build an assignment" }).click();
+  await page.getByRole("link", { name: "Build an assignment" }).click(); // in the page footer, below the board
   await page.waitForURL((u) => u.pathname === "/build", { timeout: 10000 }).catch(() => {});
   note("the trainer's footer link opens the builder", new URL(page.url()).pathname === "/build", page.url());
   await shot(page, "build-desktop.png", { fullPage: false });
@@ -122,8 +130,7 @@ const { note, results } = reporter();
   note("builder footer 'Back to Count It' lands on the trainer", new URL(page.url()).pathname === "/" && (await page.locator(".focus-toggle").count()) === 1, page.url());
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(400); // let React attach the dialog handlers before clicking
-  await page.getByRole("button", { name: "About" }).click();
-  await page.getByRole("link", { name: "Build an assignment" }).click();
+  await page.getByRole("link", { name: "Build an assignment" }).click(); // in the page footer, below the board
   await page.waitForURL((u) => u.pathname === "/build", { timeout: 10000 }).catch(() => {});
   await page.getByRole("link", { name: "Count It home" }).click();
   await page.waitForURL((u) => u.pathname === "/", { timeout: 10000 }).catch(() => {});

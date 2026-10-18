@@ -1,12 +1,19 @@
 "use client";
+import { useRoundChangeGuard } from "./RoundChangeGuard";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool } from '../src/practice-settings';
+import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, usablePool, PRACTICE_LENGTHS, supportedPracticeLength, type PracticeLength } from '../src/practice-settings';
+import { COUNTING_RHYTHMS_STEPS } from "../src/assignment/presets";
 import { saveHistory } from '../src/practice-history';
-import { downloadResultImage } from '../src/result-download';
+import { stampLine } from '../src/class-summary';
+import { currentStreak, readBadges, recordRound, saveBadges, streakText } from '../src/badges';
+import { copyResultImage, downloadResultImage } from '../src/result-download';
 import RhythmNotation from "./RhythmNotation";
-import SupportFallbackDialog from "./SupportFallbackDialog";
+import SupportLink from "./SupportLink";
+import { ChevronIcon } from "./icons";
+import { SOCIAL_LINKS, SocialGlyph } from "./BrandFooterBits";
+import { emailHref } from "../src/support-links";
 import {
   ALL_RHYTHM_CELLS,
   LEVELS,
@@ -45,6 +52,7 @@ import {
   DEFAULT_QUESTIONS,
   describeAssignment,
   parseAssignment,
+  playedAssignment,
   retakeSeed,
   roundLengthFor,
   serializeAssignment,
@@ -65,8 +73,11 @@ import {
 import { copyTextOrFallback } from "../src/copy-text";
 import { parseSequenceStep, type SequenceStep } from "../src/sequence-step";
 import { readAttempts, writeAttempts } from "../src/attempt-tally";
+import { hintFor, hintsTicketLine } from "../src/hints";
+import { elapsedSeconds, timeResultText, timeTicketLine, timerAnnouncement, timerDisplay } from "../src/time-limit";
 
 type AppMode = "practice" | "challenge";
+interface BadgeNews { earned: string[]; streak: number }
 
 const SESSION_LENGTH = DEFAULT_QUESTIONS;
 const INITIAL_SEED = 20260715;
@@ -214,6 +225,7 @@ function SetupControls({
   studentId,
   identityLocked,
   children,
+  rhythmControls,
   onLevelChange,
   onScopeChange,
   onMeterChange,
@@ -234,6 +246,7 @@ function SetupControls({
   studentId: string;
   identityLocked: boolean;
   children?: React.ReactNode;
+  rhythmControls?: React.ReactNode;
   onLevelChange: (value: LevelId) => void;
   onScopeChange: (value: QuestionScope) => void;
   onMeterChange: (value: MeterId) => void;
@@ -247,6 +260,21 @@ function SetupControls({
      the round into a different one (a whole note in 3/4 is never asked; two
      rhythms in 2/4 make four bars, not twelve). The parser's own rule says
      which choices those are, so they are greyed out rather than offered. */
+  // Keep keyboard selection immediate across native select implementations.
+  // Only unmodified navigation keys are handled; Alt+Down still opens the OS
+  // picker. Read the rendered disabled options, so assignment guards also apply
+  // to keyboard navigation and Home/End cannot enter an unavailable choice.
+  function moveChoice<T extends string>(event: ReactKeyboardEvent<HTMLSelectElement>, choose: (value: T) => void) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.currentTarget.disabled) return;
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+    const options = Array.from(event.currentTarget.options).filter(option => !option.disabled);
+    if (!options.length) return;
+    const index = options.findIndex(option => option.value === event.currentTarget.value);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+      : Math.max(0, Math.min(options.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
+    event.preventDefault();
+    if (options[next].value !== event.currentTarget.value) choose(options[next].value as T);
+  }
   const unavailable = assignment ? unavailableChoices(assignment, { scope, meter, level }) : null;
   const metersOut = !locked.has("meter") && unavailable !== null && Object.keys(unavailable.meters).length > 0;
   const scopesOut = !locked.has("scope") && unavailable !== null && Object.keys(unavailable.scopes).length > 0;
@@ -267,6 +295,8 @@ function SetupControls({
           <small>These settings are part of the assignment, so they stay put.</small>
         </p>
       )}
+      <h3>Rhythms and meter</h3>
+      <p>Changing rhythms, meter, challenge length or counting starts a new set. An answered, unfinished challenge asks before clearing your work.</p>
       {assignment?.cells ? (
         <p className="level-control" aria-label="Rhythms in this assignment">
           <span>Rhythms</span>
@@ -279,11 +309,12 @@ function SetupControls({
         </p>
       ) : (
         <label className="level-control">
-          <span>Beginner level</span>
+          <span>Rhythm level</span>
           <select
             value={level}
             disabled={locked.has("level")}
             onChange={(event) => onLevelChange(event.target.value as LevelId)}
+            onKeyDown={(event) => moveChoice(event, onLevelChange)}
           >
             {LEVELS.map((option) => (
               <option key={option.id} value={option.id} disabled={Boolean(unavailable?.levels[option.id])} title={unavailable?.levels[option.id]}>
@@ -303,6 +334,7 @@ function SetupControls({
           value={meter}
           disabled={locked.has("meter")}
           onChange={(event) => onMeterChange(event.target.value as MeterId)}
+          onKeyDown={(event) => moveChoice(event, onMeterChange)}
         >
           {METER_IDS.map((id) => (
             <option key={id} value={id} disabled={Boolean(unavailable?.meters[id])} title={unavailable?.meters[id]}>
@@ -339,6 +371,8 @@ function SetupControls({
           </small>
         )}
       </fieldset>
+      {rhythmControls}
+      <h3>Counting and help</h3>
       <label className="reference-toggle">
         <input
           type="checkbox"
@@ -394,7 +428,10 @@ function SetupControls({
             ))}
           </select>
           <small>Preview: <code>{COUNTING_PROFILES[system].preview}</code></small>
+          <details><summary>How counting profiles work</summary><p>The meter sets the numbered quarter-note beats. The profile chooses the syllables between them. Count only note beginnings; rests and held space stay silent.</p></details>
         </label>
+        <h3>Remember on this device</h3>
+        <p>Save profile remembers syllables only. Save setup remembers rhythm level, question size, meter, guide, chosen rhythms and challenge length. Assignment links override these defaults.</p>
         {assignment ? (
           <small className="counting-profile-status" role="status">
             {savedSystem
@@ -512,7 +549,7 @@ function FocusedQuestionPractice({
     if (!session || session.status !== "active") return;
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.matches("input, select, textarea") || getCurrentResponse(session)) return;
+      if ((target.matches("input, select, textarea") || Boolean(document.querySelector("dialog[open]"))) || getCurrentResponse(session)) return;
       if (!/^[1-4]$/.test(event.key)) return;
       const choice = getCurrentQuestion(session).choices[Number(event.key) - 1];
       if (!choice) return;
@@ -636,6 +673,38 @@ function FocusedQuestionPractice({
   );
 }
 
+/* The teacher's time limit, while the round runs.
+
+   Calm on purpose: no colour change to red, no sound, no stopping. At zero the
+   countdown simply becomes overtime ("+0:42 over") and the student finishes the
+   round they started; the card records the time against the limit.
+
+   The visible clock ticks every second and is a `timer`, which screen readers
+   do not announce as it changes. What they DO hear is a separate polite line
+   that changes at most once a minute — "3 minutes left", "Time limit reached" —
+   so nobody is read a number every second. */
+function RoundTimer({ startedAt, limitMinutes }: { startedAt: number; limitMinutes: number }) {
+  const [now, setNow] = useState(startedAt);
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const every = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(every);
+    };
+  }, [startedAt]);
+  const elapsed = elapsedSeconds(startedAt, now);
+  const display = timerDisplay(elapsed, limitMinutes);
+  return (
+    <span className={`round-timer${display.over ? " is-over" : ""}`}>
+      {display.over ? "Time " : "Time left "}
+      <strong role="timer">{display.text}</strong>
+      <span className="visually-hidden" aria-live="polite">{timerAnnouncement(elapsed, limitMinutes)}</span>
+    </span>
+  );
+}
+
 function ChallengeMode({
   session,
   level,
@@ -648,9 +717,13 @@ function ChallengeMode({
   sequenceStep,
   studentId,
   finishedAt,
+  startedAt,
   holdFeedback,
   attempt,
   retryPolicy,
+  hinted,
+  onHint,
+  badgeNews,
   onStudentIdChange,
   onAnswer,
   onAdvance,
@@ -668,6 +741,9 @@ function ChallengeMode({
   sequenceStep: SequenceStep | null;
   studentId: string;
   finishedAt: Date | null;
+  /** When this run of the round began, for a link with a time limit; null
+   *  otherwise, or before the round has been shown. */
+  startedAt: number | null;
   /** `fb=end`: no correct answer, no running score, no highlighted guide until
    *  the round is over. Instant feedback teaches; a graded round cannot afford
    *  to hand over an answer key while it is still being answered. */
@@ -675,14 +751,29 @@ function ChallengeMode({
   attempt: number;
   /** What the retry control offers, and whether it exists at all. */
   retryPolicy: RetryPolicy;
+  /** The questions of this round a hint was shown for. Null when the link did
+   *  not turn hints on: then there is no Hint button and no hints line. */
+  hinted: ReadonlySet<string> | null;
+  onHint: (questionId: string) => void;
+  /** Badges this round newly earned and the streak it extends; null when
+   *  storage is unavailable or before the round is saved. Never in the summary. */
+  badgeNews: BadgeNews | null;
   onStudentIdChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
   onNewSession: () => void;
 }) {
+  const [copyNotice, setCopyNotice] = useState("");
+  const [copyFallback, setCopyFallback] = useState("");
   const questionHeading = useRef<HTMLHeadingElement>(null);
   const resultHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (session.status !== "active") return;
+    const clear = window.setTimeout(() => { setCopyNotice(""); setCopyFallback(""); }, 0);
+    return () => window.clearTimeout(clear);
+  }, [session.status]);
+
 
   useEffect(() => {
     if (session.status === "complete") resultHeading.current?.focus();
@@ -692,7 +783,7 @@ function ChallengeMode({
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.matches("input, select, textarea") || session.status !== "active") return;
+      if ((target.matches("input, select, textarea") || Boolean(document.querySelector("dialog[open]"))) || session.status !== "active") return;
       const question = getCurrentQuestion(session);
       const response = getCurrentResponse(session);
       if (!response && /^[1-4]$/.test(event.key)) {
@@ -725,6 +816,15 @@ function ChallengeMode({
        teacher-facing code with its own published format and its own stated
        limits, and whether it generalizes across the three apps is still open.
        Making the two identical here would answer that by accident. */
+    /* How long the round took, when the teacher set a limit. Measured from
+       when this run was first shown to when it was stamped finished, and only
+       once both are known — a card that printed 0:00 while the stamp was
+       still landing would be a claim nobody made. */
+    const limitMinutes = assignment?.timeLimit ?? null;
+    const elapsed = limitMinutes !== null && finishedAt && startedAt !== null
+      ? elapsedSeconds(startedAt, finishedAt.getTime())
+      : null;
+    const timing = limitMinutes !== null && elapsed !== null ? { elapsedSeconds: elapsed, limitMinutes } : null;
     const code = verificationCode({
       assignment: assignment?.name ?? "",
       studentId,
@@ -732,6 +832,8 @@ function ChallengeMode({
       total: session.questions.length,
       finishedAt: stamped,
       attempt,
+      ...(timing ? { timing } : {}),
+      ...(hinted ? { hintsUsed: hinted.size } : {}),
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
@@ -754,14 +856,41 @@ function ChallengeMode({
       `Score: ${session.score}/${session.questions.length} (${accuracy}%)`,
       attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
+      timing ? timeTicketLine(timing.elapsedSeconds, timing.limitMinutes) : null,
+      hinted ? hintsTicketLine(hinted.size) : null,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
       missed.length ? `Missed: ${missed.map((entry) => entry.item).join(", ")}` : null,
       scope === "measure" && missedQuestionCount > 0
         ? `Measure questions to revisit: ${missedQuestionCount}`
         : null,
       finishedAt ? `Finished: ${finishedAt.toLocaleString()}` : null,
+      /* The exact moment the code was made from, so the class summary page
+         can check a pasted summary with the same function that made it. */
+      finishedAt ? stampLine(finishedAt) : null,
       `Code: ${code}`,
     ].filter(Boolean).join("\n");
+    const copySummary = async (turningIn: boolean) => {
+      setCopyFallback("");
+      const copied = await copyTextOrFallback(summary, () => navigator.clipboard, setCopyFallback);
+      setCopyNotice(turningIn
+        ? copied
+          ? "Copied. Now paste it wherever your teacher asked."
+          : "Copy unavailable. Select the summary below, copy it and paste it wherever your teacher asked."
+        : copied ? "Summary copied." : "Copy unavailable. Select the summary below and copy it.");
+    };
+    const saveButtons = (
+      <>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const copied = await copyResultImage(summary);
+          setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
+        }}>Copy result image</button>
+        <button type="button" className="secondary-button" onClick={async () => {
+          const downloaded = await downloadResultImage(summary);
+          setCopyNotice(downloaded ? "PNG download started." : `PNG unavailable. Use ${assignment ? "Turn this in" : "Copy summary"} instead.`);
+        }}>Download PNG</button>
+        <a className="secondary-button" href="/history">Practice history</a>
+      </>
+    );
     return (
       <section className="trainer-card result-card" aria-labelledby="result-title">
         <div className="result-badge" aria-hidden="true"><span>{accuracy}%</span></div>
@@ -788,6 +917,15 @@ function ChallengeMode({
             // not say which run it came from claims more than it knows.
             <div><dt>Attempt</dt><dd>{attempt}</dd></div>
           )}
+          {timing && (
+            // Recorded, not enforced: the round was finished either way, and
+            // the teacher reads the time beside the score.
+            <div><dt>Time</dt><dd>{timeResultText(timing.elapsedSeconds, timing.limitMinutes)}</dd></div>
+          )}
+          {hinted && (
+            // Beside the score, not in it: a right answer after a tip counts.
+            <div><dt>Hints used</dt><dd>{hinted.size}</dd></div>
+          )}
         </dl>
         {missedLabels.length > 0 && (
           <p className="result-missed">
@@ -799,6 +937,12 @@ function ChallengeMode({
           <p className="result-missed">
             <strong>Measure questions to revisit</strong>
             <span>{missedQuestionCount}</span>
+          </p>
+        )}
+        {badgeNews && (badgeNews.earned.length > 0 || badgeNews.streak > 1) && (
+          <p className="result-earned">
+            {badgeNews.earned.length > 0 && <><strong>New badge{badgeNews.earned.length > 1 ? "s" : ""}:</strong> {badgeNews.earned.join(" · ")}. </>}
+            {badgeNews.streak > 1 && streakText(badgeNews.streak)}
           </p>
         )}
         {assignment && (
@@ -814,34 +958,40 @@ function ChallengeMode({
             />
           </label>
         )}
+        {/* An assigned round has one job left: get the result to the teacher.
+            So it gets one obvious button, which is the same copy-the-summary
+            hand-in as before under a name a student does not have to decode,
+            and the other ways to keep a result fold away below it. Practice
+            rounds keep their row of buttons exactly as it was. */}
         <div className="result-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => {
-              void copyTextOrFallback(
-                summary,
-                () => navigator.clipboard,
-                (text) => { window.prompt("Copy your result summary:", text); },
-              );
-            }}
-          >
-            Copy summary
-          </button>
-          <button type="button" className="secondary-button" onClick={() => downloadResultImage(summary)}>Download result image</button>
-          <a className="secondary-button" href="/history">Practice history</a>
+          {assignment ? (
+            <button type="button" className="primary-button turn-in-button" onClick={() => copySummary(true)}>
+              Turn this in
+            </button>
+          ) : (
+            <button type="button" className="secondary-button" onClick={() => copySummary(false)}>
+              Copy summary
+            </button>
+          )}
+          {!assignment && saveButtons}
           {/* The label has to match what the button does: "Retry this set" is
               a promise about which questions come back, and under `reseed` it
               would be a false one. */}
           {retryPolicy !== "off" && (
             <button type="button" className="secondary-button" onClick={onRetry}>
-              {retryPolicy === "reseed" ? "Try again on new questions" : "Retry this set"}
+              {retryPolicy === "reseed" ? "Try new questions" : "Retry this set"}
             </button>
           )}
           {!assignment && (
-            <button type="button" className="primary-button" onClick={onNewSession}>New randomized session <span aria-hidden="true">↻</span></button>
+            <button type="button" className="primary-button" onClick={onNewSession}>New questions <span aria-hidden="true">↻</span></button>
           )}
         </div>
+        {assignment && (
+          <details className="result-more">
+            <summary>More ways to save this result</summary>
+            <div className="result-actions">{saveButtons}</div>
+          </details>
+        )}
         {!assignment && missedQuestions.length > 0 && (
           <FocusedQuestionPractice
             questions={missedQuestions}
@@ -850,6 +1000,8 @@ function ChallengeMode({
             onReturn={() => resultHeading.current?.focus()}
           />
         )}
+        <p role="status">{copyNotice}</p>
+        {copyFallback && <label>Result summary to copy<textarea readOnly value={copyFallback} onFocus={event => event.target.select()} /></label>}
         {assignment && retryPolicy === "off" && (
           // Said, rather than left as an absence a student has to notice. The
           // claim is deliberately about what the assignment asks for, not about
@@ -858,7 +1010,7 @@ function ChallengeMode({
           <p className="result-retry-note">This assignment asks for one attempt, so there is no retry here.</p>
         )}
         {assignment && (
-          <p className="result-submit">Copy the summary and submit it wherever your teacher asked.</p>
+          <p className="result-submit">Turn this in copies your result and its verification code. Paste it wherever your teacher asked.</p>
         )}
         {/* Every question, what they chose, and what it should have been. When
             feedback was held to the end this is where the round is learned
@@ -893,7 +1045,7 @@ function ChallengeMode({
         <p className="result-footnote">{conditions}</p>
         <p className="result-code">
           <span>Verification</span> <code>{code}</code>
-          <small>Your answers are checked in this browser. The app does not automatically submit your answers or result. Settings, personal bests and attempt counts may be saved on this device. The code only shows this result was not retyped by hand.</small>
+          <small>Your answers are checked in this browser. The app does not automatically submit your answers or result. Settings, personal bests and attempt counts may be saved on this device. This browser-generated code can help compare submissions, but it is not proof of authentic work.</small>
         </p>
       </section>
     );
@@ -903,6 +1055,7 @@ function ChallengeMode({
   const response = getCurrentResponse(session);
   const selected = question.choices.find((choice) => choice.id === response?.choiceId);
   const accuracy = getAccuracy(session);
+  const hintShown = Boolean(hinted?.has(question.id));
   return (
     <section className="trainer-card challenge-card" aria-labelledby="challenge-title">
       <div className="challenge-progress">
@@ -914,6 +1067,9 @@ function ChallengeMode({
           {holdFeedback
             ? <span>Answers at the end</span>
             : <span>Score <strong>{session.score}</strong> · Accuracy <strong>{accuracy}%</strong></span>}
+          {assignment?.timeLimit != null && startedAt !== null && (
+            <RoundTimer startedAt={startedAt} limitMinutes={assignment.timeLimit} />
+          )}
         </div>
         <progress value={session.currentIndex + (response ? 1 : 0)} max={session.questions.length}>
           {session.currentIndex + 1} of {session.questions.length}
@@ -925,6 +1081,26 @@ function ChallengeMode({
           <h2 id="challenge-title" tabIndex={-1} ref={questionHeading}>Which count matches this rhythm?</h2>
         </div>
       </div>
+      {hinted && (
+        /* One tip per question, on request. The tip lives in a polite live
+           region that is always on the page, so a screen reader hears it when
+           it appears; pressing again, or after answering, uses no second hint. */
+        <div className="hint-row">
+          <button
+            type="button"
+            className="secondary-button hint-button"
+            aria-expanded={hintShown}
+            aria-controls="hint-text"
+            disabled={Boolean(response) || hintShown}
+            onClick={() => onHint(question.id)}
+          >
+            Hint
+          </button>
+          <p id="hint-text" className="hint-text" aria-live="polite">
+            {hintShown ? hintFor(question.prompt, system) : ""}
+          </p>
+        </div>
+      )}
       <div className="notation-panel">
         <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} revealed={Boolean(response) && !holdFeedback} playback={!assignment} />
       </div>
@@ -996,57 +1172,9 @@ function ChallengeMode({
   );
 }
 
-// Visit counter (progressive enhancement). Counts once per browser session via the
-// shared Backwerd counter Worker; dev machines only read, so local work never
-// inflates the number. Returns null until a real count arrives, so nothing renders
-// if the endpoint is offline, blocked, or not deployed yet.
-function useVisitCount(app: string) {
-  const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
-    const API = "https://counter.backwerdrhythmshop.com";
-    const dev = /^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)
-      || location.protocol === "file:";
-    let counted = false;
-    try { counted = sessionStorage.getItem("brs-counted") === "1"; } catch { /* private mode */ }
-
-    let live = true;
-    fetch(`${API}${dev || counted ? "/count" : "/hit"}?app=${app}`, { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { count?: number } | null) => {
-        if (!live || !d || typeof d.count !== "number" || d.count < 1) return;
-        if (!dev) { try { sessionStorage.setItem("brs-counted", "1"); } catch { /* private mode */ } }
-        setCount(d.count);
-      })
-      .catch(() => { /* leave the footer exactly as it was */ });
-    return () => { live = false; };
-  }, [app]);
-  return count;
-}
-
-// Build stamp + self-documenting support/feedback emails (progressive enhancement).
+// Build stamp. The shop no longer counts visits, so the stamp shows the build alone.
 function BuildStamp() {
-  const visits = useVisitCount("count-it");
-  useEffect(() => {
-    document.querySelectorAll<HTMLAnchorElement>('a.foot-btn[href^="mailto:"]').forEach((a) => {
-      const href = a.getAttribute("href") || "";
-      if (/[?&]body=/.test(href)) return;
-      const match = href.match(/[?&]subject=([^&]*)/);
-      const subject = match ? decodeURIComponent(match[1].replace(/\+/g, " ")) : "";
-      const appName = (subject.split(/\s[—-]\s/)[0] || document.title || "this app").trim();
-      const body = (/support@/.test(href)
-          ? "Describe what went wrong — what you did, what you expected, and what actually happened:"
-          : "Describe your idea or request:")
-        + "\n\n\n\n─── details below help with troubleshooting ───\n"
-        + `App: ${appName}\nBuild: ${BUILD_ID}\nPage: ${location.href}\nBrowser: ${navigator.userAgent}`;
-      a.setAttribute("href", `${href}&body=${encodeURIComponent(body)}`);
-    });
-  }, []);
-  return (
-    <p className="build-stamp" style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.55, fontSize: "11px", margin: "4px 0 0" }}>
-      Build {BUILD_ID}
-      {visits !== null && ` · ${visits.toLocaleString()} visit${visits === 1 ? "" : "s"}`}
-    </p>
-  );
+  return <span className="build-stamp">Build {BUILD_ID}</span>;
 }
 
 export default function CountItApp() {
@@ -1064,6 +1192,7 @@ export default function CountItApp() {
   const [systemSaveMessage, setSystemSaveMessage] = useState("");
   const [showReference, setShowReference] = useState(true);
   const [freeCells, setFreeCells] = useState<string[] | null>(null);
+  const [freeLength, setFreeLength] = useState<PracticeLength>(5);
   const [saveSetup, setSaveSetup] = useState(false);
   const [preferencesReady, setPreferencesReady] = useState(false);
   const [preferenceMessage, setPreferenceMessage] = useState('');
@@ -1075,6 +1204,17 @@ export default function CountItApp() {
     makeSession({ ...DEFAULT_PRACTICE, cells: undefined, system: "standard", seed: INITIAL_SEED + 100, count: SESSION_LENGTH }),
   );
   const savedHistorySession = useRef<ChallengeSession | null>(null);
+  /** The run (attempt and question ids) a reseed retry just built. Only that
+   *  run counts as fresh for badges after attempt 1: a reload rebuilds the
+   *  original seeded set, which the student has already seen answered. */
+  const reseededRun = useRef("");
+  /** Whether the counting guide was on screen at any point in the current run,
+   *  so switching it off just before the last answer does not count as a round
+   *  done without it. */
+  const guideUsed = useRef<{ run: string; used: boolean }>({ run: "", used: false });
+  /* What the round just finished earned, for one calm line on its card. */
+  const [badgeNews, setBadgeNews] = useState<(BadgeNews & { session: ChallengeSession }) | null>(null);
+  const { protect, confirmation } = useRoundChangeGuard(session.status === "active" && session.responses.length > 0);
   const [personalBests, setPersonalBests] = useState<Record<string, number>>({});
   // An assignment comes from the LINK only, never from stored preferences — it
   // is something a teacher set, not something this browser remembers. It is
@@ -1091,9 +1231,20 @@ export default function CountItApp() {
   const [linkError, setLinkError] = useState<AssignmentError | null>(null);
   const [studentId, setStudentId] = useState("");
   const [finishedAt, setFinishedAt] = useState<Date | null>(null);
+  /** When the current run of a time-limited round was first shown. Null with no
+   *  limit, and between runs; set by the effect below, never during a render. */
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  /** Which questions a hint was shown for, tied to the run it was asked in: the
+   *  attempt and the questions. A retry or a new round starts again at zero
+   *  without every place that builds a round resetting it, while a name typed
+   *  before the first answer (which only reorders the choices) keeps the count. */
+  const [hintLog, setHintLog] = useState<{ readonly run: string; readonly ids: ReadonlySet<string> }>(
+    () => ({ run: "", ids: new Set() }),
+  );
   /** Which run of this round the student is on. Reset by anything that builds a
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
+  const hintRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
   const [deviceVariant, setDeviceVariant] = useState("");
   /** The assignment's canonical link, used to key its attempt tally. */
   const [attemptKey, setAttemptKey] = useState("");
@@ -1106,11 +1257,12 @@ export default function CountItApp() {
   useEffect(() => {
     if (!setupOpen) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
       setSetupOpen(false);
       setupToggle.current?.focus();
     };
     const onPointer = (event: PointerEvent) => {
+      if (document.querySelector("dialog[open]")) return;
       if (focusBar.current && !focusBar.current.contains(event.target as Node)) setSetupOpen(false);
     };
     document.addEventListener("keydown", onKey);
@@ -1125,7 +1277,13 @@ export default function CountItApp() {
     () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
     [assignment, pinnedLocks],
   );
-  const sessionLength = assignment?.count ?? SESSION_LENGTH;
+  /* What the card, summary and evidence report: the link's pinned values, and
+     the student's own choices wherever the link left level, scope or meter open. */
+  const reportedAssignment = useMemo(
+    () => (assignment ? playedAssignment(assignment, pinnedLocks, { level, scope, meter }) : null),
+    [assignment, pinnedLocks, level, scope, meter],
+  );
+  const sessionLength = assignment ? assignment.count ?? SESSION_LENGTH : freeLength;
   const assignedCells = assignment?.cells ?? freeCells ?? undefined;
   const holdFeedback = assignment?.feedback === "end";
   /* `free` is what this app has always done, so an existing link keeps it. */
@@ -1189,8 +1347,10 @@ export default function CountItApp() {
       setLevel(settings.level); setScope(settings.scope); setMeter(settings.meter);
       setShowReference(settings.showReference); setFreeCells(settings.cells);
       setSystem(freePlayProfile);
+      const restoredLength = supportedPracticeLength(settings, settings.challengeLength);
+      setFreeLength(restoredLength);
       setSession(makeSession({ ...settings, ...(settings.cells ? { cells: settings.cells } : { cells: undefined }), system: freePlayProfile,
-        seed: INITIAL_SEED + 100, count: SESSION_LENGTH }));
+        seed: INITIAL_SEED + 100, count: restoredLength }));
       /* Read before the assignment is validated: a link that names a step and
          then fails validation is still evidence of which step was attempted,
          and refusing the round does not make the marker untrue. */
@@ -1253,7 +1413,7 @@ export default function CountItApp() {
       setScope(pinned.scope);
       setMeter(pinned.meter ?? DEFAULT_METER);
       setSystem(resolveCountingProfile(pinned.system, savedProfile));
-      if (pinned.guide) setShowReference(pinned.guide === "on");
+      setShowReference(pinned.guide ? pinned.guide === "on" : DEFAULT_PRACTICE.showReference);
       // An assignment is a scored round by definition, so it opens in the
       // challenge rather than making a student find the tab.
       setMode("challenge");
@@ -1305,6 +1465,7 @@ export default function CountItApp() {
     meter === DEFAULT_METER ? "" : `meter:${meter}`,
     system === "standard" ? "" : `sys:${system}`,
     assignment?.guide ? `guide:${assignment.guide}` : "",
+    !assignment && freeLength !== 5 ? `n:${session.questions.length}` : "",
   ].filter(Boolean).join(":");
 
   useEffect(() => {
@@ -1323,9 +1484,26 @@ export default function CountItApp() {
   useEffect(() => {
     if (!preferencesReady || assignment || !saveSetup) return;
     try {
-      localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+      localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells, challengeLength: freeLength }));
     } catch { /* optional; explicit save reports failures */ }
-  }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells]);
+  }, [preferencesReady, assignment, saveSetup, level, scope, meter, showReference, freeCells, freeLength]);
+
+  /* The clock for a time-limited round starts when the round is first on
+     screen, and keeps running if the student renames themselves before their
+     first answer (that rebuilds the round's answer order, not the attempt). */
+  const badgeRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
+  useEffect(() => {
+    if (mode !== "challenge" || session.status === "complete") return;
+    if (guideUsed.current.run !== badgeRun) guideUsed.current = { run: badgeRun, used: showReference };
+    else if (showReference) guideUsed.current.used = true;
+  }, [mode, session.status, badgeRun, showReference]);
+
+  const timeLimit = assignment?.timeLimit ?? null;
+  useEffect(() => {
+    if (timeLimit === null || mode !== "challenge" || session.status !== "active" || startedAt !== null) return;
+    const start = window.setTimeout(() => setStartedAt((current) => current ?? Date.now()), 0);
+    return () => window.clearTimeout(start);
+  }, [timeLimit, mode, session.status, startedAt]);
 
   useEffect(() => {
     if (session.status !== "complete") return;
@@ -1343,6 +1521,17 @@ export default function CountItApp() {
         rhythms: [...new Set(session.questions.flatMap(q => q.prompt.cells.map(c => c.id)))],
         missed: [...new Set(getMissedQuestions(session).flatMap(q => q.prompt.cells.map(c => c.id)))],
         assignment: assignment?.name ?? null, attempt });
+      try {
+        const { state, earned } = recordRound(readBadges(localStorage), {
+          finishedAt: finished, score: session.score, total: session.questions.length, meter, scope,
+          guide: showReference || (guideUsed.current.run === badgeRun && guideUsed.current.used),
+          metGoal: assignment?.passing != null ? session.score >= assignment.passing : null,
+          fresh: attempt === 1 || (retryPolicy === "reseed" && reseededRun.current === badgeRun),
+        });
+        setBadgeNews(saveBadges(state, localStorage)
+          ? { session, earned: earned.map((badge) => badge.name), streak: currentStreak(state.days, finished) }
+          : null);
+      } catch { setBadgeNews(null); /* optional, like the history */ }
       }
       if (attemptKey) writeAttempts(attemptKey, attempt);
       setPersonalBests((current) => {
@@ -1355,7 +1544,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(saveBest);
-  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment]);
+  }, [attempt, attemptKey, bestKey, session, challengeSeed, meter, scope, system, showReference, assignment, retryPolicy, badgeRun]);
 
   function nextSeedFrom(seed: string | number): string | number {
     return typeof seed === "number" ? seed + 1 : `${seed}-again`;
@@ -1367,13 +1556,17 @@ export default function CountItApp() {
     nextMeter: MeterId,
     nextSystem: CountingProfileId = system,
     cells: readonly string[] | null | undefined = assignedCells,
+    wantedLength: PracticeLength = freeLength,
   ) {
+    const nextLength = assignment ? sessionLength : supportedPracticeLength({ level: nextLevel, scope: nextScope, meter: nextMeter, cells: cells ? [...cells] : null }, wantedLength);
+    if (!assignment) setFreeLength(nextLength as PracticeLength);
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setPracticeSeed((seed) => seed + 1);
     setPracticeIndex(0);
     setRevealed(false);
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
       level: nextLevel,
@@ -1381,7 +1574,7 @@ export default function CountItApp() {
       meter: nextMeter,
       system: nextSystem,
       seed: nextSeed,
-      count: sessionLength,
+      count: nextLength,
       ...(cells ? { cells } : {}),
       ...(assignment && variant ? { variant } : {}),
     }));
@@ -1437,6 +1630,16 @@ export default function CountItApp() {
     }
   }
 
+  function resetPracticeSetup() {
+    if (level === DEFAULT_PRACTICE.level && scope === DEFAULT_PRACTICE.scope && meter === DEFAULT_PRACTICE.meter && freeCells === null && freeLength === 5) {
+      setShowReference(true); return;
+    }
+    protect(() => {
+      setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
+      resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null, 5);
+    });
+  }
+
   function nextPractice(direction: 1 | -1) {
     setPracticeIndex((index) => (index + direction + practiceQuestions.length) % practiceQuestions.length);
     setRevealed(false);
@@ -1446,6 +1649,7 @@ export default function CountItApp() {
     const nextSeed = nextSeedFrom(challengeSeed);
     setChallengeSeed(nextSeed);
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
       level,
@@ -1474,10 +1678,11 @@ export default function CountItApp() {
     if (retryPolicy === "off") return;
     const nextAttempt = attempt + 1;
     setFinishedAt(null);
+    setStartedAt(null);
     setAttempt(nextAttempt);
     setMode("challenge");
     if (retryPolicy === "reseed") {
-      setSession(makeSession({
+      const reseeded = makeSession({
         level,
         scope,
         meter,
@@ -1487,7 +1692,9 @@ export default function CountItApp() {
         count: sessionLength,
         ...(assignedCells ? { cells: assignedCells } : {}),
         ...(assignment && variant ? { variant } : {}),
-      }));
+      });
+      reseededRun.current = `${nextAttempt}|${reseeded.questions.map((question) => question.id).join(",")}`;
+      setSession(reseeded);
       return;
     }
     setSession((current) => resetSession(current));
@@ -1526,7 +1733,7 @@ export default function CountItApp() {
           <span><strong>Count <em>It.</em></strong><small>by Backwerd Rhythm Shop</small></span>
         </a>
         <p>Free percussion tools that teach.</p>
-        <WorkspaceActions teachers={{ href: "/assignments", label: "For teachers" }} />
+        <WorkspaceActions />
           <a className="brs-home" href="https://backwerdrhythmshop.com/" aria-label="Backwerd Rhythm Shop home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brs-monogram.svg" alt="" width="28" height="28" />
@@ -1607,7 +1814,6 @@ export default function CountItApp() {
               aria-controls="setup-popover"
               onClick={() => setSetupOpen((open) => !open)}
             >
-              <span className="focus-label">{assignment ? "Assigned" : "Set your focus"}</span>
               <span className="focus-summary">
                 {[
                   assignment?.name ?? (assignedCells ? `${assignedCells.length} rhythms` : getLevel(level).name),
@@ -1617,7 +1823,7 @@ export default function CountItApp() {
                   showReference ? "Guide on" : "Guide off",
                 ].join(" · ")}
               </span>
-              <span className="focus-action" aria-hidden="true">{setupOpen ? "Close" : "Change"} <i>▾</i></span>
+              <span className="focus-action">Settings<i><ChevronIcon /></i></span>
             </button>
             <div id="setup-popover" className="setup-popover" hidden={!setupOpen}>
               <SetupControls
@@ -1632,40 +1838,63 @@ export default function CountItApp() {
                 locked={locked}
                 studentId={studentId}
                 identityLocked={identityLocked}
-                onLevelChange={changeLevel}
-                onScopeChange={changeScope}
-                onMeterChange={changeMeter}
-                onSystemChange={changeSystem}
+                onLevelChange={value => { if (value !== level) protect(() => changeLevel(value)); }}
+                onScopeChange={value => { if (value !== scope) protect(() => changeScope(value)); }}
+                onMeterChange={value => { if (value !== meter) protect(() => changeMeter(value)); }}
+                onSystemChange={value => { if (value !== system) protect(() => changeSystem(value)); }}
                 onSaveSystemChange={saveSystemPreference}
                 onReferenceChange={setShowReference}
                 onStudentIdChange={changeStudentId}
-              >
-                {!assignment && <div className="practice-customization">
+                rhythmControls={!assignment && <div className="practice-customization">
+                  <fieldset className="scope-control">
+                    <legend>Challenge length</legend>
+                    <div className="scope-options">{PRACTICE_LENGTHS.map(count => {
+                      const available = roundLengthFor({ level, scope, meter, cells: assignedCells, wanted: count });
+                      return <label key={count} className={freeLength === count ? 'is-selected' : ''}>
+                        <input type="radio" name="challenge-length" value={count} checked={freeLength === count}
+                          disabled={count !== 5 && available < count}
+                          onChange={() => { if (count !== freeLength) protect(() => resetForSettings(level, scope, meter, system, assignedCells, count)); }} />
+                        <span>{count === 5 ? 'Quick 5' : count === 12 ? 'Standard 12' : 'Extended 20'}{available < count ? ` (${available} available)` : ''}</span>
+                      </label>;
+                    })}</div>
+                    <small>Choose the Count uses {session.questions.length} questions. Longer sets need enough unique measures; a small pool can shorten Quick 5. Unscored Practice examples stay separate.</small>
+                  </fieldset>
+                  <details><summary>Practice starting points</summary>
+                    <p>Choose a rhythm pool from the existing teaching sequence for unscored exploration. These do not set an assignment or goal.</p>
+                    {COUNTING_RHYTHMS_STEPS.slice(0, 3).map(preset => <button type="button" className="quiet-button" key={preset.id} onClick={() => protect(() => {
+                      const vocabulary = preset.state.vocabulary;
+                      if (vocabulary.kind !== "cells") return;
+                      const cells = [...vocabulary.cells];
+                      setLevel("level-1"); setScope("beat"); setMeter("4-4"); setShowReference(preset.state.guide === "on"); setFreeCells(cells); setMode("practice");
+                      resetForSettings("level-1", "beat", "4-4", system, cells);
+                    })}>{preset.title} — {preset.focus}</button>)}
+                  </details>
                   <details><summary>Choose individual rhythms</summary>
                     <p>Select at least two. Changing the level returns to its complete vocabulary.</p>
                     <div className="rhythm-picker">{ALL_RHYTHM_CELLS.map(cell => {
                       const selected = freeCells ?? getCellsForLevel(level).map(c => c.id);
                       const fits = cell.beats <= (scope === 'beat' ? 1 : getMeter(meter).beatsPerMeasure);
-                      return <label key={cell.id}><input type="checkbox" checked={selected.includes(cell.id)} disabled={!fits}
+                      return <label key={cell.id}><input type="checkbox" value={cell.id} checked={selected.includes(cell.id)} disabled={!fits}
                         onChange={event => {
                           const next = event.target.checked ? [...selected, cell.id] : selected.filter(id => id !== cell.id);
                           if (!usablePool(next, scope, meter)) { setPreferenceMessage('Keep at least two rhythms that fit this meter.'); return; }
-                          setFreeCells(next); setPreferenceMessage(''); resetForSettings(level, scope, meter, system, next);
+                          protect(() => { setFreeCells(next); setPreferenceMessage(''); resetForSettings(level, scope, meter, system, next); });
                         }} /> {cell.label}{!fits ? ' (full measure required)' : ''}</label>;
                     })}</div>
-                    <button type="button" className="quiet-button" onClick={() => { setFreeCells(null); resetForSettings(level, scope, meter, system, null); }}>Use level rhythms</button>
+                    <button type="button" className="quiet-button" onClick={() => { if (freeCells) protect(() => { setFreeCells(null); resetForSettings(level, scope, meter, system, null); }); }}>Use level rhythms</button>
                   </details>
+                </div>}
+              >
+                {!assignment && <div className="practice-customization">
                   <label><input type="checkbox" checked={saveSetup} onChange={e => {
                     try {
-                      if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells }));
+                      if (e.target.checked) localStorage.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ level, scope, meter, showReference, cells: freeCells, challengeLength: freeLength }));
                       else localStorage.removeItem(PRACTICE_SETTINGS_KEY);
                       setSaveSetup(e.target.checked); setPreferenceMessage(e.target.checked ? 'Practice setup saved on this device.' : 'Saved practice setup cleared.');
                     } catch { setPreferenceMessage('This browser could not save your setup. You can still practice.'); }
                   }} /> Save my practice setup</label>
-                  <button type="button" className="quiet-button" onClick={() => {
-                    setLevel(DEFAULT_PRACTICE.level); setScope(DEFAULT_PRACTICE.scope); setMeter(DEFAULT_PRACTICE.meter); setShowReference(true); setFreeCells(null);
-                    resetForSettings(DEFAULT_PRACTICE.level, DEFAULT_PRACTICE.scope, DEFAULT_PRACTICE.meter, system, null);
-                  }}>Reset practice defaults</button>
+                  <p>Uncheck either save option to clear that saved default. Reset setup keeps your counting profile, history and personal bests; if setup saving is on, it also updates the saved setup.</p>
+                  <button type="button" className="quiet-button" onClick={resetPracticeSetup}>Reset practice setup</button>
                   <p role="status">{preferenceMessage}</p>
                 </div>}
               </SetupControls>
@@ -1705,13 +1934,20 @@ export default function CountItApp() {
                 showReference={showReference}
                 practiceCells={freeCells}
                 personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
-                assignment={assignment}
+                assignment={reportedAssignment}
                 sequenceStep={sequenceStep}
                 studentId={studentId}
                 finishedAt={finishedAt}
+                startedAt={startedAt}
                 holdFeedback={holdFeedback}
                 attempt={attempt}
                 retryPolicy={retryPolicy}
+                hinted={assignment?.hints ? (hintLog.run === hintRun ? hintLog.ids : new Set()) : null}
+                onHint={(questionId) => setHintLog((current) => ({
+                  run: hintRun,
+                  ids: new Set([...(current.run === hintRun ? current.ids : []), questionId]),
+                }))}
+                badgeNews={badgeNews?.session === session ? badgeNews : null}
                 onStudentIdChange={changeStudentId}
                 onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
                 onAdvance={advanceChallenge}
@@ -1727,37 +1963,62 @@ export default function CountItApp() {
 
       </main>
 
-      <WorkspaceInfo name="Count It" guide="https://guides.backwerdrhythmshop.com/count-it/" help={<><section className="hero" aria-label="How Count It works">
-          <div className="hero-lesson">
-            <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
-            <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
-            <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
-          </div>
-        </section>
-<section className="quick-lesson" aria-labelledby="lesson-title">
-          <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
-          <p>The complete grid keeps time underneath every rhythm. Your answer names only the positions where a note begins; rests and held space stay silent.</p>
-        </section></>}><footer className="site-footer">
-        <div><strong>Count It.</strong><span>by <a className="shop-link" href="https://backwerdrhythmshop.com">Backwerd Rhythm Shop</a></span></div>
-        <div className="foot-links">
+      <WorkspaceInfo
+        name="Count It"
+        guide="https://guides.backwerdrhythmshop.com/count-it/"
+        help={<>
+          <section className="hero" aria-label="How Count It works">
+            <div className="hero-lesson">
+              <div><span>1</span><p><strong>Look</strong>Read the noteheads and rests.</p></div>
+              <div><span>&</span><p><strong>Locate</strong>Find each sounding subdivision.</p></div>
+              <div><span>✓</span><p><strong>Connect</strong>Say the matching count.</p></div>
+            </div>
+          </section>
+          <section className="quick-lesson" aria-labelledby="lesson-title">
+            <div><p className="eyebrow">Keep this in mind</p><h2 id="lesson-title">Count the notes that sound.</h2></div>
+            <p>The complete grid keeps time underneath every rhythm. Your answer names only the positions where a note begins; rests and held space stay silent.</p>
+          </section>
+          <p>Forever free. No account required.</p>
+          <p>Standard, Eastman, and Eastman variant counts · quarter-note beats · Quarter, eighth, and sixteenth-note cells</p>
+        </>}
+        feedback={<>
+          <p><SupportLink kind="support">Report a problem</SupportLink> · <SupportLink kind="feedback">Request a feature</SupportLink></p>
+          <p><a href={emailHref("support")}>Email support</a> · <a href={emailHref("feedback")}>Email feedback</a></p>
+        </>}
+      >
+        <p className="about-build">Build <span className="build-id">{BUILD_ID}</span></p>
+        <nav className="about-links" aria-label="More from Backwerd Rhythm Shop">
+          <a className="text-action" href="https://apps.backwerdrhythmshop.com/">More apps</a>
+          <a className="text-action" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
+          <a className="text-action" href="/assignments">For teachers</a>
+        </nav>
+        <p className="about-copyright">© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
+      </WorkspaceInfo>
+      <footer className="site-footer">
+        <nav className="foot-social" aria-label="Backwerd Rhythm Shop on social media">
+          {SOCIAL_LINKS.map(({ network, href }) => (
+            <a key={network} className="foot-ico" href={href} target="_blank" rel="noreferrer" aria-label={`Backwerd Rhythm Shop on ${network}`} title={network}>
+              <SocialGlyph network={network} />
+            </a>
+          ))}
+        </nav>
+        <nav className="foot-links" aria-label="Count It links">
+          <SupportLink kind="support" className="foot-btn">Report a problem</SupportLink>
+          <SupportLink kind="feedback" className="foot-btn">Request a feature</SupportLink>
+          <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">Guide</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/">All free apps</a>
-        <a className="foot-btn" href="https://guides.backwerdrhythmshop.com/count-it/">App guide</a>
-          {/* A plain anchor: next/link throws on click in this vinext build. */}
+          {/* The app's own pages follow the shop links. A plain anchor: next/link throws on click in this vinext build. */}
           <a className="foot-btn" href="/assignments" title="Every published teaching-sequence step, ready to try, copy or customize">Assignments</a>
           <a className="foot-btn" href="/build" title="Choose the rhythms, meter and pass mark, and get a link that gives every student the same round">Build an assignment</a>
           <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
-          <a className="foot-btn" href="mailto:support@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Support%20request">Report a problem</a>
-          <a className="foot-btn" href="mailto:feedback@backwerdrhythmshop.com?subject=Count%20It%20%E2%80%94%20Feature%20request">Request a feature</a>
-          <a className="foot-btn foot-ico" href="https://www.facebook.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Facebook" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
-          <a className="foot-btn foot-ico" href="https://www.instagram.com/backwerdrhythmshop/" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on Instagram" title="Instagram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm7.846-10.405a1.441 1.441 0 01-2.88 0 1.44 1.44 0 012.88 0z"/></svg></a>
-          <a className="foot-btn foot-ico" href="https://www.youtube.com/@backwerdrhythmshop" target="_blank" rel="noopener noreferrer" aria-label="Backwerd Rhythm Shop on YouTube" title="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        </nav>
+        <div className="foot-legal">
+          <span>© 2026 Backwerd Rimshot, LLC. All rights reserved.</span>
+          <BuildStamp />
         </div>
-        <p>Standard, Eastman, and Eastman variant counts · quarter-note beats · Quarter, eighth, and sixteenth-note cells</p>
-        <p>Forever free. No account required.<br />© 2026 Backwerd Rimshot, LLC. All rights reserved.</p>
-        <BuildStamp />
-      </footer></WorkspaceInfo>
-      <SupportFallbackDialog />
+      </footer>
+      {confirmation}
     </div>
   );
 }

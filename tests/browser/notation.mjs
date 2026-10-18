@@ -32,7 +32,12 @@ const { note, results } = reporter();
   const links = await page.$$eval(".notation-contents a", (as) => as.map((a) => a.getAttribute("href")));
   note("notation: the contents list jumps to each topic", links.length === 7 && (await Promise.all(links.map((h) => page.locator(h).count()))).every((n) => n === 1));
   note("notation: the Rhythm Shop's written-count convention is stated as the shop's, not the app's", /convention is to put the count for a rest\s+in parentheses/.test(((await page.locator("#rests").textContent()) || "").replace(/\s+/g, " ").replace("rest in", "rest in")) || /parentheses/.test((await page.locator("#rests").textContent()) || ""));
-  note("notation: no 'not in either app' overclaim beyond what is true", /6\/8 and cut time are not in either app/.test(((await page.locator("#eighth-beat").textContent()) || "").replace(/\s+/g, " ")));
+  /* What the page says about the sibling app must stay true of the sibling app. This pinned the opposite
+     ("6/8 and cut time are not in either app") and kept passing after Eight Time added 6/8, so it checked
+     the sentence, not the fact. Compare against Eight Time's manifest when you change either. */
+  const eighth = ((await page.locator("#eighth-beat").textContent()) || "").replace(/\s+/g, " ");
+  note("notation: the eighth-beat topic names Eight Time's meters and says only cut time is in neither app",
+    /Eight Time, which reads 3\/8, 5\/8, 6\/8, 7\/8, 9\/8 and 12\/8/.test(eighth) && /Cut time \(2\/2\) is not in either app/.test(eighth) && !/6\/8 and cut time are not in either app/.test(eighth));
   await shot(page, "notation-desktop.png", { fullPage: false });
   await shot(page.locator("#time-signature"), "notation-timesig.png");
   const phone = await browser.newContext({ viewport: { width: 375, height: 800 } });

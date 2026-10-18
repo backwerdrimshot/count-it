@@ -202,6 +202,12 @@ export function createPraxisEvidenceResult(options: {
     if (assignment.retry) settings.retry = assignment.retry;
     if (assignment.count !== null) settings.n = String(assignment.count);
     if (assignment.passing !== null) settings.pass = String(assignment.passing);
+    /* The limit the round was set, so the record can reproduce its conditions.
+       The time it actually took is on the card and in the code, not here:
+       adding an outcome field would change the shape shared with the sibling
+       apps, which is the family's decision rather than this file's. */
+    if (assignment.timeLimit !== null) settings.time = String(assignment.timeLimit);
+    if (assignment.hints) settings.hints = "on";
     if (assignment.seed) settings.seed = assignment.seed;
     if (assignment.systemPinned) settings.sys = assignment.system;
   }
@@ -253,7 +259,8 @@ export function createPraxisEvidenceResult(options: {
     },
     measured: ["rhythm notation reading", "counting-syllable selection"],
     /* The boundary, on the evidence itself rather than only in the manifest.
-       There is no timer anywhere in this app, by design. */
+       Speed is never scored. A link may set a time limit, but the elapsed time
+       is reported beside the score, never folded into it. */
     notMeasured,
     validity: { valid: true, deviceReliabilityFlags: [] },
     errorSummary,

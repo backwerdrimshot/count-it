@@ -81,6 +81,11 @@ export interface BuilderState {
   readonly count: number | null;
   /** Questions needed to pass. Null: no goal on the card. */
   readonly passing: number | null;
+  /** Time limit in whole minutes. Null or absent: no limit, no countdown.
+   *  Optional so the published presets, which have none, need not say so. */
+  readonly timeLimit?: number | null;
+  /** One tip per question, on request. Optional for the same reason. */
+  readonly hints?: boolean;
   /** Empty string: none. */
   readonly seed: string;
 }
@@ -106,6 +111,8 @@ export function defaultBuilderState(seed: string): BuilderState {
     retry: null,
     count: 10,
     passing: 8,
+    timeLimit: null,
+    hints: false,
     seed,
   });
 }
@@ -199,6 +206,8 @@ export function buildQuery(state: BuilderState): string {
   if (state.retry) parts.push(`retry=${state.retry}`);
   if (state.count !== null) parts.push(`n=${state.count}`);
   if (state.passing !== null) parts.push(`pass=${state.passing}`);
+  if (state.timeLimit != null) parts.push(`time=${state.timeLimit}`);
+  if (state.hints) parts.push("hints=on");
   if (state.seed) parts.push(`seed=${encodeURIComponent(state.seed)}`);
   return parts.length ? `?${parts.join("&")}` : "";
 }
@@ -248,6 +257,9 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
   if (state.passing !== null && !isWholeNumber(state.passing)) {
     return { ok: false, problem: "The pass mark has to be a whole number." };
   }
+  if (state.timeLimit != null && !isWholeNumber(state.timeLimit)) {
+    return { ok: false, problem: "The time limit has to be a whole number of minutes." };
+  }
 
   const query = buildQuery(state);
   const parsed = parseAssignment(query);
@@ -288,6 +300,18 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
   }
   if (state.passing === null) {
     notes.push("No pass mark: the result card will show a score but no goal.");
+  }
+  if (assignment.timeLimit !== null) {
+    notes.push(
+      `Time limit: students see a ${assignment.timeLimit}-minute countdown. At zero it keeps counting as ` +
+        "overtime and they can still finish; the result card records their time against the limit.",
+    );
+  }
+  if (assignment.hints) {
+    notes.push(
+      "Hints on: each question has a Hint button that shows one tip on how to count it, never the answer. " +
+        "A right answer after a hint still scores, and the result card says how many hints were used.",
+    );
   }
   if (state.count === null) {
     notes.push(`No question count: the round will be ${DEFAULT_QUESTIONS} questions.`);
@@ -373,3 +397,4 @@ export const BUILDER_METERS: readonly { readonly id: MeterId; readonly label: st
 );
 
 export { MAX_NAME_LENGTH, MAX_QUESTIONS, MIN_QUESTIONS };
+export { MAX_TIME_LIMIT, MIN_TIME_LIMIT } from "../time-limit";

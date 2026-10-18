@@ -1127,136 +1127,6 @@ a:focus-visible,
   color: var(--on-ink-muted);
 }
 
-.site-footer {
-  display: grid;
-  gap: 18px;
-  background: var(--ink);
-  color: var(--on-ink-muted);
-  padding: 30px max(20px, calc((100% - 1180px) / 2));
-  font-size: 0.78rem;
-}
-
-.site-footer > div {
-  display: grid;
-}
-
-.site-footer .shop-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-.site-footer .shop-link:hover { color: var(--on-ink); }
-
-.site-footer strong {
-  color: var(--on-ink);
-  font-family: var(--display);
-  font-size: 1.25rem;
-}
-
-.site-footer span {
-  color: var(--on-ink-muted);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-}
-
-.site-footer .foot-links { display: flex; gap: 10px; flex-wrap: wrap; }
-.site-footer .foot-btn {
-  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-  background: var(--veil); color: var(--on-ink); border: 1px solid var(--veil-edge);
-  border-radius: 8px; padding: 7px 14px; font-size: 0.75rem; font-weight: 700; transition: 0.15s;
-}
-.site-footer .foot-btn:hover { background: var(--veil-line); border-color: var(--on-ink); }
-.site-footer .foot-btn.foot-ico{padding:8px;border-radius:50%;gap:0;line-height:0}
-.site-footer .foot-btn.foot-ico svg{width:16px;height:16px;display:block}
-
-/* Support fallback panel. A bare mailto: fails silently on machines without a
-   registered email app, so support links open this native dialog when available. */
-.support-dialog {
-  width: min(560px, calc(100vw - 32px));
-  border: 2px solid var(--ink);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  background: var(--white);
-  color: var(--ink);
-  box-shadow: var(--shadow);
-}
-
-.support-dialog::backdrop {
-  background: rgba(23, 23, 23, 0.56);
-}
-
-.support-dialog h2 {
-  margin: 0 0 8px;
-  color: var(--ink);
-  font: 800 1.15rem var(--display);
-}
-
-.support-dialog .support-dialog-lede,
-.support-dialog .support-dialog-hint {
-  margin: 0 0 12px;
-  color: var(--ink-soft);
-  font-size: 0.86rem;
-}
-
-.support-dialog .support-dialog-hint {
-  margin: 12px 0 0;
-}
-
-.support-dialog .support-dialog-label {
-  display: block;
-  color: var(--ink);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.support-dialog textarea {
-  display: block;
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--warm-white);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.85rem;
-  resize: vertical;
-}
-
-.support-dialog textarea:focus-visible {
-  outline: 3px solid var(--forest);
-  outline-offset: 3px;
-  border-color: var(--accent);
-}
-
-.support-dialog .support-dialog-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.support-dialog .foot-btn {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--veil-edge);
-  border-radius: 8px;
-  background: var(--ink);
-  color: var(--on-ink);
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.support-dialog .foot-btn:hover {
-  background: var(--ink);
-  border-color: var(--accent);
-}
-
-.site-footer p {
-  margin: 0;
-}
 
 /* Below the two-column breakpoint the hero was 518px of a 664px phone screen —
    an eyebrow, a two-line headline, a paragraph of description and three tall
@@ -1337,14 +1207,6 @@ a:focus-visible,
     padding: 30px 36px;
   }
 
-  .site-footer {
-    grid-template-columns: 1fr 1.35fr 1fr;
-    align-items: center;
-  }
-
-  .site-footer p:last-child {
-    text-align: right;
-  }
 }
 
 @media (min-width: 980px) {
@@ -1444,10 +1306,6 @@ a:focus-visible,
     display: grid;
   }
 
-  .site-footer {
-    padding-right: 20px;
-    padding-left: 20px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1856,6 +1714,29 @@ a:focus-visible,
 
 .result-assignment { margin: 6px 0 0; color: var(--ink); font-size: 0.95rem; }
 .result-submit { margin: 14px 0 0; color: var(--ink-soft); font-size: 0.82rem; }
+
+/* An assigned round's one hand-in button, and the other ways to keep a result
+   folded beneath it. The button is wider than its row-mates so it reads as the
+   thing to do; the fold uses the review panel's look so the card has one kind
+   of disclosure, not two. */
+.turn-in-button { min-width: min(100%, 260px); font-size: 1.05rem; }
+.result-more {
+  margin: 14px auto 0;
+  max-width: 560px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+.result-more > summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: var(--ink);
+}
+.result-more > summary:focus-visible { outline: 3px solid var(--forest); outline-offset: -3px; }
+.result-more[open] > summary { border-bottom: 1px solid var(--line); }
+.result-more > .result-actions { padding: 14px 16px; }
 
 .result-code {
   display: grid;
@@ -2600,18 +2481,14 @@ header .brs-home { margin-left:4px; }
 .workspace-dialog::backdrop { background:rgba(0,0,0,.5); }
 .workspace-dialog-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
 .workspace-dialog-heading h2 { margin:0; padding:0; border:0; font-size:1.5rem; color:inherit; }
-dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0; border:0; text-align:left; color:inherit; }
-.workspace-dialog footer .foot-links { justify-content:flex-start; }
 .workspace-dialog .field-note,.workspace-dialog .area-about { margin:0; }
 .workspace-dialog .field-note { display:block; padding:0; border:0; }
 .workspace-dialog .kb-hint { display:block; }
 .workspace-dialog .cols { display:grid; grid-template-columns:1fr; gap:14px; }
 .workspace-dialog .panel { margin-bottom:12px; }
-@media(max-width:700px) { .workspace-actions {gap:4px;} .workspace-actions button {padding-inline:8px;font-size:.88rem;} .workspace-dialog {padding:16px;} }
+@media(max-width:700px) { .workspace-dialog {padding:16px;} }
 @media print { .workspace-actions,.workspace-dialog {display:none;} }
 
-.workspace-dialog footer{display:flex;flex-direction:column;align-items:stretch;gap:18px;min-height:0;background:transparent}
-.workspace-dialog footer :is(strong,span,p){color:inherit}
 .workspace-dialog .hero{width:100%;min-height:0;padding:18px;margin:0 0 20px}
 .workspace-dialog .hero-lesson{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .workspace-dialog .hero-lesson>div{grid-template-columns:1fr;justify-items:center;text-align:center;gap:6px;padding:12px 8px}
@@ -2626,13 +2503,6 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 
 @media (min-width:1000px) and (min-height:560px){.mode-wrap{min-height:calc(100dvh - var(--hdr))}}
 
-/* The "For teachers" link beside Help and About: it looks like the buttons next to it. */
-.workspace-actions a { display:inline-flex; align-items:center; min-height:44px; padding:8px 14px; border:1px solid var(--line,var(--ink,#171717)); border-radius:8px; background:var(--card,var(--panel,var(--white,#fff))); color:var(--text,var(--ink,#171717)); font:600 1rem var(--body,system-ui); text-decoration:none; white-space:nowrap; }
-.workspace-actions a:hover { border-color: var(--forest-deep, #344d29); }
-.workspace-actions a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:700px) { .workspace-actions a {padding-inline:8px;font-size:.88rem;} }
-/* The full teacher link stays in the header where it fits; phones get a dedicated
-   entry below the header so the wordmark and Help/About controls keep their space. */
 .mobile-teacher-entry { display:none; }
 .mobile-teacher-entry a {
   display:flex;
@@ -2650,7 +2520,6 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 }
 .mobile-teacher-entry a:hover { border-color:var(--forest-deep,#344d29); }
 .mobile-teacher-entry a:focus-visible { outline:3px solid var(--accent,var(--forest,#416034)); outline-offset:2px; }
-@media(max-width:479px) { .workspace-actions a { display:none; } }
 @media(max-width:479px) {
   .mobile-teacher-entry {
     display:flex;
@@ -2772,3 +2641,193 @@ dialog.workspace-dialog footer { width:100%; max-width:none; margin:0; padding:0
 .workshop-setup .workshop-controls { border:0; margin:0; padding-top:0; }
 .program-frame-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--tan-line); background:var(--paper); font-size:.9rem; }
 body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mobile-teacher-entry { display:none; }
+
+/* Focus sections and selectable copy fallback stay within the popover/card. */
+.setup-panel h3 { margin: 14px 0 6px; font-size: 1rem; }
+.setup-panel details { margin-block: 8px; }
+.setup-panel summary { cursor: pointer; }
+.result-card textarea { display: block; width: 100%; min-height: 160px; padding: 12px; font: inherit; }
+.focused-practice { margin-block: 16px; }
+.scope-note svg { width: 42px; height: 28px; vertical-align: middle; }
+
+.setup-popover .setup-panel { display: flex; flex-direction: column; gap: 10px; }
+
+.setup-panel > p { margin-block: 0; }
+
+/* ==========================================================================
+   Shop layout standard, 2026-10-16. Mallet Board is the reference.
+   Labels show from 600px; below that each header button keeps its name,
+   visually hidden. The settings column sits beside the board from 1700px,
+   and below that the settings are one bar labelled Settings. The shell
+   caps at 1760px in column mode.
+   ========================================================================== */
+
+.workspace-actions button span { white-space: nowrap; }
+.workspace-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.workspace-actions svg { width: 18px; height: 18px; flex: none; }
+@media (max-width: 599px) {
+  .workspace-actions button { position: relative; min-width: 44px; justify-content: center; padding-inline: 8px; }
+  .workspace-actions button span { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+}
+
+.build-id {
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.about-build,
+.about-copyright { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.about-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0; }
+.about-links a,
+.workspace-dialog p a { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink); font-weight: 700; text-underline-offset: 3px; }
+.workspace-dialog a:focus-visible { outline: 3px solid var(--accent, var(--forest, #416034)); outline-offset: 2px; }
+
+/* Footer: social marks, the links, then the copyright and build stamp. */
+.site-footer {
+  box-sizing: border-box;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.site-footer .foot-social,
+.site-footer .foot-links { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 13px; }
+.site-footer .foot-legal { flex-basis: 100%; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 13px; }
+.site-footer a { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink-soft); font-weight: 700; text-underline-offset: 3px; }
+.site-footer a:hover { color: var(--ink); }
+.site-footer a.foot-ico { min-width: 44px; justify-content: center; line-height: 0; }
+.site-footer .foot-legal span { font-size: inherit; }
+@media print { .site-footer, .workspace-actions { display: none; } }
+
+/* Settings: one bar below 1700px; from 1700px the same panel is a 340px column beside the
+   board. The column is out of the grid flow, so its height cannot push the board down, and
+   it scrolls within the viewport. */
+.focus-toggle { min-height: 48px; }
+.focus-action { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 0.8rem; font-weight: 900; }
+.focus-action svg { width: 16px; height: 16px; }
+@media (min-width: 1700px) {
+  .site-header,
+  .mode-wrap,
+  .site-footer { width: min(1760px, calc(100% - 48px)); }
+  .mode-wrap { padding-right: 358px; }
+  .mode-wrap > .focus-bar { position: absolute; top: 0; right: 0; width: 340px; margin-top: 0; }
+  .focus-toggle { display: none; }
+  .setup-popover,
+  .setup-popover[hidden] { display: block; position: static; top: auto; left: auto; right: auto; max-height: calc(100dvh - var(--hdr) - 24px); overflow-y: auto; box-shadow: var(--shadow); }
+  .setup-popover .setup-panel { grid-template-columns: 1fr; }
+}
+
+/* Phones: the header stays on one row. The byline goes first, then the name shrinks;
+   the monogram and the app's own logo tile are never hidden. */
+@media (max-width: 539px) {
+  .site-header { gap: 12px; }
+  .brand-lockup small { display: none; }
+  .brand-lockup strong { font-size: 1.5rem; }
+  .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+}
+@media (max-width: 359px) {
+  .brand-lockup strong { font-size: 1.25rem; }
+  .brand-mark { width: 30px; height: 30px; flex-basis: 30px; }
+}
+/* The time-limit countdown. Calm on purpose: the same weight as the question
+   counter, and overtime is stated rather than alarmed — no red, no flashing. */
+.round-timer { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.round-timer.is-over strong { font-style: italic; }
+.builder-time { margin-top: 14px; }
+.builder-time > span small { font-weight: 400; opacity: 0.75; }
+
+/* Class summary (/class-summary): the paste box, the table and the downloads. */
+.class-summary-input { display: grid; gap: 6px; font-weight: 800; }
+.class-summary-input textarea {
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid var(--tan-line);
+  border-radius: 11px;
+  padding: 12px;
+  font: 0.85rem/1.45 "Cascadia Mono", Consolas, monospace;
+  background: var(--white);
+  color: var(--ink);
+}
+.class-summary-count { margin: 10px 0 16px; color: var(--ink-soft); font-weight: 700; }
+.class-summary-table { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--white); }
+.class-summary-table:focus-visible { outline: 3px solid var(--forest); outline-offset: 2px; }
+.class-summary-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.class-summary-table th, .class-summary-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.class-summary-table th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--forest-deep); }
+.class-summary-table tbody tr:last-child td { border-bottom: 0; }
+.class-summary-table td code { display: block; margin-top: 2px; font-size: 0.75rem; color: var(--ink-soft); }
+.code-status { font-weight: 800; }
+.code-valid .code-status { color: var(--green-ink); }
+.code-invalid .code-status { color: var(--red); }
+.class-summary-help { margin: 12px 0 0; color: var(--ink-soft); font-size: 0.88rem; }
+.class-summary-help summary { cursor: pointer; font-weight: 800; color: var(--ink); padding: 6px 0; }
+.class-summary-downloads { display: grid; gap: 14px; margin-top: 24px; max-width: 760px; }
+.class-summary-downloads h2 { margin: 0; }
+.class-summary-downloads > button { justify-self: start; }
+.class-summary-downloads fieldset { display: grid; gap: 12px; }
+.class-summary-downloads fieldset p { margin: 0; }
+.class-summary-downloads fieldset > button { justify-self: start; }
+.class-summary-note { border-left: 4px solid var(--forest); border-radius: 0 10px 10px 0; background: var(--tan-soft); padding: 10px 14px; }
+.class-summary-check { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.class-summary-check input { width: 20px; height: 20px; }
+@media (max-width: 600px) {
+  .class-summary-downloads > button, .class-summary-downloads fieldset > button { justify-self: stretch; }
+  /* On a phone each summary becomes a small card of labelled lines, so the code
+     column is not hidden off the side of a scrolling table. */
+  .class-summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .class-summary-table table, .class-summary-table tbody, .class-summary-table tr, .class-summary-table td { display: block; }
+  .class-summary-table tr { padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .class-summary-table tbody tr:last-child { border-bottom: 0; }
+  .class-summary-table td { display: grid; grid-template-columns: 7.5em 1fr; gap: 8px; padding: 4px 12px; border: 0; }
+  .class-summary-table td::before { content: attr(data-label); font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--forest-deep); }
+  .class-summary-table td code { grid-column: 2; }
+}
+
+/* The builder's pointer to Eight Time for 3/8, which this builder refuses by design. */
+.builder-intro p.builder-eight-time {
+  margin-top: 12px;
+  border-left: 4px solid var(--forest);
+  border-radius: 0 10px 10px 0;
+  background: var(--tan-soft);
+  padding: 10px 14px;
+  font-size: 0.94rem;
+}
+.builder-eight-time a { color: var(--forest-deep); font-weight: 700; }
+
+/* Optional hints (hints=on). The tip sits quietly under the question: the same
+   size as the feedback text, and empty until it is asked for. */
+.hint-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 12px; margin-block: 8px 12px; }
+.hint-row .hint-button { flex: none; }
+.hint-text { flex: 1 1 16rem; margin: 0; line-height: 1.45; }
+.catalog-hints { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.catalog-hints p { flex: 1 1 18rem; margin: 0; }
+
+/* Badges: a small shelf on the history page and one line on a result card.
+   Theme colours only, so both stay readable in dark mode. */
+.result-earned { margin:16px auto 0; max-width:420px; padding:10px 16px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:0.9rem; text-align:left; }
+.badge-shelf { margin:16px 0; padding:20px; border:1px solid var(--line); border-radius:14px; }
+.badge-shelf ul { list-style:none; padding:0; margin:12px 0; display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+.badge-shelf li { display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px dashed var(--line); border-radius:var(--radius-sm); }
+.badge-shelf li.is-earned { border-style:solid; }
+.badge-mark { font-size:1.2rem; line-height:1.2; }
+.badge-status, .badge-note { font-size:0.85rem; }
+
+/* Header actions, as Mallet Board: a bordered pill with the icon and the bold label side by side.
+   The labels show from 600px. Below that the icon carries the action, the name stays for screen
+   readers, and each button keeps a 44px tap area. The colours are this app's own tokens. */
+.workspace-actions { display:flex; align-items:center; gap:8px; margin-left:auto; flex:none; }
+.workspace-actions button { min-height:44px; padding:8px 14px; border:1px solid var(--line); border-radius:8px; background:var(--white); color:var(--ink); font:600 1rem var(--body,system-ui); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.workspace-actions svg { width:18px; height:18px; flex:none; }
+@media (max-width: 599px) {
+  .workspace-actions button { position:relative; min-width:44px; justify-content:center; padding-inline:8px; }
+  .workspace-actions button span { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+}

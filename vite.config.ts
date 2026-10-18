@@ -14,6 +14,11 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
+  // Served only on count-it.backwerdrhythmshop.com. Keeping the workers.dev
+  // address off also means a deploy never reads the account-wide workers.dev
+  // subdomain, which a token scoped to this one Worker is not allowed to do.
+  workers_dev: false,
+  preview_urls: false,
   d1_databases: d1
     ? [
         {

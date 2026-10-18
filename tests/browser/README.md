@@ -21,7 +21,7 @@ Each file prints `PASS`/`FAIL` per check and a tally, and exits non-zero on any 
 | `ROUTE_VIA_NODE=1` | For an `https` target behind a proxy whose CA Chromium does not trust: Node fetches the page and hands it to the browser. Redirects are passed through, not followed. |
 | `SHOTS_DIR` | Write screenshots there. Unset: none are taken. |
 
-Analytics (`counter.backwerdrhythmshop.com`, Cloudflare Insights) is blocked in every context, so a run never counts as a visitor, even against the live site.
+Analytics (Cloudflare Insights) is blocked in every context, so a run never counts as a visitor, even against the live site.
 
 **Known limit of `ROUTE_VIA_NODE=1`.** Chromium re-requests a redirect's target outside the route, so a check that needs the browser to *follow* a redirect fails with `ERR_CERT_AUTHORITY_INVALID`. Today that is only the last check in `builder.mjs` (`/build/` with a trailing slash), and because it is last, every check before it still runs and reports. Run that file against a local build, where it passes, or against the live site from a machine whose browser trusts the connection. The redirect itself can be confirmed without a browser: `curl -sI https://count-it.backwerdrhythmshop.com/build/` answers `308` with `location: /build`.
 
@@ -35,7 +35,8 @@ Analytics (`counter.backwerdrhythmshop.com`, Cloudflare Insights) is blocked in 
 | `meter-guard.mjs` | A choice that cannot make a round is greyed out with the reason, never offered. |
 | `catalog.mjs` | `/assignments`: sixteen steps, their links, Copy, a step played from the catalog to its result, the finished count. |
 | `notation.mjs` | `/notation`: the seven topics, every example staff drawn, the one-beat example without a closing barline and every measure example with one (as the page says), the contents links, phone width. |
-| `teachers-link.mjs` | The **For teachers** entry: visible in the header on wide screens and in a dedicated phone row below 480px; 44px targets, keyboard access and routes to Assignments. |
+| `teachers-link.mjs` | The **For teachers** entry: in the About dialog at every width and in a dedicated phone row below 480px, with the header holding only Help, Feedback and About; 44px targets, keyboard access and routes to Assignments. |
+| `class-summary.mjs` | `/class-summary`: two real hand-ins checked, an edited one caught, the table and Canvas CSVs downloaded and read back, phone width. |
 
 ## Keeping them true
 
@@ -46,3 +47,7 @@ Analytics (`counter.backwerdrhythmshop.com`, Cloudflare Insights) is blocked in 
 ## What these do not cover
 
 Real phones, tablets and screen readers. Every check is an automated Chromium session, so a pass is evidence about layout and behavior in that browser, not a statement that the app has been tested on devices or with assistive technology.
+
+## Settings regression
+
+`settings.mjs` verifies tab keyboard/focus, popover and confirmation Escape, cancellation preserving the round, instant untouched changes, guide/unchanged settings retaining answers, opt-in setup/profile reload and clearing, assignment overrides without saved-preference writes, clipboard absence/success feedback, storage failure feedback, and a phone-width focus panel. Eight Time also verifies explicit missed-question practice preserves the original score and verification. `CHROMIUM_PATH` can select an installed headless binary; no foreground browser is used.

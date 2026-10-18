@@ -44,6 +44,12 @@ const off = (state) => Object.keys(state).filter((k) => state[k] === "off").sort
     await page.waitForTimeout(300);
     const landed = await meterSelect(page).inputValue();
     note("…and arrowing up the list from 5/4 stops at 4/4: 3/4 and 2/4 cannot be reached", landed === "4-4", `expected 4-4; actual ${landed}`);
+    await page.keyboard.press("End");
+    note("End reaches the last enabled meter", await meterSelect(page).inputValue() === "7-4");
+    await page.keyboard.press("Home");
+    note("Home skips unavailable meters", await meterSelect(page).inputValue() === "4-4");
+    await page.keyboard.press("ArrowDown");
+    note("ArrowDown advances to the next enabled meter", await meterSelect(page).inputValue() === "5-4");
     await page.close();
   }
 
