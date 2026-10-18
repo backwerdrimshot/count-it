@@ -710,6 +710,27 @@ export function isAssigned(result: AssignmentResult): boolean {
   return result.ok && (result.locked.length > 0 || result.assignment.name !== null);
 }
 
+/** The assignment as the student actually played it, for the result card,
+ *  the copied summary and the evidence record.
+ *
+ *  A link that pins only `n`, `pass`, `time` or `hints` still puts the app in
+ *  assignment mode, but leaves level, scope and meter for the student to
+ *  choose. The parsed assignment carries the parser's defaults for those, so
+ *  reporting it as-is claimed a round nobody answered. Anything the link
+ *  pinned is kept exactly; only the open choices take the played values. A
+ *  4/4 round stays `meter: null`, so its record is unchanged. */
+export function playedAssignment(
+  assignment: Assignment,
+  locked: readonly string[],
+  played: { readonly level: LevelId; readonly scope: AssignmentScope; readonly meter: MeterId },
+): Assignment {
+  const level = locked.includes("level") || assignment.cells ? assignment.level : played.level;
+  const scope = locked.includes("scope") ? assignment.scope : played.scope;
+  const meter = locked.includes("meter") ? assignment.meter : played.meter === DEFAULT_METER ? null : played.meter;
+  if (level === assignment.level && scope === assignment.scope && meter === assignment.meter) return assignment;
+  return { ...assignment, level, scope, meter };
+}
+
 /** Canonical serialization, so a link round-trips losslessly.
  *
  *  This is also the key a browser's attempt tally is stored under, so anything

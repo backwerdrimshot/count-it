@@ -52,6 +52,7 @@ import {
   DEFAULT_QUESTIONS,
   describeAssignment,
   parseAssignment,
+  playedAssignment,
   retakeSeed,
   roundLengthFor,
   serializeAssignment,
@@ -1276,6 +1277,12 @@ export default function CountItApp() {
     () => new Set<string>(assignment ? assignmentLocks(assignment, pinnedLocks) : []),
     [assignment, pinnedLocks],
   );
+  /* What the card, summary and evidence report: the link's pinned values, and
+     the student's own choices wherever the link left level, scope or meter open. */
+  const reportedAssignment = useMemo(
+    () => (assignment ? playedAssignment(assignment, pinnedLocks, { level, scope, meter }) : null),
+    [assignment, pinnedLocks, level, scope, meter],
+  );
   const sessionLength = assignment ? assignment.count ?? SESSION_LENGTH : freeLength;
   const assignedCells = assignment?.cells ?? freeCells ?? undefined;
   const holdFeedback = assignment?.feedback === "end";
@@ -1927,7 +1934,7 @@ export default function CountItApp() {
                 showReference={showReference}
                 practiceCells={freeCells}
                 personalBest={Math.max(personalBests[bestKey] ?? 0, session.status === "complete" ? session.score : 0)}
-                assignment={assignment}
+                assignment={reportedAssignment}
                 sequenceStep={sequenceStep}
                 studentId={studentId}
                 finishedAt={finishedAt}
