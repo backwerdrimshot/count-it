@@ -2486,7 +2486,7 @@ header .brs-home { margin-left:4px; }
 .workspace-dialog .kb-hint { display:block; }
 .workspace-dialog .cols { display:grid; grid-template-columns:1fr; gap:14px; }
 .workspace-dialog .panel { margin-bottom:12px; }
-@media(max-width:700px) { .workspace-actions {gap:4px;} .workspace-actions button {padding-inline:8px;font-size:.88rem;} .workspace-dialog {padding:16px;} }
+@media(max-width:700px) { .workspace-dialog {padding:16px;} }
 @media print { .workspace-actions,.workspace-dialog {display:none;} }
 
 .workspace-dialog .hero{width:100%;min-height:0;padding:18px;margin:0 0 20px}
@@ -2820,3 +2820,14 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .badge-shelf li.is-earned { border-style:solid; }
 .badge-mark { font-size:1.2rem; line-height:1.2; }
 .badge-status, .badge-note { font-size:0.85rem; }
+
+/* Header actions, as Mallet Board: a bordered pill with the icon and the bold label side by side.
+   The labels show from 600px. Below that the icon carries the action, the name stays for screen
+   readers, and each button keeps a 44px tap area. The colours are this app's own tokens. */
+.workspace-actions { display:flex; align-items:center; gap:8px; margin-left:auto; flex:none; }
+.workspace-actions button { min-height:44px; padding:8px 14px; border:1px solid var(--line); border-radius:8px; background:var(--white); color:var(--ink); font:600 1rem var(--body,system-ui); cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+.workspace-actions svg { width:18px; height:18px; flex:none; }
+@media (max-width: 599px) {
+  .workspace-actions button { position:relative; min-width:44px; justify-content:center; padding-inline:8px; }
+  .workspace-actions button span { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
+}
