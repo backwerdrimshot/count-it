@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { PROGRAM_ORIGINS, programFrameOrigin, programFramePolicy } from '../src/program-frame';
+import { PROGRAM_ORIGINS, programFrameOrigin, programFramePolicy, acceptsConfigurationSaveReply } from '../src/program-frame';
 const parent = 'https://praxispercussion.com';
 const own = 'https://count-it.backwerdrhythmshop.com';
 const search = `?praxisContext=program&praxisReturnOrigin=${encodeURIComponent(parent)}`;
 describe('Program frame context', () => {
+  it('acknowledges only the pending save from the checked parent', () => {
+    const source = {}, data = { type: 'count-it.configuration.saved', version: 1, requestId: 'request1', ok: true };
+    const event = { origin: parent, source, data };
+    expect(acceptsConfigurationSaveReply(event, source, parent, 'request1')).toBe(true);
+    for (const wrong of [{ ...event, origin: 'https://evil.example' }, { ...event, source: {} }, { ...event, data: { ...data, requestId: 'old' } }, { ...event, data: { ...data, version: 2 } }, { ...event, data: { ...data, ok: 'true' } }]) expect(acceptsConfigurationSaveReply(wrong, source, parent, 'request1')).toBe(false);
+    expect(acceptsConfigurationSaveReply(event, source, parent, undefined)).toBe(false);
+  });
   it('preserves other security directives and excludes local parents from production', () => {
     const policy = programFramePolicy("default-src 'self'; frame-ancestors 'none'; connect-src 'self'");
     expect(policy).toBe(`default-src 'self'; connect-src 'self'; frame-ancestors 'self' ${PROGRAM_ORIGINS.join(' ')}`);

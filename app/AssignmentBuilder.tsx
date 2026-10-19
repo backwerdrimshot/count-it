@@ -12,6 +12,7 @@ import {
   MIN_TIME_LIMIT,
   PRODUCTION_ORIGIN,
   applyQuiz,
+  builderStateFromQuery,
   cellsForLevel,
   evaluateBuilder,
   makeSeed,
@@ -27,6 +28,8 @@ import {
 } from "../src/assignment/presets";
 import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
+import ProgramSaveConfiguration from "./ProgramSaveConfiguration";
+import { useProgramOrigin } from "./useProgramOrigin";
 import { classroomShareUrl } from "../src/classroom-share";
 import { CATALOG_ENTRIES } from "../src/assignment/catalog";
 
@@ -75,6 +78,7 @@ function meterNote(published: MeterId | null, meter: MeterId | null): string {
 }
 
 export default function AssignmentBuilder() {
+  const programOrigin = useProgramOrigin();
   const [name, setName] = useState("");
   const [vocabKind, setVocabKind] = useState<VocabularyKind>("level");
   const [level, setLevel] = useState<1 | 2 | 3>(2);
@@ -94,6 +98,7 @@ export default function AssignmentBuilder() {
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
   const [copyMessage, setCopyMessage] = useState("");
   const [quizMessage, setQuizMessage] = useState("");
+  const [loadProblem, setLoadProblem] = useState("");
   const linkField = useRef<HTMLInputElement>(null);
   const copyTimer = useRef<number | undefined>(undefined);
 
@@ -131,11 +136,7 @@ export default function AssignmentBuilder() {
      sequence page publishes it (the presets' own test holds the published
      links verbatim). Everything stays editable afterwards. Choosing "my own
      choices" leaves the form as it is rather than wiping it. */
-  const applyPreset = useCallback((id: string) => {
-    setPresetId(id);
-    const preset = getPreset(id);
-    if (!preset) return;
-    const next = preset.state;
+  const applyState = useCallback((next: BuilderState) => {
     setName(next.name);
     setVocabKind(next.vocabulary.kind);
     if (next.vocabulary.kind === "level") setLevel(next.vocabulary.level);
@@ -152,6 +153,11 @@ export default function AssignmentBuilder() {
     setHints(Boolean(next.hints));
     setSeed(next.seed);
   }, []);
+  const applyPreset = useCallback((id: string) => {
+    setPresetId(id);
+    const preset = getPreset(id);
+    if (preset) applyState(preset.state);
+  }, [applyState]);
 
   /* The seed is random and the origin is the page's own, and neither is known on
      the server — so they are filled in once the page is in a browser, rather
@@ -161,15 +167,22 @@ export default function AssignmentBuilder() {
   useEffect(() => {
     const id = window.setTimeout(() => {
       setOrigin(window.location.origin);
-      const from = new URLSearchParams(window.location.search).get("from");
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get("from");
+      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed'].some(key => params.has(key));
       if (from && getPreset(from)) applyPreset(from);
+      else if (hasSettings) {
+        const saved = builderStateFromQuery(window.location.search);
+        if (saved) applyState(saved);
+        else setLoadProblem('These saved settings cannot be reopened as a valid assignment. Choose Create assignment in Program to start a new configuration.');
+      }
       else setSeed((current) => current || makeSeed(Math.random));
     }, 0);
     return () => {
       window.clearTimeout(id);
       window.clearTimeout(copyTimer.current);
     };
-  }, [applyPreset]);
+  }, [applyPreset, applyState]);
 
   const chosenPreset = getPreset(presetId);
 
@@ -488,6 +501,7 @@ export default function AssignmentBuilder() {
                   <span>Trying again</span>
                   <select value={retry ?? ""} onChange={(event) => setRetry(orNull<"free" | "reseed" | "off">(event.target.value))}>
                     <option value="">The same round</option>
+                    <option value="free">The same round (pinned)</option>
                     <option value="reseed">New questions each time</option>
                     <option value="off">One attempt</option>
                   </select>
@@ -577,7 +591,7 @@ export default function AssignmentBuilder() {
 
           <aside className="builder-output" aria-labelledby="builder-link-title">
             <h2 id="builder-link-title">Your link</h2>
-            {result.ok ? (
+            {loadProblem ? <p className="builder-problem" role="alert">{loadProblem}</p> : result.ok ? (
               <>
                 <p className="builder-summary">{result.summary}</p>
                 <label className="builder-linkbox">
@@ -592,7 +606,7 @@ export default function AssignmentBuilder() {
                 </label>
                 <div className="builder-actions">
                   <button type="button" className="primary-button" onClick={copyLink}>Copy link</button>
-                  <a className="secondary-button" href={result.link} target="_blank" rel="noopener noreferrer">
+                  <a className="secondary-button" href={result.link} target={programOrigin ? undefined : '_blank'} rel="noopener noreferrer">
                     Try it as a student
                   </a>
                   <a
@@ -605,6 +619,7 @@ export default function AssignmentBuilder() {
                   </a>
                 </div>
                 <p className="builder-copied" role="status" aria-live="polite">{copyMessage}</p>
+                <ProgramSaveConfiguration name={name} link={result.link} />
                 {result.notes.length > 0 && (
                   <ul className="builder-notes" aria-label="Worth knowing">
                     {result.notes.map((note) => <li key={note}>{note}</li>)}

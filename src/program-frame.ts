@@ -5,6 +5,11 @@ export const PROGRAM_ORIGINS = [
   'https://praxis-staging.backwerdrimshot.com',
 ] as const;
 export const PROGRAM_FRAME_KEY = 'count-it-program-frame-v1';
+export function acceptsConfigurationSaveReply(event: { origin: string; source: unknown; data?: { type?: unknown; version?: unknown; requestId?: unknown; ok?: unknown } }, parent: unknown, origin: string | null, requestId: string | undefined): boolean {
+  return Boolean(origin && requestId && event.origin === origin && event.source === parent
+    && event.data?.type === 'count-it.configuration.saved' && event.data.version === 1
+    && event.data.requestId === requestId && typeof event.data.ok === 'boolean');
+}
 export function programFramePolicy(existing: string, development = false): string {
   const directives = existing.split(';').map(value => value.trim())
     .filter(value => value && !/^frame-ancestors(?:\s|$)/i.test(value));
