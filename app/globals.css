@@ -638,6 +638,25 @@ a:focus-visible,
   background: var(--paper);
 }
 
+/* These surfaces stay pale in both OS themes. Their text must use paper ink,
+   including playback labels outside the notation canvas. Theme-aware controls
+   keep their own foreground/background pairs. */
+.notation-panel,
+.workshop-controls,
+.workshop-controls select,
+.workshop-exercise,
+.workshop-setup,
+.history-list li,
+.program-frame-bar {
+  color: var(--paper-ink);
+}
+
+/* Nested workshop help/count panels follow the theme rather than the paper. */
+.workshop-exercise .reveal-panel,
+.workshop-exercise .reading-scaffold {
+  color: var(--ink);
+}
+
 .notation-scroll {
   width: 100%;
   overflow-x: auto;
@@ -2607,7 +2626,7 @@ header .brs-home { margin-left:4px; }
 }
 
 /* Practice workspace: notation owns its time grid and scrolls with the guide. */
-.rhythm-exercise { width:100%; }
+.rhythm-exercise { width:100%; min-width:0; }
 .balanced-score svg { margin-inline:auto; max-width:none; }
 .rhythm-player { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; border-top:1px solid var(--tan-line); font-size:.9rem; }
 .rhythm-player label { display:flex; align-items:center; gap:6px; }
