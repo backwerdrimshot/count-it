@@ -54,7 +54,10 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       (score.ties ?? []).forEach(([first, last]) => new StaveTie({ firstNote: notes[first], lastNote: notes[last], firstIndexes: [0], lastIndexes: [0] }).setDirection(-1).setContext(context).draw());
       const svg = element.querySelector('svg');
       if (!svg) return;
-      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', label); svg.setAttribute('focusable', 'false');
+      /* A one-beat prompt always begins on beat 1. Say so where it is seen and where it is heard, so a
+         student who cannot see the subdivision guide is not left guessing the beat number of the answers. */
+      const beatCue = score.fragment ? 'Starts on beat 1.' : '';
+      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', [label, beatCue].filter(Boolean).join(' ')); svg.setAttribute('focusable', 'false');
       const add = (tag: string, attributes: Record<string, string>, text?: string) => {
         const child = document.createElementNS('http://www.w3.org/2000/svg', tag);
         Object.entries(attributes).forEach(([key, value]) => child.setAttribute(key, value));
@@ -86,6 +89,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
           at += group;
         });
       }
+      if (beatCue) add('text', { x: String(layout.width / 2), y: String(height - 8), 'text-anchor': 'middle', 'font-family': 'system-ui, sans-serif', 'font-size': '12', fill: '#55584f', 'data-beat-cue': 'true' }, 'Starts on beat 1');
       svg.setAttribute('data-grid-start', String(layout.start));
       svg.setAttribute('data-grid-unit', String(layout.unit));
       add('line', { x1: String(layout.start), x2: String(layout.start), y1: '24', y2: showGuide ? '179' : '110', stroke: '#9a552e', 'stroke-width': '2', 'data-playhead': 'true', visibility: 'hidden' });
