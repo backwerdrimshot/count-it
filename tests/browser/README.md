@@ -57,3 +57,7 @@ Real phones, tablets and screen readers. Every check is an automated Chromium se
 ## Settings regression
 
 `settings.mjs` verifies tab keyboard/focus, popover and confirmation Escape, cancellation preserving the round, instant untouched changes, guide/unchanged settings retaining answers, opt-in setup/profile reload and clearing, assignment overrides without saved-preference writes, clipboard absence/success feedback, storage failure feedback, and a phone-width focus panel. Eight Time also verifies explicit missed-question practice preserves the original score and verification. `CHROMIUM_PATH` can select an installed headless binary; no foreground browser is used.
+
+## Local gap-repair candidates
+
+`repairs.mjs` checks the three independent `/repairs-v1` branches at320/768/1280px in light/dark. It verifies direct response instructions, taught guide/choice vocabulary, in-flow feedback, pointer access, keyboard scrolling/answer/Next focus, full-round scores, profile history/results, builder persistence (including the unprofiled rest-cell lesson) and malformed links. Correct counts are matched to rendered labels because the existing device variant deliberately reshuffles choice order. These candidates remain outside published presets/catalogs; use a local build, not production.

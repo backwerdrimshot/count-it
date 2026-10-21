@@ -79,7 +79,7 @@ function meterNote(published: MeterId | null, meter: MeterId | null): string {
 
 export default function AssignmentBuilder() {
   const programOrigin = useProgramOrigin();
-  const [response, setResponse] = useState<"eighths-v1" | undefined>(undefined);
+  const [response, setResponse] = useState<"eighths-v1" | "half-beats-v1" | undefined>(undefined);
   const [name, setName] = useState("");
   const [vocabKind, setVocabKind] = useState<VocabularyKind>("level");
   const [level, setLevel] = useState<1 | 2 | 3>(2);

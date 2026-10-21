@@ -1,5 +1,7 @@
 # Next Count It gap repairs — exact local proposal
 
+Historical proposal snapshot: the subsequent local implementation is documented in [repairs-v1-handoff.md](repairs-v1-handoff.md), with a new response contract and regenerated distractor evidence. This file preserves the original diagnostic assumptions; it is not the current launch contract.
+
 Status: proposed configurations, now locally validated for exact seed coverage; see [coverage evidence](repair-proposal-validation.md). Not implemented or published. This repairs identified preparation gaps before designing broader assignments. No additional response mode, tie/multi-bar engine or authenticated reporting is proposed.
 
 Reviewed for overlap: current `src/assignment/presets.ts`, `public/praxis-assignment-catalog.json`, `docs/supported-rhythm-catalog.md`, `docs/followup-plan.md`, and the parent's full 13-assignment audit at main `15e701c`. Counting Rhythms 4 first mixes rests over a bar with guide off; 7 introduces `two-rest`, `rest-two`, `rest-three` with guide off; 10 introduces spanning values with guide off. Rhythms in Three 1 already supplies supported 3/4 mixed-rest bars, so do not duplicate that card. Count It has seven one-beat and six one-bar published steps, no multi-bar or physical-performance assessment.

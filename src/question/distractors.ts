@@ -119,7 +119,7 @@ export function generateDistractors(
   random: RandomSource,
   count = 3,
   system: CountingProfileId = "standard",
-  response?: "eighths-v1",
+  response?: "eighths-v1" | "half-beats-v1",
 ): readonly Distractor[] {
   if (!Number.isInteger(count) || count < 1) throw new RangeError("Distractor count must be positive.");
   const { partialsPerBeat, beatsPerMeasure } = getMeter(prompt.meter);
