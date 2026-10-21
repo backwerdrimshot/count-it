@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-21.6";
+export const COUNT_IT_BUILD = "2026-10-21.7";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -59,6 +59,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "class", "seed", "sys", "response"],
   lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys", "response"],
   responseVocabularies: [{ id: "eighths-v1", status: "local-review", countingSystem: "standard", cells: ["quarter", "eighths"], meters: ["2-4", "3-4", "4-4"], positions: [0, 2], beatChoices: 3, measureChoices: 4 }, { id: "half-beats-v1", status: "supported", countingSystem: "standard", cells: ["quarter", "eighths", "eighth-rest", "rest-eighth", "whole", "half", "half-rest"], cellPools: [["quarter", "eighths", "eighth-rest", "rest-eighth"], ["whole", "half", "half-rest", "quarter", "eighths"]], meters: ["4-4"], scopes: ["measure"], positions: [0, 2], measureChoices: 4 }],
+  earlyLaunchResolution: { version: 2, status: "local-unpublished", archivePath: "/archive", matching: "Exact known original Counting Rhythms steps 1–5, Standard only; marked or unmarked", catalogField: "currentLaunch", resultIdentity: "Current activity identity and settings; old results remain archived originals" },
   assignmentLink:
     "The opt-in response=eighths-v1 profile restricts guide and choices to beat numbers and & for quarter/pair rounds in 2/4, 3/4 or 4/4; half-beats-v1 uses the same positions for only the exact declared rest-bar or long-value pools in Standard 4/4 measures. Absent retains legacy responses. A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, " +

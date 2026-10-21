@@ -87,7 +87,7 @@ test("/assignments serves every step as a card, with its own title and canonical
   assert.match(html, /<link rel="canonical" href="https:\/\/count-it\.backwerdrhythmshop\.com\/assignments"/);
   assert.equal((html.match(/class="catalog-card"/g) ?? []).length, 16, "all sixteen published steps are in the server-rendered page");
   assert.equal((html.match(/href="\/build\?from=/g) ?? []).length, 13, "the thirteen steps the builder can make link to it");
-  assert.match(html, /href="\/\?seq=counting-rhythms&step=3&/, "a Count It step opens its published link in this app");
+  assert.match(html, /href="\/\?seq=counting-early-v2&step=3&/, "a Count It step opens its published link in this app");
   assert.match(html, /href="https:\/\/eight-time\.backwerdrhythmshop\.com\/\?seq=rhythms-in-three&step=4&/, "an Eight Time step opens in Eight Time");
 });
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { parseAssignment, serializeAssignment } from "../src/assignment";
 import {
   CATALOG_SEQUENCES,
+  currentCatalogEntry,
   entriesForSequence,
   withHints,
   type CatalogEntry,
@@ -16,7 +17,7 @@ import { classroomShareUrl } from "../src/classroom-share";
    the trainer writes under when the round finishes (tests/catalog.test.ts holds
    it equal to the site's own link). Eight Time keeps its own storage on its own
    origin, so its steps carry no tally here. */
-function tallyKey(entry: CatalogEntry): string | null {
+function tallyKey(entry: Pick<CatalogEntry,"app"|"query">): string | null {
   if (entry.app !== "count-it") return null;
   const parsed = parseAssignment(entry.query);
   return parsed.ok ? serializeAssignment(parsed.assignment) : null;
@@ -51,7 +52,7 @@ export default function AssignmentCatalog() {
   const keys = useMemo(() => {
     const map = new Map<string, string | null>();
     for (const sequence of CATALOG_SEQUENCES) {
-      for (const entry of entriesForSequence(sequence.id)) map.set(entry.id, tallyKey(entry));
+      for (const entry of entriesForSequence(sequence.id).map(currentCatalogEntry)) map.set(entry.id, tallyKey(entry));
     }
     return map;
   }, []);
@@ -64,7 +65,7 @@ export default function AssignmentCatalog() {
     }
   }, [copied]);
 
-  async function copyLink(entry: CatalogEntry) {
+  async function copyLink(entry: Pick<CatalogEntry,"id"|"link"|"title">) {
     window.clearTimeout(copyTimer.current);
     try {
       await navigator.clipboard.writeText(withHints(entry.link, hints));
@@ -115,7 +116,7 @@ export default function AssignmentCatalog() {
         </div>
 
         {CATALOG_SEQUENCES.map((sequence) => {
-          const entries = entriesForSequence(sequence.id);
+          const entries = entriesForSequence(sequence.id).map(currentCatalogEntry);
           return (
             <section key={sequence.id} className="catalog-sequence" aria-labelledby={`seq-${sequence.id}`}>
               <h2 id={`seq-${sequence.id}`}>{sequence.name}</h2>
@@ -137,7 +138,7 @@ export default function AssignmentCatalog() {
                           {entry.app === "eight-time" && <span className="catalog-badge">Opens in Eight Time</span>}
                         </h3>
                         <p className="catalog-focus">{entry.focus}</p>
-                        <p className="catalog-summary">{entry.summary}</p>
+                        <p className="catalog-summary">{entry.summary}</p>{entry.currentLaunch && <p>Updated practice, version 2. <a href={entry.archiveLink}>Archived original: {entry.currentLaunch.archivedSummary}</a></p>}
                         {key !== null && attempts !== null && (
                           <p className="catalog-status">{triedText(attempts[key] ?? 0)}</p>
                         )}

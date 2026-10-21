@@ -21,11 +21,10 @@ import {
 } from "../src/assignment/builder";
 import {
   COUNTING_RHYTHMS_SEQUENCE_URL,
-  COUNTING_RHYTHMS_STEPS,
   RHYTHMS_IN_THREE_SEQUENCE_URL,
   RHYTHMS_IN_THREE_STEPS,
-  getPreset,
 } from "../src/assignment/presets";
+import { CURRENT_COUNTING_RHYTHMS_STEPS as COUNTING_RHYTHMS_STEPS, getCurrentPreset as getPreset, resolveEarlyLaunch } from "../src/assignment/early-v2";
 import { COUNTING_PROFILES, type CountingProfileId, type MeterId } from "../src/rhythm";
 import { PageFooter, PageHeader } from "./PageChrome";
 import ProgramSaveConfiguration from "./ProgramSaveConfiguration";
@@ -178,7 +177,7 @@ export default function AssignmentBuilder() {
       const hasSettings = ['response', 'a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints', 'class'].some(key => params.has(key));
       if (from && getPreset(from)) applyPreset(from);
       else if (hasSettings) {
-        const saved = builderStateFromQuery(window.location.search);
+        const saved = builderStateFromQuery(resolveEarlyLaunch(window.location.search)?.query ?? window.location.search);
         if (saved) applyState(saved);
         else setLoadProblem('These saved settings cannot be reopened as a valid assignment. Choose Create assignment in Program to start a new configuration.');
       }
@@ -281,7 +280,7 @@ export default function AssignmentBuilder() {
                 <span className="builder-visually-hidden">Teaching-sequence step to start from</span>
                 <select value={presetId} onChange={(event) => applyPreset(event.target.value)}>
                   <option value="">My own choices</option>
-                  <optgroup label="Counting Rhythms — 4/4">
+                  <optgroup label="Counting Rhythms — current entry points">
                     {COUNTING_RHYTHMS_STEPS.map((preset) => (
                       <option key={preset.id} value={preset.id}>
                         Step {preset.step}: {preset.title}
@@ -312,8 +311,8 @@ export default function AssignmentBuilder() {
               </label>
               {chosenPreset && (
                 <p className="builder-preset-note">
-                  This keeps the step&rsquo;s own seed, so your class runs the same questions as the published
-                  step and scores stay comparable. {meterNote(chosenPreset.publishedMeter, chosenPreset.state.meter)}{" "}
+                  This keeps this activity&rsquo;s own seed and settings. Updated activities have their own results;
+                  archived original scores are not converted. {meterNote(chosenPreset.publishedMeter, chosenPreset.state.meter)}{" "}
                   Press &ldquo;New seed&rdquo; for different questions.
                 </p>
               )}
