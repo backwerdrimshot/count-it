@@ -79,6 +79,7 @@ function meterNote(published: MeterId | null, meter: MeterId | null): string {
 
 export default function AssignmentBuilder() {
   const programOrigin = useProgramOrigin();
+  const [response, setResponse] = useState<"eighths-v1" | undefined>(undefined);
   const [name, setName] = useState("");
   const [vocabKind, setVocabKind] = useState<VocabularyKind>("level");
   const [level, setLevel] = useState<1 | 2 | 3>(2);
@@ -111,6 +112,7 @@ export default function AssignmentBuilder() {
 
   const state: BuilderState = useMemo(
     () => ({
+      response,
       name,
       vocabulary,
       scope,
@@ -126,7 +128,7 @@ export default function AssignmentBuilder() {
       classCode: classText.trim() || null,
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, classText, seed],
+    [response, name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, classText, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -139,6 +141,7 @@ export default function AssignmentBuilder() {
      links verbatim). Everything stays editable afterwards. Choosing "my own
      choices" leaves the form as it is rather than wiping it. */
   const applyState = useCallback((next: BuilderState) => {
+    setResponse(next.response);
     setName(next.name);
     setVocabKind(next.vocabulary.kind);
     if (next.vocabulary.kind === "level") setLevel(next.vocabulary.level);
@@ -172,7 +175,7 @@ export default function AssignmentBuilder() {
       setOrigin(window.location.origin);
       const params = new URLSearchParams(window.location.search);
       const from = params.get("from");
-      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints', 'class'].some(key => params.has(key));
+      const hasSettings = ['response', 'a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints', 'class'].some(key => params.has(key));
       if (from && getPreset(from)) applyPreset(from);
       else if (hasSettings) {
         const saved = builderStateFromQuery(window.location.search);

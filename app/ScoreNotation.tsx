@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useResponseVocabulary } from "./ResponseVocabulary";
+import { useEffect, useRef, useState } from 'react';
 import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tuplet, Voice } from 'vexflow';
 import { countLabelsForBeat, staffFurniture, type CountingProfileId } from '../src/rhythm';
 import { scoreLayout, type RhythmScore } from '../src/score';
@@ -7,6 +8,8 @@ import { scoreLayout, type RhythmScore } from '../src/score';
 export default function ScoreNotation({ score, label, system = 'standard', showGuide = false, countsHidden = false, revealed = false, activeBeat = null }: {
   score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; countsHidden?: boolean; revealed?: boolean; activeBeat?: number | null;
 }) {
+  const response = useResponseVocabulary();
+  const [beginnerOverflow, setBeginnerOverflow] = useState(false);
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const element = host.current;
@@ -19,6 +22,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       const height = showGuide ? 205 : 140;
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(layout.width, height);
+      setBeginnerOverflow(Boolean(response) && layout.width > (element.parentElement?.clientWidth ?? layout.width) + 1);
       const context = renderer.getContext();
       const furniture = staffFurniture(score.fragment ? 'beat' : 'measure');
       const stave = new Stave(10, 28, layout.width - 20).addClef(furniture.clef);
@@ -72,7 +76,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
         add('line', { x1: String(layout.start), x2: String(layout.end), y1: '142', y2: '142', stroke: '#b7b5a5' });
         for (let beat = 0; beat < score.beats; beat++) {
           const triplet = score.triplets?.some(group => Math.floor(score.notes[group[0]].at) === beat);
-          const labels = triplet ? [String(beat + 1), 'trip', 'let'] : countLabelsForBeat(beat + 1, system);
+          const labels = triplet ? [String(beat + 1), 'trip', 'let'] : countLabelsForBeat(beat + 1, system).filter((_, partial) => !response || partial === 0 || partial === 2);
           labels.forEach((text, partial) => {
             const at = beat + partial / labels.length;
             const sounds = score.notes.some(note => !note.rest && !note.tied && Math.abs(note.at - at) < 1e-6);
@@ -99,7 +103,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     draw();
     const observer = new ResizeObserver(draw); observer.observe(element);
     return () => observer.disconnect();
-  }, [score, label, system, showGuide, countsHidden, revealed]);
+  }, [response, score, label, system, showGuide, countsHidden, revealed]);
   useEffect(() => {
     const svg = host.current?.querySelector('svg');
     const cursor = svg?.querySelector('[data-playhead]');
@@ -108,5 +112,8 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     const x = Number(svg.getAttribute('data-grid-start')) + (activeBeat ?? 0) * Number(svg.getAttribute('data-grid-unit'));
     cursor.setAttribute('x1', String(x)); cursor.setAttribute('x2', String(x));
   }, [activeBeat]);
-  return <div className="notation-scroll"><div className="notation-canvas balanced-score" ref={host} /></div>;
+  return <>
+    <div className="notation-scroll" tabIndex={beginnerOverflow ? 0 : undefined} role={beginnerOverflow ? "region" : undefined} aria-label={beginnerOverflow ? "Rhythm notation. Scroll sideways to read the whole bar." : undefined}><div className="notation-canvas balanced-score" ref={host} /></div>
+    {beginnerOverflow && <p className="beginner-scroll-cue">Scroll sideways to read the whole bar.</p>}
+  </>;
 }

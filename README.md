@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-21.3`
+- **Build:** `2026-10-21.4`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -451,3 +451,8 @@ These three links also appear as icon buttons in the app footer.
 ## Compact practice workspace
 
 The laptop view keeps the main instrument or exercise and its practice controls together. Help contains the instructions and About contains the app, support, and build information. Long reference material and exercise grids scroll inside their own panels; narrow and zoomed windows retain normal page scrolling.
+
+
+## Local supplementary sequence (unpublished)
+
+`/beginner-v1` previews the separately versioned quarter/pair bridge. It does not replace the published assignment catalog. See [integration handoff](docs/beginner-v1-handoff.md) for IDs, links, prerequisites, response vocabulary and release gates. The `response=eighths-v1` setting is required: older builds ignore it and must not receive these links.

@@ -2854,3 +2854,10 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
   .workspace-actions button { position:relative; min-width:44px; justify-content:center; padding-inline:8px; }
   .workspace-actions button span { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0; }
 }
+
+/* The supplementary response lesson may make the phone stage taller than the
+   viewport. Keep its actions in flow so every choice remains visible/clickable. */
+.beginner-response .dock { position: static; }
+.beginner-response-lesson { max-width: 1080px; margin: 16px auto; padding: 0 16px; }
+.beginner-scroll-cue { margin: 0; padding: 4px 12px; font-size: .875rem; }
+.beginner-response .notation-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
