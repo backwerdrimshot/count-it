@@ -35,6 +35,7 @@ Analytics (Cloudflare Insights) is blocked in every context, so a run never coun
 | `meter-guard.mjs` | A choice that cannot make a round is greyed out with the reason, never offered. |
 | `catalog.mjs` | `/assignments`: sixteen steps, their links, Copy, a step played from the catalog to its result, the finished count. |
 | `notation.mjs` | `/notation`: the seven topics, every example staff drawn, the one-beat example without a closing barline and every measure example with one (as the page says), the contents links, phone width. |
+| `challenge.mjs` | Challenge: the count row follows the guide in free rounds and the teacher's policy in assigned ones; the one-beat "Starts on beat 1" cue shows with the guide on or off; Enter keeps focus in the round and Next moves it on; keys 1–4 answer once; answer choices are not marked as toggles. |
 | `teachers-link.mjs` | The **For teachers** entry: in the About dialog at every width and in a dedicated phone row below 480px, with the header holding only Help, Feedback and About; 44px targets, keyboard access and routes to Assignments. |
 | `class-summary.mjs` | `/class-summary`: two real hand-ins checked, an edited one caught, the table and Canvas CSVs downloaded and read back, phone width. |
 | `paper-contrast.mjs` | Light/dark at 320, 768 and 1280px: computed contrast on fixed paper cards, notation, playback start/stop and settings, challenge/results/focused practice, saved history, workshop setup and program-frame text; assigned challenges still omit playback. |
