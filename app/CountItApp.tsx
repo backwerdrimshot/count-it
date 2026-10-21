@@ -1109,7 +1109,7 @@ function ChallengeMode({
         </div>
       )}
       <div className="notation-panel">
-        <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} countsHidden={!assignment && !response} revealed={Boolean(response) && !holdFeedback} playback={!assignment} />
+        <RhythmNotation prompt={question.prompt} label="Rhythm for the current challenge question." system={system} showGuide={showReference} countsHidden={!assignment && !response} revealed={Boolean(response) && !holdFeedback} playback={!assignment && Boolean(response)} />
       </div>
 
       <div className={`answer-grid scope-${scope}`} aria-label="Answer choices">

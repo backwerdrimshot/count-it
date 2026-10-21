@@ -70,6 +70,18 @@ async function freeRound(page, { oneBeat, guideOn }) {
     await ctx.close();
   }
 
+  // 1b. The listen control waits for the answer in a free round, so the rhythm is not played before the choice.
+  {
+    const { ctx, page } = await open(null);
+    await freeRound(page, { oneBeat: false, guideOn: true });
+    const listen = () => page.getByRole("button", { name: "Listen to rhythm" }).count();
+    note("free round: no Listen to rhythm before answering", (await listen()) === 0, `listen=${await listen()}`);
+    await page.locator(".answer-choice").first().click();
+    await page.waitForTimeout(200);
+    note("free round: Listen to rhythm after answering", (await listen()) === 1, `listen=${await listen()}`);
+    await ctx.close();
+  }
+
   // 2. An assigned round keeps the teacher's guide policy, whatever the student does with Settings.
   {
     const { ctx, page } = await open(ASSIGNED("on"));
