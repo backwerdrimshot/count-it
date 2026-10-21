@@ -113,10 +113,17 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     const x = Number(svg.getAttribute('data-grid-start')) + (activeBeat ?? 0) * Number(svg.getAttribute('data-grid-unit'));
     cursor.setAttribute('x1', String(x)); cursor.setAttribute('x2', String(x));
   }, [activeBeat]);
-  // The panel is a keyboard stop, so keyboard users can scroll it with the arrow keys.
+  // Only a bar wider than its panel is a scrolling region. Such a panel is a keyboard stop, so keyboard
+  // users can scroll it with the arrow keys; a bar that fits has nothing to scroll and is not a stop.
   return (
     <>
-      <div className="notation-scroll" ref={scroller} tabIndex={0} role="region" aria-label={`${label} Scrolls sideways when the bar is wider than the screen.`}>
+      <div
+        className="notation-scroll"
+        ref={scroller}
+        tabIndex={overflowing ? 0 : undefined}
+        role={overflowing ? 'region' : undefined}
+        aria-label={overflowing ? `${label} Scrolls sideways when the bar is wider than the screen.` : undefined}
+      >
         <div className="notation-canvas balanced-score" ref={host} />
       </div>
       {overflowing && <p className="notation-scroll-cue">Scroll sideways to see the rest of the bar.</p>}

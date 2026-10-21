@@ -238,6 +238,19 @@ const exactlyOneModeSelected = async (page) =>
     await page.close();
   }
 
+  // A bar that fits its panel has nothing to scroll, so it is not a keyboard stop and not a region.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    watch(page, "fitting-bar");
+    await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    const fit = await page.evaluate(() => {
+      const panel = document.querySelector(".notation-scroll");
+      return { fits: panel.scrollWidth <= panel.clientWidth + 1, tabindex: panel.getAttribute("tabindex"), role: panel.getAttribute("role") };
+    });
+    note("a bar that fits its panel is not a keyboard stop", fit.fits && fit.tabindex === null && fit.role === null, JSON.stringify(fit));
+    await page.close();
+  }
+
   // A single held note with the count row is wider than a phone panel. The bar must stay readable, so the
   // panel scrolls: the page itself must not overflow, the panel must scroll, a visible cue must say so, and
   // the panel must be reachable and scrollable from the keyboard. Touch scrolling is the browser's own; here
