@@ -4,8 +4,8 @@ import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tu
 import { countLabelsForBeat, staffFurniture, type CountingProfileId } from '../src/rhythm';
 import { scoreLayout, type RhythmScore } from '../src/score';
 
-export default function ScoreNotation({ score, label, system = 'standard', showGuide = false, revealed = false, activeBeat = null }: {
-  score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; revealed?: boolean; activeBeat?: number | null;
+export default function ScoreNotation({ score, label, system = 'standard', showGuide = false, countsHidden = false, revealed = false, activeBeat = null }: {
+  score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; countsHidden?: boolean; revealed?: boolean; activeBeat?: number | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -61,7 +61,10 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
         if (text) child.textContent = text;
         svg.appendChild(child);
       };
-      if (showGuide) {
+      // A scored question can hold the count back until it is answered, so the student
+      // has to produce the count instead of matching it to one printed under the staff.
+      const countsShown = !countsHidden || revealed;
+      if (showGuide && countsShown) {
         add('line', { x1: String(layout.start), x2: String(layout.end), y1: '142', y2: '142', stroke: '#b7b5a5' });
         for (let beat = 0; beat < score.beats; beat++) {
           const triplet = score.triplets?.some(group => Math.floor(score.notes[group[0]].at) === beat);
@@ -91,7 +94,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     draw();
     const observer = new ResizeObserver(draw); observer.observe(element);
     return () => observer.disconnect();
-  }, [score, label, system, showGuide, revealed]);
+  }, [score, label, system, showGuide, countsHidden, revealed]);
   useEffect(() => {
     const svg = host.current?.querySelector('svg');
     const cursor = svg?.querySelector('[data-playhead]');
