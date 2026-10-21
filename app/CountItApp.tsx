@@ -634,7 +634,6 @@ function FocusedQuestionPractice({
               key={choice.id}
               disabled={Boolean(response)}
               onClick={() => setSession((current) => current ? answerSession(current, choice.id) : current)}
-              aria-pressed={isSelected}
             >
               <span className="choice-key" aria-hidden="true">{index + 1}</span>
               <strong>{choice.label}</strong>
@@ -767,6 +766,7 @@ function ChallengeMode({
   const [copyNotice, setCopyNotice] = useState("");
   const [copyFallback, setCopyFallback] = useState("");
   const questionHeading = useRef<HTMLHeadingElement>(null);
+  const nextButton = useRef<HTMLButtonElement>(null);
   const resultHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (session.status !== "active") return;
@@ -779,6 +779,13 @@ function ChallengeMode({
     if (session.status === "complete") resultHeading.current?.focus();
     else questionHeading.current?.focus();
   }, [session.currentIndex, session.status]);
+
+  // Answering disables the choice that had focus, which would drop focus to the page.
+  // Hand focus to the button that continues the round instead.
+  const answered = Boolean(getCurrentResponse(session));
+  useEffect(() => {
+    if (answered) nextButton.current?.focus();
+  }, [answered]);
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -1121,7 +1128,6 @@ function ChallengeMode({
               key={choice.id}
               disabled={Boolean(response)}
               onClick={() => onAnswer(choice.id)}
-              aria-pressed={isSelected}
             >
               <span className="choice-key" aria-hidden="true">{index + 1}</span>
               <strong>{choice.label}</strong>
@@ -1150,7 +1156,7 @@ function ChallengeMode({
               <strong>Answer recorded.</strong>
               This round shows every answer once you reach the end.
             </p>
-            <button type="button" className="primary-button" onClick={onAdvance}>
+            <button type="button" className="primary-button" onClick={onAdvance} ref={nextButton}>
               {session.currentIndex === session.questions.length - 1 ? "See results" : "Next question"} <span aria-hidden="true">→</span>
             </button>
           </>
@@ -1161,7 +1167,7 @@ function ChallengeMode({
               <strong>{response.correct ? "That is it." : `The correct count is ${question.correctAnswer}.`}</strong>
               {response.correct ? question.explanation : `${misconceptionMessage(selected)} ${question.explanation}`}
             </p>
-            <button type="button" className="primary-button" onClick={onAdvance}>
+            <button type="button" className="primary-button" onClick={onAdvance} ref={nextButton}>
               {session.currentIndex === session.questions.length - 1 ? "See results" : "Next question"} <span aria-hidden="true">→</span>
             </button>
           </>
@@ -1244,7 +1250,9 @@ export default function CountItApp() {
   /** Which run of this round the student is on. Reset by anything that builds a
    *  genuinely new round; incremented by a retry, which does not. */
   const [attempt, setAttempt] = useState(1);
-  const hintRun = `${attempt}|${session.questions.map((question) => question.id).join(",")}`;
+  /* The run, not its questions: a name typed before the first answer rebuilds the
+     round, and that rebuild must not erase a hint the student already used. */
+  const hintRun = `${attempt}|${String(challengeSeed)}`;
   const [deviceVariant, setDeviceVariant] = useState("");
   /** The assignment's canonical link, used to key its attempt tally. */
   const [attemptKey, setAttemptKey] = useState("");
