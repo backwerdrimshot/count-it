@@ -147,6 +147,8 @@ export interface AssignmentError {
     | "meter-cells"
     | "system"
     | "feedback"
+    | "guide"
+    | "seed"
     | "retry"
     | "measure-pool"
     | "time"
@@ -512,9 +514,22 @@ export function parseAssignment(search: string): AssignmentResult {
     locked.push("cells");
   }
 
+  /* Refused rather than defaulted, as `fb` is: a guide the teacher meant to hide
+     that silently showed the counts would turn a graded round into a matching
+     exercise. */
   let guide: GuidePolicy | null = null;
   const guideRaw = params.get("guide");
-  if (guideRaw === "on" || guideRaw === "off") {
+  if (guideRaw !== null) {
+    if (guideRaw !== "on" && guideRaw !== "off") {
+      return {
+        ok: false,
+        error: {
+          code: "guide",
+          entry: guideRaw,
+          message: `“${guideRaw}” is not a guide setting. The guide is either “on” or “off”.`,
+        },
+      };
+    }
     guide = guideRaw;
     locked.push("guide");
   }
@@ -656,8 +671,21 @@ export function parseAssignment(search: string): AssignmentResult {
   const hints = hintsRaw === "on";
   if (hints) locked.push("hints");
 
+  /* Refused rather than replaced: a link that named a class seed and silently ran
+     the default round would give every student the same questions the teacher
+     did not choose. */
   const seedRaw = params.get("seed");
-  const seed = seedRaw !== null && /^[\w-]{1,32}$/.test(seedRaw) ? seedRaw : null;
+  if (seedRaw !== null && !/^[\w-]{1,32}$/.test(seedRaw)) {
+    return {
+      ok: false,
+      error: {
+        code: "seed",
+        entry: seedRaw,
+        message: `“${seedRaw}” is not a valid seed. A seed is 1 to 32 letters, digits, hyphens or underscores.`,
+      },
+    };
+  }
+  const seed = seedRaw;
   if (seed) locked.push("seed");
 
   const nameRaw = params.get("a");

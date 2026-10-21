@@ -19,6 +19,19 @@ function ok(search: string) {
   return result;
 }
 
+describe("unrecognized settings are refused, not repaired", () => {
+  it.each(["?guide=OFF", "?guide=yes"])("refuses a guide setting that is not on or off: %s", (search) => {
+    const result = parseAssignment(search);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("guide");
+  });
+  it.each(["?seed=class.4B", "?seed="])("refuses a seed the link format cannot carry: %s", (search) => {
+    const result = parseAssignment(search);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("seed");
+  });
+});
+
 function bad(search: string) {
   const result = parseAssignment(search);
   if (result.ok) throw new Error("expected an invalid link");
