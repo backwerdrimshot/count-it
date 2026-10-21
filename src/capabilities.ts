@@ -165,10 +165,10 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "no result object at all — the card was assembled inline — so the envelope was built rather " +
     "than renamed. `skillReferences` is null and says so: the field is nullable across the family " +
     "precisely so an app with no reconciled vocabulary can decline rather than invent ids. " +
-    "`activity.contentVersion` is null because questions are generated from the conditions and a " +
-    "seed, which already reproduce the round. In measure scope a miss is attributed to every cell " +
-    "in the measure, because the question is answered as a whole — the finest attribution the " +
-    "format allows, not a claim that all four were misread. Emitting the shape does not " +
+    "`activity.contentVersion` is null for legacy rounds and `eighths-v1` for assignments using " +
+    "that response profile. Settings plus the seed reproduce each round. Measure questions are " +
+    "reported as whole-question outcomes; a missed bar is not attributed to every cell in it. " +
+    "Emitting the shape does not " +
     "send this result; site-traffic measurement is separate.",
   supportDimensions:
     "The subdivision guide is a support, not a preference: an assignment pins it, and a gate " +
