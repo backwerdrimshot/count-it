@@ -7,9 +7,12 @@
 import { useMemo, useState } from "react";
 import {
   STATUS_TEXT,
-  canvasCsv,
+  canvasGroups,
+  canvasPreview,
   parseSummaries,
   summaryCsv,
+  type AttemptPolicy,
+  type CanvasGroup,
   type CanvasScore,
   type ParsedSummary,
 } from "../src/class-summary";
@@ -26,15 +29,32 @@ function download(name: string, text: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Every assignment the pasted summaries name, most common first. */
-function assignmentsByCount(rows: readonly ParsedSummary[]): string[] {
-  const counts = new Map<string, number>();
-  for (const row of rows) if (row.assignment) counts.set(row.assignment, (counts.get(row.assignment) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name);
-}
-
 function fileName(base: string): string {
   return `${base.replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase() || "class"}.csv`;
+}
+
+/** One group in the export list: which assignment, which round, which class. */
+function groupLabel(group: CanvasGroup): string {
+  const name = group.assignment ?? "Practice";
+  const round = group.round ? `round ${group.round}` : "older summary, matched by name";
+  const cls = group.classCode ? ` · class ${group.classCode}` : "";
+  return `${name} · ${round}${cls} · ${group.results} ${group.results === 1 ? "result" : "results"}`;
+}
+
+function scoreText(score: number, kind: CanvasScore): string {
+  return kind === "percent" ? `${score}%` : String(score);
+}
+
+/** One result, in the words the teacher reads it in: its score, attempt and finish. */
+function resultText(row: ParsedSummary, kind: CanvasScore): string {
+  const value = row.correct === null ? "no score" : scoreText(kind === "percent" ? (row.percent ?? 0) : row.correct, kind);
+  return `${value}, ${detailText(row)}`;
+}
+
+/** Attempt and finish time, which is what tells two results from the same student apart. */
+function detailText(row: ParsedSummary): string {
+  const when = row.stamp ? row.stamp.toLocaleString() : "no Finished time";
+  return `attempt ${row.attempt}, ${when}`;
 }
 
 export default function ClassSummary() {
@@ -43,31 +63,53 @@ export default function ClassSummary() {
   const [score, setScore] = useState<CanvasScore>("correct");
   const [onlyChecked, setOnlyChecked] = useState(true);
   const [notice, setNotice] = useState("");
+  const [chosenGroup, setChosenGroup] = useState<string | null>(null);
+  const [chosenPolicy, setChosenPolicy] = useState<AttemptPolicy | null>(null);
   const rows = useMemo(() => parseSummaries(text), [text]);
-  const [chosen, setChosen] = useState<string | null>(null);
-  const assignments = useMemo(() => assignmentsByCount(rows), [rows]);
-  /* The assignment whose results go in the Canvas column. Starts at the one most
-     summaries name; with none named, the practice rounds. */
-  const exported = chosen !== null && assignments.includes(chosen) ? chosen : (assignments[0] ?? null);
-  const columnName = column ?? exported ?? "";
+  const groups = useMemo(() => canvasGroups(rows), [rows]);
+  /* The first group is the round the app can check, with the most results: the
+     starting choice, shown in the select, never a silent one. */
+  const group = chosenGroup !== null && groups.some((entry) => entry.key === chosenGroup) ? chosenGroup : (groups[0]?.key ?? null);
+  const current = groups.find((entry) => entry.key === group) ?? null;
+  const columnName = column ?? current?.assignment ?? "";
+  /* Most recent is the default only when every result in the group has a Finished
+     time, so the order is known. Otherwise the teacher has to choose. */
+  const ordered = useMemo(
+    () => canvasPreview(rows, { column: columnName, score, onlyChecked, group, policy: null }).ordered,
+    [rows, columnName, score, onlyChecked, group],
+  );
+  const policy: AttemptPolicy | null = chosenPolicy ?? (ordered ? "latest" : null);
+  const preview = useMemo(
+    () => canvasPreview(rows, { column: columnName, score, onlyChecked, group, policy }),
+    [rows, columnName, score, onlyChecked, group, policy],
+  );
   const withTime = rows.some((row) => row.time);
+  const withClass = rows.some((row) => row.classCode);
   const counts = useMemo(() => ({
     valid: rows.filter((row) => row.status === "valid").length,
     invalid: rows.filter((row) => row.status === "invalid").length,
     impossible: rows.filter((row) => row.status === "impossible").length,
   }), [rows]);
 
+  /* What the file leaves out, in the teacher's words: shown before the download
+     and repeated after it, so nothing is dropped without being said. */
+  const leftOut = (chosen: AttemptPolicy | null) => [
+    preview.skipped.otherGroup ? `${preview.skipped.otherGroup} for another assignment or round` : "",
+    preview.skipped.codeFailed ? `${preview.skipped.codeFailed} without a checked code` : "",
+    preview.skipped.impossible ? `${preview.skipped.impossible} with an impossible score` : "",
+    preview.skipped.noScore ? `${preview.skipped.noScore} with no score` : "",
+    preview.skipped.noStudent ? `${preview.skipped.noStudent} with no name or class ID` : "",
+    preview.skipped.notChosen && chosen
+      ? `${preview.skipped.notChosen} repeat ${preview.skipped.notChosen === 1 ? "result" : "results"} not used (${chosen === "latest" ? "most recent" : "best score"} kept)`
+      : "",
+  ].filter(Boolean);
+
   function downloadCanvas() {
-    const result = canvasCsv(rows, { column: columnName, score, onlyChecked, assignment: exported });
-    download(fileName(`canvas-${columnName}`), result.csv);
-    const left = [
-      result.skipped.otherAssignment ? `${result.skipped.otherAssignment} for another assignment or practice` : "",
-      result.skipped.codeFailed ? `${result.skipped.codeFailed} without a checked code` : "",
-      result.skipped.impossible ? `${result.skipped.impossible} with an impossible score` : "",
-      result.skipped.noStudent ? `${result.skipped.noStudent} with no name or class ID` : "",
-      result.skipped.duplicates ? `${result.skipped.duplicates} repeat results (best score kept)` : "",
-    ].filter(Boolean);
-    setNotice(`Canvas file downloaded with ${result.included} ${result.included === 1 ? "student" : "students"}.` +
+    if (preview.csv === null) return;
+    download(fileName(`canvas-${columnName}`), preview.csv);
+    const left = leftOut(policy);
+    const count = preview.students.length;
+    setNotice(`Canvas file downloaded with ${count} ${count === 1 ? "student" : "students"}.` +
       (left.length ? ` Left out: ${left.join(", ")}.` : ""));
   }
 
@@ -82,9 +124,10 @@ export default function ClassSummary() {
           <h1>Class summary</h1>
           <p>
             Paste the summaries your students turned in (one after another, as many as you like). You get one
-            table with each student&rsquo;s score, whether they met the goal, their time if the link set one, and
-            whether their verification code checks. Then download it as a CSV, or as a file Canvas can import.
-            Everything stays in this browser: nothing you paste is sent anywhere or saved.
+            table with each student&rsquo;s score, whether they met the goal, their time if the link set one, their
+            class code if the link asked for one, and whether their verification code checks. Then download it as a
+            CSV, or as a file Canvas can import. Everything stays in this browser: nothing you paste is sent anywhere
+            or saved.
           </p>
         </div>
 
@@ -119,6 +162,7 @@ export default function ClassSummary() {
                     <th scope="col">Score</th>
                     <th scope="col">Threshold met</th>
                     {withTime && <th scope="col">Time</th>}
+                    {withClass && <th scope="col">Class</th>}
                     <th scope="col">Code</th>
                   </tr>
                 </thead>
@@ -126,10 +170,14 @@ export default function ClassSummary() {
                   {rows.map((row, index) => (
                     <tr key={index}>
                       <td data-label="Student ID">{row.studentId.trim() || <em>none typed</em>}</td>
-                      <td data-label="Assignment">{row.assignment ?? "Practice"}{row.attempt > 1 ? ` (attempt ${row.attempt})` : ""}</td>
+                      <td data-label="Assignment">
+                        {row.assignment ?? "Practice"}{row.attempt > 1 ? ` (attempt ${row.attempt})` : ""}
+                        {row.repeats && <small className="repeat-note"> · repeats some questions</small>}
+                      </td>
                       <td data-label="Score">{row.correct !== null ? `${row.correct}/${row.total} (${row.percent}%)` : "—"}</td>
                       <td data-label="Threshold met">{row.metGoal === null ? "No pass mark" : row.metGoal ? "Yes" : "Not yet"}</td>
                       {withTime && <td data-label="Time">{row.time ?? "—"}</td>}
+                      {withClass && <td data-label="Class">{row.classCode ?? "—"}</td>}
                       <td data-label="Code" className={`code-${row.status}`}>
                         <span className="code-status">{row.status === "valid" ? "✓ " : row.status === "invalid" || row.status === "impossible" ? "✗ " : ""}{STATUS_TEXT[row.status]}</span>
                         {row.code && <code>{row.code}</code>}
@@ -142,11 +190,15 @@ export default function ClassSummary() {
             <details className="class-summary-help">
               <summary>What the code check means</summary>
               <p>
-                <strong>Checksum matches</strong>: the score, attempt, student ID, assignment, time, hints used and finishing moment in
-                the summary are the ones its code was made from. <strong>Code does not match</strong>: something was
-                changed after the summary was copied, even a single character of the name. <strong>Cannot
-                check</strong>: the summary comes from before this page existed and has no Stamp line. The code is a
-                deterrent, not proof: it is made in the student&rsquo;s browser, and how it is made is public.
+                <strong>Checksum matches</strong>: the score, attempt, student ID, assignment, time, hints used, round, class
+                code, repeats and finishing moment in the summary are the ones its code was made from. <strong>Code does not
+                match</strong>: something was changed after the summary was copied, even a single character of the name.
+                <strong> Cannot check</strong>: the summary comes from before this page existed and has no Stamp line. The
+                code is a deterrent, not proof: it is made in the student&rsquo;s browser, and how it is made is public.
+              </p>
+              <p>
+                A class code is typed by the student, so it shows which class sent a result, not who sent it. A repeated
+                question is practice, not an independent check of the same skill.
               </p>
             </details>
 
@@ -165,25 +217,44 @@ export default function ClassSummary() {
                 <p className="class-summary-note">
                   <strong>You match the names in Canvas.</strong> These apps never know who a student is, so the
                   Student column holds whatever name or class ID the student typed, and ID, SIS User ID, SIS Login ID and Section
-                  are left blank. When you import it (Gradebook, then Import), Canvas lists anyone it cannot match and you
+                  are left blank. When you import it (Gradebook, then Import), Canvas lists anyone it cannot find and you
                   pick the right student there. If the column name is not the name of a Canvas assignment, Canvas
                   offers to create a new one.
                 </p>
-                {assignments.length > 1 && (
+                {groups.length > 1 && (
                   <label className="level-control">
-                    <span>Assignment to export</span>
-                    <select
-                      value={exported ?? ""}
-                      onChange={(event) => { setChosen(event.target.value); setColumn(null); }}
-                    >
-                      {assignments.map((name) => <option key={name} value={name}>{name}</option>)}
+                    <span>Assignment and round to export</span>
+                    <select value={group ?? ""} onChange={(event) => { setChosenGroup(event.target.value); setColumn(null); setChosenPolicy(null); }}>
+                      {groups.map((entry) => <option key={entry.key} value={entry.key}>{groupLabel(entry)}</option>)}
                     </select>
-                    <small>These summaries name more than one assignment. The file holds one; download again for each.</small>
+                    <small>Each round is exported on its own, so one round&rsquo;s results never land in another&rsquo;s column.</small>
                   </label>
+                )}
+                {current && current.round === null && (
+                  <p className="class-summary-warning" role="note">
+                    These summaries were made before rounds were named, so they can only be matched by assignment name.
+                    Check that they are the same round before you export them.
+                  </p>
                 )}
                 <label className="builder-field">
                   <span>Assignment column name (as it is in Canvas)</span>
                   <input type="text" value={columnName} onChange={(event) => setColumn(event.target.value)} />
+                </label>
+                <label className="level-control">
+                  <span>Which result to use for each student</span>
+                  <select
+                    value={policy ?? ""}
+                    onChange={(event) => setChosenPolicy(event.target.value === "best" ? "best" : event.target.value === "latest" ? "latest" : null)}
+                  >
+                    {policy === null && <option value="">Choose one</option>}
+                    <option value="latest">Most recent result</option>
+                    <option value="best">Best score</option>
+                  </select>
+                  <small>
+                    {ordered
+                      ? "Most recent uses each summary’s Finished time, so the order is known. Every other result is listed below and left out of the file."
+                      : "Some results have no Finished time, so the order they were made in is not known. Choose the rule yourself."}
+                  </small>
                 </label>
                 <label className="level-control">
                   <span>Score in the column</span>
@@ -200,8 +271,44 @@ export default function ClassSummary() {
                   <input type="checkbox" checked={onlyChecked} onChange={(event) => setOnlyChecked(event.target.checked)} />
                   <span>Only include summaries whose code checks</span>
                 </label>
-                <small>One row per student: if a student turned in more than one result, the best score is kept.</small>
-                <button type="button" className="primary-button" onClick={downloadCanvas}>
+
+                {preview.csv === null ? (
+                  <p className="canvas-preview-note" role="status">Choose which result to use for each student to see the file.</p>
+                ) : (
+                  <section className="canvas-preview" aria-labelledby="canvas-preview-title">
+                    <h3 id="canvas-preview-title">
+                      Preview: {preview.students.length} {preview.students.length === 1 ? "student" : "students"}
+                    </h3>
+                    <div className="canvas-preview-table" role="region" aria-label="Canvas preview table" tabIndex={0}>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Student</th>
+                            <th scope="col">Canvas gets</th>
+                            <th scope="col">Other results, left out</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {preview.students.map((student) => (
+                            <tr key={student.name}>
+                              <td data-label="Student">{student.name}</td>
+                              <td data-label="Canvas gets">
+                                {student.chosen ? `${scoreText(student.score ?? 0, score)} (${detailText(student.chosen)})` : "—"}
+                              </td>
+                              <td data-label="Other results, left out">
+                                {student.left.length === 0 ? "none" : student.left.map((row) => resultText(row, score)).join("; ")}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {leftOut(policy).length > 0 && (
+                      <p className="canvas-preview-note">Also left out: {leftOut(policy).join(", ")}.</p>
+                    )}
+                  </section>
+                )}
+                <button type="button" className="primary-button" disabled={preview.csv === null} onClick={downloadCanvas}>
                   Download Canvas gradebook CSV
                 </button>
               </fieldset>

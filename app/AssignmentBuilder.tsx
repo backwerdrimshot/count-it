@@ -93,6 +93,7 @@ export default function AssignmentBuilder() {
   const [passText, setPassText] = useState("8");
   const [timeText, setTimeText] = useState("");
   const [hints, setHints] = useState(false);
+  const [classText, setClassText] = useState("");
   const [seed, setSeed] = useState("");
   const [presetId, setPresetId] = useState("");
   const [origin, setOrigin] = useState(PRODUCTION_ORIGIN);
@@ -122,9 +123,10 @@ export default function AssignmentBuilder() {
       passing: numberOrNull(passText),
       timeLimit: numberOrNull(timeText),
       hints,
+      classCode: classText.trim() || null,
       seed: seed.trim(),
     }),
-    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, seed],
+    [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, classText, seed],
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
@@ -151,6 +153,7 @@ export default function AssignmentBuilder() {
     setPassText(next.passing === null ? "" : String(next.passing));
     setTimeText(next.timeLimit == null ? "" : String(next.timeLimit));
     setHints(Boolean(next.hints));
+    setClassText(next.classCode ?? "");
     setSeed(next.seed);
   }, []);
   const applyPreset = useCallback((id: string) => {
@@ -169,7 +172,7 @@ export default function AssignmentBuilder() {
       setOrigin(window.location.origin);
       const params = new URLSearchParams(window.location.search);
       const from = params.get("from");
-      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints'].some(key => params.has(key));
+      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints', 'class'].some(key => params.has(key));
       if (from && getPreset(from)) applyPreset(from);
       else if (hasSettings) {
         const saved = builderStateFromQuery(window.location.search);
@@ -517,6 +520,15 @@ export default function AssignmentBuilder() {
                 <small>
                   A tip says how to count the beat, never the answer. A right answer after a hint still scores; the
                   card says how many hints were used.
+                </small>
+              </label>
+              <label className="level-control builder-time">
+                <span>Class code (optional)</span>
+                <input type="text" value={classText} maxLength={24} autoComplete="off" spellCheck={false}
+                  onChange={(event) => setClassText(event.target.value)} />
+                <small>
+                  Students must type this code before they can turn in a result. They type it themselves, so it shows
+                  which class sent a result, not who the student is. It is not checked against any list.
                 </small>
               </label>
             </fieldset>
