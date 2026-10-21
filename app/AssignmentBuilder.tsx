@@ -15,7 +15,6 @@ import {
   builderStateFromQuery,
   cellsForLevel,
   evaluateBuilder,
-  repeatProblem,
   makeSeed,
   type BuilderState,
   type Vocabulary,
@@ -130,14 +129,8 @@ export default function AssignmentBuilder() {
     [name, vocabulary, scope, meter, system, guide, feedback, retry, countText, passText, timeText, hints, classText, seed],
   );
 
-  /* Everything the teacher sees about the link comes from the app's own parser.
-     A link the teacher writes is also refused when it would repeat questions
-     silently; the parser alone would accept it, because published links must keep working. */
-  const result = useMemo(() => {
-    const judged = evaluateBuilder(state, origin);
-    const repeat = judged.ok ? repeatProblem(state) : null;
-    return repeat ? { ok: false as const, problem: repeat } : judged;
-  }, [state, origin]);
+  /* Everything the teacher sees about the link comes from the app's own parser. */
+  const result = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
 
   const heldNotesAllowed = scope === "measure";
 

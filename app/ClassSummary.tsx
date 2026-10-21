@@ -231,7 +231,7 @@ export default function ClassSummary() {
                   </label>
                 )}
                 {current && current.round === null && (
-                  <p className="class-summary-note" role="note">
+                  <p className="class-summary-warning" role="note">
                     These summaries were made before rounds were named, so they can only be matched by assignment name.
                     Check that they are the same round before you export them.
                   </p>
@@ -273,13 +273,13 @@ export default function ClassSummary() {
                 </label>
 
                 {preview.csv === null ? (
-                  <p className="class-summary-note" role="status">Choose which result to use for each student to see the file.</p>
+                  <p className="canvas-preview-note" role="status">Choose which result to use for each student to see the file.</p>
                 ) : (
                   <section className="canvas-preview" aria-labelledby="canvas-preview-title">
                     <h3 id="canvas-preview-title">
                       Preview: {preview.students.length} {preview.students.length === 1 ? "student" : "students"}
                     </h3>
-                    <div className="class-summary-table" role="region" aria-label="Canvas preview table" tabIndex={0}>
+                    <div className="canvas-preview-table" role="region" aria-label="Canvas preview table" tabIndex={0}>
                       <table>
                         <thead>
                           <tr>
@@ -304,7 +304,7 @@ export default function ClassSummary() {
                       </table>
                     </div>
                     {leftOut(policy).length > 0 && (
-                      <p className="class-summary-note">Also left out: {leftOut(policy).join(", ")}.</p>
+                      <p className="canvas-preview-note">Also left out: {leftOut(policy).join(", ")}.</p>
                     )}
                   </section>
                 )}

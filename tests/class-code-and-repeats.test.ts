@@ -8,7 +8,7 @@ import {
   serializeAssignment,
   uniqueQuestions,
 } from "../src/assignment";
-import { buildQuery, builderStateFromQuery, defaultBuilderState, evaluateBuilder, repeatProblem } from "../src/assignment/builder";
+import { buildQuery, builderStateFromQuery, defaultBuilderState, evaluateBuilder, type BuilderState } from "../src/assignment/builder";
 import { ALL_RHYTHM_CELLS, getCellsForLevel } from "../src/rhythm";
 import { generateQuestions } from "../src/question";
 
@@ -86,26 +86,32 @@ describe("repeated questions", () => {
   });
 });
 
-describe("the builder refuses a new link that would repeat, and the published links are kept", () => {
+describe("the builder warns about a repeating round, and never refuses it", () => {
   const pinned = { ...defaultBuilderState("cr1"), vocabulary: { kind: "cells" as const, cells: ["quarter", "eighths"] }, count: 12, passing: null };
+  const notesOf = (state: BuilderState) => {
+    const result = evaluateBuilder(state);
+    if (!result.ok) throw new Error(`builder refused: ${result.problem}`);
+    return result.notes.join(" ");
+  };
 
-  it("refuses a new beat-scope link that asks more questions than its rhythms make", () => {
-    const problem = repeatProblem(pinned);
-    expect(problem).toMatch(/asks 12 questions/);
-    expect(problem).toMatch(/only 2 different one-beat questions/);
-    expect(evaluateBuilder(pinned).ok).toBe(true);
+  it("keeps the link, and says how many questions repeat and how to avoid it", () => {
+    const notes = notesOf(pinned);
+    expect(notes).toMatch(/asks 12 questions from 2 different one-beat rhythms/);
+    expect(notes).toMatch(/ask for 2 or fewer/);
   });
 
-  it("allows the same rhythms with as many questions as they can make", () => {
-    expect(repeatProblem({ ...pinned, count: 2 })).toBeNull();
+  it("says nothing about repeats when the round asks no more than its rhythms make", () => {
+    expect(notesOf({ ...pinned, count: 2 })).not.toMatch(/repeat/);
   });
 
-  it("does not judge a rhythm choice the student makes, only one the link pins", () => {
-    expect(repeatProblem({ ...pinned, vocabulary: { kind: "student" } })).toBeNull();
+  it("warns about the level the student starts from when the rhythm choice is left to them", () => {
+    const notes = notesOf({ ...pinned, vocabulary: { kind: "student" as const } });
+    expect(notes).toMatch(/Rhythm choice is left to the student/);
   });
 
-  it("leaves full-measure links to the parser, which already refuses them", () => {
-    expect(repeatProblem({ ...pinned, scope: "measure", count: 12 })).toBeNull();
+  it("still allows the default starting point, which asks more questions than the level's rhythms make", () => {
+    const result = evaluateBuilder(defaultBuilderState("cr1"));
+    expect(result.ok).toBe(true);
   });
 
   it("writes the class code and reads it back when the builder reopens a link", () => {

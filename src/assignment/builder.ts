@@ -276,10 +276,10 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
   const meter = assignment.meter ?? DEFAULT_METER;
   const length = assignment.count ?? DEFAULT_QUESTIONS;
 
-  /* Whether the round repeats questions. A published link is judged here and
-     labelled; a link a teacher writes is refused by repeatProblem, which the form
-     asks as well. The vocabulary must be pinned for either, because a
-     student-chosen level can have more one-beat rhythms than the one named. */
+  /* Whether the round repeats questions. Warned about, never refused: a repeated
+     question is labelled practice, and a beat-scope round does not promise unique
+     questions. A student-chosen level can have more one-beat rhythms than the one
+     the link names, so the warning says which case applies. */
   const vocabularyPinned = assignment.cells !== null || parsed.locked.includes("level");
   const repeat = questionRepeats({
     scope: assignment.scope,
@@ -311,6 +311,13 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
           `so their round would be shorter than the ${length} you set. Pin the question size to avoid this.`,
       );
     }
+  }
+  if (repeat.repeats && vocabularyPinned && assignment.scope === "beat") {
+    notes.push(
+      `Some questions repeat: this round asks ${length} questions from ${repeat.unique} different one-beat ` +
+        `rhythm${repeat.unique === 1 ? "" : "s"}. A repeated question is practice, not an independent check of ` +
+        `the same skill. To avoid repeats, ask for ${repeat.unique} or fewer.`,
+    );
   }
   if (repeat.repeats && !vocabularyPinned && assignment.scope === "beat") {
     notes.push(
@@ -370,34 +377,6 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
 }
 
 /** The levels, for the form's select, in the app's own words. */
-/** Why a link the teacher is writing now would repeat questions, or null.
- *
- *  Refused for the builder only. The parser keeps every link it accepted before,
- *  because the links students already have must keep working, and the published
- *  presets are checked as published (labelled, not refused). A repeat is judged
- *  only where the vocabulary is pinned: with the level left to the student, the
- *  round they get depends on the level they choose, and it is noted instead. */
-export function repeatProblem(state: BuilderState): string | null {
-  const parsed = parseAssignment(buildQuery(state));
-  if (!parsed.ok) return null;
-  const { assignment, locked } = parsed;
-  const length = assignment.count ?? DEFAULT_QUESTIONS;
-  const vocabularyPinned = assignment.cells !== null || locked.includes("level");
-  const repeat = questionRepeats({
-    scope: assignment.scope,
-    level: assignment.level,
-    meter: assignment.meter ?? DEFAULT_METER,
-    cells: assignment.cells,
-    count: length,
-  });
-  if (!repeat.repeats || !vocabularyPinned || assignment.scope !== "beat") return null;
-  return (
-    `This round asks ${length} questions, but its rhythms make only ${repeat.unique} different ` +
-    `one-beat question${repeat.unique === 1 ? "" : "s"}, so some would repeat. Ask for ` +
-    `${repeat.unique} or fewer questions, or add rhythms.`
-  );
-}
-
 /* "Make this a quiz": the settings that turn practice into a check.
  *
  *   * the subdivision guide hidden — reading without the grid printed is what is
