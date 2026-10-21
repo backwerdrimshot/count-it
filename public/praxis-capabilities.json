@@ -110,7 +110,7 @@
   ],
   "earlyLaunchResolution": {
     "version": 2,
-    "status": "local-unpublished",
+    "status": "supported",
     "archivePath": "/archive",
     "matching": "Exact known original Counting Rhythms steps 1–5, Standard only; marked or unmarked",
     "catalogField": "currentLaunch",
