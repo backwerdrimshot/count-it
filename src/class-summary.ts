@@ -123,7 +123,7 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   const total = score ? Number(score[2]) : null;
   /* Always from the numbers the code covers, never from the "(92%)" text beside
      them: that text is not in the code, so a copy that edited only it would
-     otherwise still say "Code checks" and export the edited percent. */
+     otherwise still say "Checksum matches" and export the edited percent. */
   const percent = correct !== null && total ? Math.round((correct / total) * 100) : correct !== null ? 0 : null;
   const attemptRaw = fields.get("Attempt")?.trim();
   const attempt = attemptRaw && /^\d+$/.test(attemptRaw) ? Number(attemptRaw) : 1;
@@ -147,7 +147,9 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   if (!finishedAt || Number.isNaN(finishedAt.getTime()) || stamp !== finishedAt.toISOString()) {
     return { ...base, status: "unchecked" };
   }
-  if (correct === null || total === null) return { ...base, status: "invalid" };
+  /* A checksum proves only that the copied text matches its code, and anyone can
+     make a code for any numbers. A score that cannot happen is refused anyway. */
+  if (correct === null || total === null || total === 0 || correct > total) return { ...base, status: "invalid" };
   if (attemptRaw !== undefined && !/^\d+$/.test(attemptRaw)) return { ...base, status: "invalid" };
   if (hintsRaw !== undefined && hintsUsed === null) return { ...base, status: "invalid" };
 
@@ -185,7 +187,7 @@ export function parseSummaries(text: string): ParsedSummary[] {
 }
 
 export const STATUS_TEXT: Record<CodeStatus, string> = {
-  valid: "Code checks",
+  valid: "Checksum matches",
   invalid: "Code does not match",
   unchecked: "Cannot check (older summary)",
   "other-app": `${SIBLING.name} summary`,

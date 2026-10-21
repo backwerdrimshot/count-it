@@ -139,7 +139,7 @@ export default function ClassSummary() {
             <details className="class-summary-help">
               <summary>What the code check means</summary>
               <p>
-                <strong>Code checks</strong>: the score, attempt, student ID, assignment, time, hints used and finishing moment in
+                <strong>Checksum matches</strong>: the score, attempt, student ID, assignment, time, hints used and finishing moment in
                 the summary are the ones its code was made from. <strong>Code does not match</strong>: something was
                 changed after the summary was copied, even a single character of the name. <strong>Cannot
                 check</strong>: the summary comes from before this page existed and has no Stamp line. The code is a

@@ -37,7 +37,7 @@ async function handIn(browser, student) {
   await page.getByLabel("Students’ summaries").fill(`${first}\n\n${second}\n\n${edited}`);
   const rows = await page.locator(".class-summary-table tbody tr").allInnerTexts();
   note("three pasted summaries make three rows", rows.length === 3, String(rows.length));
-  note("real hand-ins check", /Code checks/.test(rows[0]) && /Code checks/.test(rows[1]), rows.slice(0, 2).join(" // ").replace(/\s+/g, " "));
+  note("real hand-ins check", /Checksum matches/.test(rows[0]) && /Checksum matches/.test(rows[1]), rows.slice(0, 2).join(" // ").replace(/\s+/g, " "));
   note("an edited hand-in is caught", /Code does not match/.test(rows[2] ?? ""), (rows[2] ?? "").replace(/\s+/g, " "));
   note("the table shows student ID, goal and time", /4B-07/.test(rows[0]) && /(Yes|Not yet)/.test(rows[0]) && /limit 5:00/.test(rows[0]));
   await shot(page, "class-summary-desktop.png", { fullPage: true });

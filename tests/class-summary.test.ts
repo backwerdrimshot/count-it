@@ -34,6 +34,10 @@ function summary(options: {
 }
 
 describe("reading pasted summaries", () => {
+  it("refuses a score that cannot happen, even when its checksum matches", () => {
+    const [row] = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
+    expect(row.status).toBe("invalid");
+  });
   it("checks the hints count on a summary from a hints-on assignment", () => {
     const text = summary({ assignment: "Step 2", student: "Ana", correct: 10, total: 12, hints: 2 });
     expect(parseSummaries(text)[0]).toMatchObject({ status: "valid", hintsUsed: 2 });
@@ -154,7 +158,7 @@ describe("the CSV files", () => {
     const table = summaryCsv(rows).split("\r\n");
     expect(table[0]).toBe("Student ID,Assignment,Score,Out of,Percent,Threshold met,Attempt,Finished,Code,Code check");
     expect(table[1]).toMatch(/^4B-07,Step 2,9,12,75,no,1,/);
-    expect(table[1]).toMatch(/Code checks$/);
+    expect(table[1]).toMatch(/Checksum matches$/);
     expect(table[5]).toMatch(/Code does not match$/);
     expect(summaryCsv(parseSummaries(summary({ correct: 1, total: 2, timing: { elapsedSeconds: 60, limitMinutes: 5 } })))).toMatch(/Threshold met,Time,/);
   });
