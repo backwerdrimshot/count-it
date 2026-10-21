@@ -50,6 +50,10 @@ Analytics (Cloudflare Insights) is blocked in every context, so a run never coun
 
 Real phones, tablets and screen readers. Every check is an automated Chromium session, so a pass is evidence about layout and behavior in that browser, not a statement that the app has been tested on devices or with assistive technology.
 
+## Supplementary bridge (local review)
+
+`beginner.mjs` reads the five launches from `/beginner-v1` and checks every step at 320, 768 and 1280px in light/dark: taught choices and guide positions, profile-only overflow cue/tab stop/arrow scrolling, direct pointer access to the last choice, keyboard answers/focus, delayed feedback, retry policy, completed-history conditions, reload, builder reopening and malformed imports. It blocks analytics through the shared harness. These drafts are not published catalog entries.
+
 ## Settings regression
 
 `settings.mjs` verifies tab keyboard/focus, popover and confirmation Escape, cancellation preserving the round, instant untouched changes, guide/unchanged settings retaining answers, opt-in setup/profile reload and clearing, assignment overrides without saved-preference writes, clipboard absence/success feedback, storage failure feedback, and a phone-width focus panel. Eight Time also verifies explicit missed-question practice preserves the original score and verification. `CHROMIUM_PATH` can select an installed headless binary; no foreground browser is used.

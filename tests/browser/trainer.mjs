@@ -17,7 +17,7 @@ async function playRound(page, { keyboard = false } = {}) {
       }
     }
     const next = page.getByRole("button", { name: /next question|see (your )?result|finish/i }).first();
-    if (await next.count()) await next.click().catch(() => {});
+    if (await next.count()) await next.click({ timeout: 5000 });
     await page.waitForTimeout(150);
   }
   return answered;
@@ -238,16 +238,60 @@ const exactlyOneModeSelected = async (page) =>
     await page.close();
   }
 
-  // A single held note fills the bar; at phone widths the sparse notation should fit without scrolling.
+  // A bar that fits its panel has nothing to scroll, so it is not a keyboard stop and not a region.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    watch(page, "fitting-bar");
+    await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    const fit = await page.evaluate(() => {
+      const panel = document.querySelector(".notation-scroll");
+      return { fits: panel.scrollWidth <= panel.clientWidth + 1, tabindex: panel.getAttribute("tabindex"), role: panel.getAttribute("role") };
+    });
+    note("a bar that fits its panel is not a keyboard stop", fit.fits && fit.tabindex === null && fit.role === null, JSON.stringify(fit));
+    await page.close();
+  }
+
+  // A single held note with the count row is wider than a phone panel. The bar must stay readable, so the
+  // panel scrolls: the page itself must not overflow, the panel must scroll, a visible cue must say so, and
+  // the panel must be reachable and scrollable from the keyboard. Touch scrolling is the browser's own; here
+  // it is checked through overflow-x, not a simulated drag.
   for (const width of [390, 320]) {
     const page = await browser.newPage({ viewport: { width, height: 740 }, hasTouch: true, isMobile: true });
     watch(page, `phone-whole-note-${width}`);
     await page.goto(BASE + "/?scope=measure&meter=5-4&cells=whole,quarter&n=1&seed=whole-phone", { waitUntil: "networkidle" });
-    const dimensions = await page.locator(".notation-scroll").evaluate((element) => ({
-      client: element.clientWidth,
-      scroll: element.scrollWidth,
-    }));
-    note(`phone ${width}px · whole-note measure fits the notation panel`, dimensions.scroll <= dimensions.client + 1, `${dimensions.scroll}px inside ${dimensions.client}px`);
+    const state = await page.evaluate(() => {
+      const panel = document.querySelector(".notation-scroll");
+      const style = getComputedStyle(panel);
+      const labels = [...document.querySelectorAll("[data-guide-at]")].map((text) => Number(text.getAttribute("x")));
+      const gaps = labels.slice(1).map((x, i) => x - labels[i]);
+      return {
+        pageOverflow: document.documentElement.scrollWidth - window.innerWidth,
+        overflowX: style.overflowX,
+        panelScrolls: panel.scrollWidth > panel.clientWidth + 1,
+        panelTabbable: panel.tabIndex === 0,
+        cueShown: [...document.querySelectorAll(".notation-scroll-cue")].some((cue) => cue.offsetParent !== null),
+        minLabelGap: gaps.length ? Math.min(...gaps) : null,
+      };
+    });
+    note(`phone ${width}px · the page does not overflow sideways`, state.pageOverflow <= 0, `${state.pageOverflow}px`);
+    note(`phone ${width}px · the notation panel scrolls inside its own box`, state.overflowX === "auto" && state.panelScrolls, `overflow-x ${state.overflowX}`);
+    note(`phone ${width}px · a visible cue says the bar scrolls`, state.cueShown, `cue ${state.cueShown}`);
+    note(`phone ${width}px · the panel is reachable by keyboard`, state.panelTabbable, `tabIndex ${state.panelTabbable ? 0 : "none"}`);
+    note(`phone ${width}px · count labels keep readable spacing (at least 14px apart)`, state.minLabelGap !== null && state.minLabelGap >= 14, `min gap ${state.minLabelGap}px`);
+    await page.locator(".notation-scroll").focus();
+    const ring = await page.locator(".notation-scroll").evaluate((panel) => {
+      const style = getComputedStyle(panel);
+      return { offset: parseFloat(style.outlineOffset), width: parseFloat(style.outlineWidth), color: style.outlineColor };
+    });
+    note(`phone ${width}px · focus indicator stays inside the clipped panel`, ring.offset <= -ring.width && ring.width >= 3 && ring.color === "rgb(54, 92, 53)", JSON.stringify(ring));
+    const before = await page.locator(".notation-scroll").evaluate((panel) => panel.scrollLeft);
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    // The site scrolls smoothly, so wait for the panel to move before reading where it stopped.
+    await page.waitForFunction((start) => document.querySelector(".notation-scroll").scrollLeft > start, before, { timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    const after = await page.locator(".notation-scroll").evaluate((panel) => panel.scrollLeft);
+    note(`phone ${width}px · arrow keys scroll the notation panel`, after > before, `scrollLeft ${before} → ${after}`);
     if (width === 390) await shot(page, "e2e-phone-whole-note.png");
     await page.close();
   }

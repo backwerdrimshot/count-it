@@ -119,6 +119,7 @@ export function generateDistractors(
   random: RandomSource,
   count = 3,
   system: CountingProfileId = "standard",
+  response?: "eighths-v1",
 ): readonly Distractor[] {
   if (!Number.isInteger(count) || count < 1) throw new RangeError("Distractor count must be positive.");
   const { partialsPerBeat, beatsPerMeasure } = getMeter(prompt.meter);
@@ -134,6 +135,9 @@ export function generateDistractors(
     );
     for (let mask = 1; mask < 2 ** partialsPerBeat; mask += 1) {
       if (mask === currentMask) continue;
+      // This opt-in profile teaches only the beat and its halfway position.
+      if (response && Array.from({ length: partialsPerBeat }, (_, p) => p)
+        .some(p => p !== 0 && p !== 2 && Boolean(mask & (1 << (partialsPerBeat - 1 - p))))) continue;
       const candidateGrid = withMask(correctGrid, beatIndex, mask, partialsPerBeat);
       const label = answerForGrid(candidateGrid, system);
       if (!label || label === correctAnswer || candidates.has(label)) continue;
@@ -145,7 +149,7 @@ export function generateDistractors(
 
   const wrongNumber = wrongBeatNumber(correctAnswer, beatsPerMeasure);
   if (
-    wrongNumber &&
+    !response && wrongNumber &&
     wrongNumber !== correctAnswer &&
     !candidates.has(wrongNumber) &&
     allowed.has("wrong_beat_number")

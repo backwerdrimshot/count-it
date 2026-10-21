@@ -1,4 +1,6 @@
 "use client";
+import { BEGINNER_RESPONSE_LESSON } from "../src/assignment/beginner-v1";
+import { ResponseVocabularyContext } from "./ResponseVocabulary";
 import { useRoundChangeGuard } from "./RoundChangeGuard";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 
@@ -131,6 +133,7 @@ function assignmentLocks(assignment: Assignment, pinned: readonly string[]): str
 }
 
 interface RoundSpec {
+  readonly response?: "eighths-v1";
   readonly level: LevelId;
   readonly scope: QuestionScope;
   readonly meter?: MeterId;
@@ -197,7 +200,14 @@ function ReadingScaffold({ prompt, system }: { prompt: RhythmPrompt; system: Cou
   );
 }
 
-function misconceptionMessage(choice: QuestionChoice | undefined): string {
+function misconceptionMessage(choice: QuestionChoice | undefined, response?: "eighths-v1"): string {
+  if (response) {
+    switch (choice?.category) {
+      case "added_sound": return "That count adds a note start where none is written.";
+      case "omitted_sound": return "That count leaves out a written note start.";
+      case "shifted_subdivision": return "That count moves a note start between the beat and its halfway position.";
+    }
+  }
   switch (choice?.category) {
     case "omitted_sound":
       return "That choice leaves out a subdivision where a note sounds.";
@@ -1204,7 +1214,7 @@ function ChallengeMode({
         aria-live="polite"
       >
         {!response ? (
-          <p><strong>Choose one answer.</strong>You can also press 1, 2, 3, or 4.</p>
+          <p><strong>Choose one answer.</strong>{assignment?.response && question.choices.length === 3 ? "You can also press 1, 2, or 3." : "You can also press 1, 2, 3, or 4."}</p>
         ) : holdFeedback ? (
           <>
             <span className="feedback-icon" aria-hidden="true">•</span>
@@ -1221,7 +1231,7 @@ function ChallengeMode({
             <span className="feedback-icon" aria-hidden="true">{response.correct ? "✓" : "!"}</span>
             <p>
               <strong>{response.correct ? "That is it." : `The correct count is ${question.correctAnswer}.`}</strong>
-              {response.correct ? question.explanation : `${misconceptionMessage(selected)} ${question.explanation}`}
+              {response.correct ? question.explanation : `${misconceptionMessage(selected, assignment?.response)} ${question.explanation}`}
             </p>
             <button type="button" className="primary-button" onClick={onAdvance} ref={nextButton}>
               {session.currentIndex === session.questions.length - 1 ? "See results" : "Next question"} <span aria-hidden="true">→</span>
@@ -1455,6 +1465,7 @@ export default function CountItApp() {
       let round: ChallengeSession;
       try {
         round = makeSession({
+          response: pinned.response,
           level: pinned.level,
           scope: pinned.scope,
           system: resolveCountingProfile(pinned.system, savedProfile),
@@ -1527,8 +1538,8 @@ export default function CountItApp() {
     return Math.max(1, Math.min(12, uniqueMeasures(pool, getMeter(meter).beatsPerMeasure)));
   }, [assignedCells, level, meter, scope]);
   const practiceQuestions = useMemo(
-    () => generateQuestions({ level, scope, meter, system, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
-    [assignedCells, level, meter, system, practiceCount, practiceSeed, scope],
+    () => generateQuestions({ response: assignment?.response, level, scope, meter, system, count: practiceCount, seed: practiceSeed, ...(assignedCells ? { cells: assignedCells } : {}) }),
+    [assignment?.response, assignedCells, level, meter, system, practiceCount, practiceSeed, scope],
   );
   const practiceQuestion = practiceQuestions[practiceIndex % practiceQuestions.length];
   // A pooled round is its own achievement: "the rest-entry cells" is not
@@ -1545,6 +1556,7 @@ export default function CountItApp() {
     meter === DEFAULT_METER ? "" : `meter:${meter}`,
     system === "standard" ? "" : `sys:${system}`,
     assignment?.guide ? `guide:${assignment.guide}` : "",
+    assignment?.response ? `response:${assignment.response}` : "",
     !assignment && freeLength !== 5 ? `n:${session.questions.length}` : "",
   ].filter(Boolean).join(":");
 
@@ -1597,7 +1609,7 @@ export default function CountItApp() {
       savedHistorySession.current = session;
       saveHistory({ id: `${finished.toISOString()}:${challengeSeed}:${bestKey}:${attempt}:${session.questions.map(q => q.id).join(',')}`,
         finishedAt: finished.toISOString(), score: session.score, total: session.questions.length,
-        conditions: `${getMeter(meter).label} · ${scope} · ${COUNTING_PROFILES[system].name} · Guide ${showReference ? 'on' : 'off'}`,
+        conditions: `${getMeter(meter).label} · ${scope} · ${COUNTING_PROFILES[system].name} · Guide ${showReference ? 'on' : 'off'}${assignment?.response ? ` · ${assignment.response} · Feedback ${assignment.feedback ?? 'each'} · Retry ${assignment.retry ?? 'free'}` : ''}`,
         rhythms: [...new Set(session.questions.flatMap(q => q.prompt.cells.map(c => c.id)))],
         missed: [...new Set(getMissedQuestions(session).flatMap(q => q.prompt.cells.map(c => c.id)))],
         assignment: assignment?.name ?? null, attempt });
@@ -1649,6 +1661,7 @@ export default function CountItApp() {
     setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
+      response: assignment?.response,
       level: nextLevel,
       scope: nextScope,
       meter: nextMeter,
@@ -1732,6 +1745,7 @@ export default function CountItApp() {
     setStartedAt(null);
     setAttempt(1);
     setSession(makeSession({
+      response: assignment?.response,
       level,
       scope,
       meter,
@@ -1763,6 +1777,7 @@ export default function CountItApp() {
     setMode("challenge");
     if (retryPolicy === "reseed") {
       const reseeded = makeSession({
+        response: assignment?.response,
         level,
         scope,
         meter,
@@ -1789,6 +1804,7 @@ export default function CountItApp() {
     const nextVariant = value.trim() || deviceVariant;
     if (!nextVariant) return;
     setSession(makeSession({
+      response: assignment?.response,
       level,
       scope,
       meter,
@@ -1805,7 +1821,8 @@ export default function CountItApp() {
   }
 
   return (
-    <div className="app-shell">
+    <ResponseVocabularyContext.Provider value={assignment?.response}>
+    <div className={`app-shell${assignment?.response ? " beginner-response" : ""}`}>
       <a className="skip-link" href="#trainer">Skip to the trainer</a>
       <header className="site-header">
         <a className="brand-lockup" href="#top" aria-label="Count It home">
@@ -1825,6 +1842,7 @@ export default function CountItApp() {
       </nav>
 
       <main id="top">
+        {assignment?.response && <p className="beginner-response-lesson" role="note">{BEGINNER_RESPONSE_LESSON}</p>}
         {/* The page's one <h1> used to sit in the hero, which now lives in the closed
             Help dialog and so is not in the page outline. It stays here, visually
             hidden, so the heading is there for screen readers and outline tools. */}
@@ -2105,5 +2123,6 @@ export default function CountItApp() {
       </footer>
       {confirmation}
     </div>
+    </ResponseVocabularyContext.Provider>
   );
 }

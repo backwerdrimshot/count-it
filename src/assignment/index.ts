@@ -175,6 +175,7 @@ export const CLASS_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]{0,23}$/;
 
 export interface AssignmentError {
   readonly code:
+    | "response"
     | "cell"
     | "too-few-cells"
     | "count"
@@ -202,6 +203,8 @@ export interface AssignmentError {
 }
 
 export interface Assignment {
+  /** Opt-in response vocabulary; absent preserves every legacy round. */
+  readonly response?: "eighths-v1";
   /** Present only when the link named one; display text, never an identity. */
   readonly name: string | null;
   readonly level: LevelId;
@@ -750,12 +753,24 @@ export function parseAssignment(search: string): AssignmentResult {
   const seed = seedRaw;
   if (seed) locked.push("seed");
 
+  const responseRaw = params.get("response");
+  if (responseRaw !== null) {
+    if (params.getAll("response").length !== 1 || responseRaw !== "eighths-v1" ||
+        system !== "standard" || !meter || !["2-4", "3-4", "4-4"].includes(meter) ||
+        !cells || cells.length !== 2 || !cells.includes("quarter") || !cells.includes("eighths")) {
+      return { ok: false, error: { code: "response", message:
+        "The eighths-v1 response vocabulary needs quarter,eighths, Standard counting, and an explicit 2/4, 3/4 or 4/4 meter. Unknown or repeated response versions are refused." } };
+    }
+    locked.push("response");
+  }
+
   const nameRaw = params.get("a");
   const name = nameRaw !== null ? sanitizeName(nameRaw) : null;
 
   return {
     ok: true,
     assignment: Object.freeze({
+      ...(responseRaw ? { response: "eighths-v1" as const } : {}),
       name,
       level,
       scope,
@@ -831,6 +846,7 @@ export function playedAssignment(
  *  did, so no existing tally is orphaned. */
 export function serializeAssignment(assignment: Assignment): string {
   const parts: string[] = [];
+  if (assignment.response) parts.push(`response=${assignment.response}`);
   if (assignment.name) parts.push(`a=${encodeURIComponent(assignment.name)}`);
   if (!assignment.cells) parts.push(`level=${assignment.level.slice(-1)}`);
   parts.push(`scope=${assignment.scope}`);
@@ -879,6 +895,7 @@ export function describeAssignment(assignment: Assignment): string {
   if (assignment.meter && assignment.meter !== DEFAULT_METER) {
     parts.push(getMeter(assignment.meter).label);
   }
+  if (assignment.response) parts.push("beat numbers and & only (eighths-v1)");
   if (assignment.guide) parts.push(assignment.guide === "on" ? "guide visible" : "guide hidden");
   if (assignment.feedback === "end") parts.push("answers at the end");
   /* Only when it deviates from what the app does anyway, the same rule `fb`

@@ -1,0 +1,694 @@
+[
+  {
+    "search": "seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr1-quarters-pairs"
+    },
+    "serialized": "?a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "digest": "37bf6746d055cae544341dea8bf905fc325fcad76acf42ae2c6640d0e9df7dd6"
+  },
+  {
+    "search": "seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr1-quarters-pairs",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "digest": "de7b63c2660c1a49e8124ad99283c538f9805e57a91a991c58160c4e1730f119"
+  },
+  {
+    "search": "seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr1-quarters-pairs",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+    "digest": "9abced4645e9de2f0dcec376abd3e44c4a6adecef4bdaf2c3bbbbc9bc589b37a"
+  },
+  {
+    "search": "seq=counting-rhythms&step=2&a=Step%202%3A%20Where%27s%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr2-wheres-the-and"
+    },
+    "serialized": "?a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "digest": "56c38f3f1e34ad26c9b8949330d760a3e2b60f631a33cd4376d51e23b8ef1f66"
+  },
+  {
+    "search": "seq=counting-rhythms&step=2&a=Step%202%3A%20Where%27s%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr2-wheres-the-and",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "digest": "5da3c56f17b5ebb75f033ee0d46a5f3e0583d697be8c50ddb505b8d89d3b0a3b"
+  },
+  {
+    "search": "seq=counting-rhythms&step=2&a=Step%202%3A%20Where%27s%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr2-wheres-the-and",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+    "digest": "b468dfe96f284bc0b30b9d989cb3bd4af255819379aab3becd5e81017e8c0006"
+  },
+  {
+    "search": "seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr3-no-help"
+    },
+    "serialized": "?a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "digest": "798e0238661a98e92e62e6d0239e6d22a413623cf4524686369b09beae412fd1"
+  },
+  {
+    "search": "seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr3-no-help",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "digest": "abe86da81f2eac5c3978e725fc8c52dd363331587a57cb1af8b4fccdd9acd98a"
+  },
+  {
+    "search": "seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr3-no-help",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+    "digest": "9e11f39651946bc92cbed58046615085cebba5e6ce34dde2f807f06a94914924"
+  },
+  {
+    "search": "seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr4-beat-numbers"
+    },
+    "serialized": "?a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "digest": "6ba2f689469c1ba34b2d843e98a9568e54db7d0d2adb0e0647ac3794ec5e2da4"
+  },
+  {
+    "search": "seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr4-beat-numbers",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "digest": "362c81b40d42ac4d3836bbb38c6237c0412dc16434ab4a3b3e8ad8688d97ad33"
+  },
+  {
+    "search": "seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr4-beat-numbers",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+    "digest": "b51f5acc5835c89d059eed26b356375c58e57f6bbdaa059eaf4dabef8582b49a"
+  },
+  {
+    "search": "seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=sixteenths,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr5-sixteenths"
+    },
+    "serialized": "?a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "digest": "d4b76dfd9e8a41cc882a2141e63606e84a9c959dc8654a64ffb530c265be9c39"
+  },
+  {
+    "search": "seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=sixteenths,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr5-sixteenths",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "digest": "7eb376275ac0a0de0e5577a3e9d9c13963d5ac2690d2e03a41d350df7e2a448c"
+  },
+  {
+    "search": "seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=sixteenths,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr5-sixteenths",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+    "digest": "1596574785c23d207106601aebd9ceb543d9b247187b22b9ec80fe85286216e3"
+  },
+  {
+    "search": "seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenth-eighth-sixteenth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr6-combos"
+    },
+    "serialized": "?a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "digest": "7bb16d3f84fde02b44e3d92ebab5c16d4c0a214609a020ecbd0e188ecaf3a744"
+  },
+  {
+    "search": "seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenth-eighth-sixteenth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr6-combos",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "digest": "82dc25d421cf457bd3c8a61d600d48cd19fc928cb8a05cb614a2a3d8daa7910c"
+  },
+  {
+    "search": "seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenth-eighth-sixteenth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr6-combos",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+    "digest": "f4b805d86e05c1c32029ca28eb883fe9a2fb7feafbd6b97ef798d44937104a64"
+  },
+  {
+    "search": "seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn%27t%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest,two-rest,rest-two,rest-three&guide=off&n=12&pass=10&seed=cr7-silent",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth",
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "rest-three",
+        "two-rest",
+        "rest-two"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr7-silent"
+    },
+    "serialized": "?a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+    "digest": "7b0c81b2e67132bfa1701faaa816cc553c8d2bd2e01f3e103e1eaae528038e3e"
+  },
+  {
+    "search": "seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn%27t%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest,two-rest,rest-two,rest-three&guide=off&n=12&pass=10&seed=cr7-silent",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth",
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "rest-three",
+        "two-rest",
+        "rest-two"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr7-silent",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+    "digest": "8e1bcb100d7148f649181c77689e137393134df91bd2eff6fb479e997f867154"
+  },
+  {
+    "search": "seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn%27t%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,rest-sixteenth-rest,three-rest-note,alternating-rests,rest-two-rest,two-rest,rest-two,rest-three&guide=off&n=12&pass=10&seed=cr7-silent",
+    "options": {
+      "level": "level-2",
+      "scope": "beat",
+      "cells": [
+        "eighth-rest",
+        "rest-eighth",
+        "three-rest-note",
+        "rest-sixteenth-rest",
+        "alternating-rests",
+        "rest-two-rest",
+        "rest-three",
+        "two-rest",
+        "rest-two"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr7-silent",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+    "digest": "790e5538d73437f00459145ab1320dd795b065d20cecffba3af18feea8276a86"
+  },
+  {
+    "search": "seq=counting-rhythms&step=8&a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "beat",
+      "system": "standard",
+      "count": 12,
+      "seed": "cr8-cold"
+    },
+    "serialized": "?a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "digest": "48c8a6e77fa659a4030092b280589257ff80c332602371096c91b83bfed10fc8"
+  },
+  {
+    "search": "seq=counting-rhythms&step=8&a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "beat",
+      "system": "standard",
+      "count": 12,
+      "seed": "cr8-cold",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "digest": "5b281cd18ee9afdc059da18837b5396fa93baa02403a50a531965c9f2d0edb4e"
+  },
+  {
+    "search": "seq=counting-rhythms&step=8&a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "beat",
+      "system": "standard",
+      "count": 12,
+      "seed": "cr8-cold",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%208%3A%20Count%20It%20Cold&level=3&scope=beat&guide=off&n=12&pass=11&seed=cr8-cold",
+    "digest": "67318043348cd6aff09daec63f70112ba92acf94f6111ed935796cfe0500cc24"
+  },
+  {
+    "search": "seq=counting-rhythms&step=9&a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "system": "standard",
+      "count": 16,
+      "seed": "cr9-full-measures"
+    },
+    "serialized": "?a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "digest": "f65a3cd83235a1184f46a7b08c1359eaf4398d3c4d4484ede28de61a99f28eee"
+  },
+  {
+    "search": "seq=counting-rhythms&step=9&a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "system": "standard",
+      "count": 16,
+      "seed": "cr9-full-measures",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "digest": "acfdde9e313cb2ce4980c5ec7241069d1be66f2533e9dc40c426ba21b6b0d8a1"
+  },
+  {
+    "search": "seq=counting-rhythms&step=9&a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "system": "standard",
+      "count": 16,
+      "seed": "cr9-full-measures",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%209%3A%20Full%20Measures&level=3&scope=measure&guide=off&n=16&pass=14&seed=cr9-full-measures",
+    "digest": "729b884de856b095dfdbd9e5492616779684e9511adfd05eaa80af5e9e2823bd"
+  },
+  {
+    "search": "seq=counting-rhythms&step=10&a=Step%2010%3A%20Notes%20That%20Last&level=1&scope=measure&cells=whole,half,half-rest,quarter,eighths&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "options": {
+      "level": "level-1",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "half",
+        "half-rest",
+        "whole"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr10-notes-that-last"
+    },
+    "serialized": "?a=Step%2010%3A%20Notes%20That%20Last&scope=measure&cells=quarter,eighths,half,half-rest,whole&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "digest": "6a1d802ae5eff5ee14c82ea46a20ebbe40b814535ef1ed2e926acbf038fec8a3"
+  },
+  {
+    "search": "seq=counting-rhythms&step=10&a=Step%2010%3A%20Notes%20That%20Last&level=1&scope=measure&cells=whole,half,half-rest,quarter,eighths&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "options": {
+      "level": "level-1",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "half",
+        "half-rest",
+        "whole"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr10-notes-that-last",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%2010%3A%20Notes%20That%20Last&scope=measure&cells=quarter,eighths,half,half-rest,whole&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "digest": "de9f9b12f0e1d2ec9b4deed8988fd6e73034c98089bb1f830f1f884cf216277e"
+  },
+  {
+    "search": "seq=counting-rhythms&step=10&a=Step%2010%3A%20Notes%20That%20Last&level=1&scope=measure&cells=whole,half,half-rest,quarter,eighths&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "options": {
+      "level": "level-1",
+      "scope": "measure",
+      "cells": [
+        "quarter",
+        "eighths",
+        "half",
+        "half-rest",
+        "whole"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "cr10-notes-that-last",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%2010%3A%20Notes%20That%20Last&scope=measure&cells=quarter,eighths,half,half-rest,whole&guide=off&n=12&pass=10&seed=cr10-notes-that-last",
+    "digest": "da1331810099db158a8e8eb28b3839fca5c7d91b245bf46fe91a8a3fdfab837d"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=1&a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&meter=3-4&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-1-three-beats"
+    },
+    "serialized": "?a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&scope=measure&meter=3-4&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "digest": "79456db76bd6c09e401d792707dbcdee89aa8e6cd75977eb9f3e2a9ee526947f"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=1&a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&meter=3-4&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-1-three-beats",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&scope=measure&meter=3-4&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "digest": "c09b05f76f969e9e612d0e54b2e827179c26d1fd26028b35b862263c042bf853"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=1&a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&meter=3-4&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "quarter",
+        "eighths",
+        "eighth-rest",
+        "rest-eighth"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-1-three-beats",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%201%3A%20Three%20Beats%2C%20Not%20Four&scope=measure&meter=3-4&cells=quarter,eighths,eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=r3-1-three-beats",
+    "digest": "b07101b6d7da8df3ef863c0c000f50b34fa747b558afcc13fce2d648fbcda58d"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=2&a=Step%202%3A%20Sixteenths%20in%20Three&meter=3-4&scope=measure&cells=sixteenths,eighth-two,two-eighth,dotted-eighth-sixteenth&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-2-sixteenths"
+    },
+    "serialized": "?a=Step%202%3A%20Sixteenths%20in%20Three&scope=measure&meter=3-4&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenths&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "digest": "2d01b3955fa530d0729056ed02fc980923afcd804f045cc98c0d8b0b99bfab8f"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=2&a=Step%202%3A%20Sixteenths%20in%20Three&meter=3-4&scope=measure&cells=sixteenths,eighth-two,two-eighth,dotted-eighth-sixteenth&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-2-sixteenths",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%202%3A%20Sixteenths%20in%20Three&scope=measure&meter=3-4&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenths&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "digest": "8e61f2420e588d65d68d8584327d429e4f9310d32144178890b54461ced4b1eb"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=2&a=Step%202%3A%20Sixteenths%20in%20Three&meter=3-4&scope=measure&cells=sixteenths,eighth-two,two-eighth,dotted-eighth-sixteenth&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "options": {
+      "level": "level-2",
+      "scope": "measure",
+      "meter": "3-4",
+      "cells": [
+        "dotted-eighth-sixteenth",
+        "eighth-two",
+        "two-eighth",
+        "sixteenths"
+      ],
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-2-sixteenths",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%202%3A%20Sixteenths%20in%20Three&scope=measure&meter=3-4&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenths&guide=on&n=12&pass=10&seed=r3-2-sixteenths",
+    "digest": "238384d2360871ea67810ebd1e11d6e749325385616b7e3db53ec1a4bab7b233"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=3&a=Step%203%3A%203/4%20Cold&meter=3-4&level=3&scope=measure&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "meter": "3-4",
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-3-cold"
+    },
+    "serialized": "?a=Step%203%3A%203%2F4%20Cold&level=3&scope=measure&meter=3-4&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "digest": "c7c8bf06b76dbdeadcab069a8df6f0a92e4bd14448d32ee08ff333820310ba27"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=3&a=Step%203%3A%203/4%20Cold&meter=3-4&level=3&scope=measure&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "meter": "3-4",
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-3-cold",
+      "variant": "student-a"
+    },
+    "serialized": "?a=Step%203%3A%203%2F4%20Cold&level=3&scope=measure&meter=3-4&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "digest": "e18dfef2114c7805ebb57519c8c36646faee8aacc58ac4d4eed2478397a5dab0"
+  },
+  {
+    "search": "seq=rhythms-in-three&step=3&a=Step%203%3A%203/4%20Cold&meter=3-4&level=3&scope=measure&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "options": {
+      "level": "level-3",
+      "scope": "measure",
+      "meter": "3-4",
+      "system": "standard",
+      "count": 12,
+      "seed": "r3-3-cold",
+      "variant": "student-b"
+    },
+    "serialized": "?a=Step%203%3A%203%2F4%20Cold&level=3&scope=measure&meter=3-4&guide=off&n=12&pass=10&seed=r3-3-cold",
+    "digest": "a8a3e9bc6e654e8c53b905b536c9c6dbf6a297a8d0ed4406005e7b55e61e30e3"
+  }
+]

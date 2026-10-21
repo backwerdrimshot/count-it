@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-21.3";
+export const COUNT_IT_BUILD = "2026-10-21.5";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -56,10 +56,11 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
-  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "class", "seed", "sys"],
-  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys"],
+  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "class", "seed", "sys", "response"],
+  lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys", "response"],
+  responseVocabularies: [{ id: "eighths-v1", status: "local-review", countingSystem: "standard", cells: ["quarter", "eighths"], meters: ["2-4", "3-4", "4-4"], positions: [0, 2], beatChoices: 3, measureChoices: 4 }],
   assignmentLink:
-    "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
+    "The opt-in response=eighths-v1 profile restricts guide and choices to beat numbers and & for quarter/pair rounds in 2/4, 3/4 or 4/4; absent retains legacy responses. A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
     "vocabulary by catalog id, `scope` chooses one beat or one measure, `meter` chooses 2/4, " +
     "3/4, 4/4, 5/4 or 7/4, `guide` fixes the " +
     "subdivision-guide policy, `fb` chooses whether the correct answer appears after each " +
@@ -145,7 +146,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     transmitsResults: false,
     description: "Director-led framed practice on approved Praxis hosts; no learner launch or persistent Program results.",
   },
-  freePracticeDefaults: { level: "level-1", scope: "measure", meter: "4-4", guide: "on" },
+  freePracticeDefaults: { level: "level-1", scope: "beat", meter: "4-4", guide: "on" },
   freePracticeFeatures: ["individual-rhythm-selection", "optional-saved-setup", "synthesized-playback", "aligned-subdivision-guide", "download-result-png", "local-completed-challenge-history"],
   acceptedInputSources: ["touch", "mouse", "computer-keyboard"],
   evidenceTypes: ["A1_ANSWER_CORRECTNESS"],
@@ -164,10 +165,10 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "no result object at all — the card was assembled inline — so the envelope was built rather " +
     "than renamed. `skillReferences` is null and says so: the field is nullable across the family " +
     "precisely so an app with no reconciled vocabulary can decline rather than invent ids. " +
-    "`activity.contentVersion` is null because questions are generated from the conditions and a " +
-    "seed, which already reproduce the round. In measure scope a miss is attributed to every cell " +
-    "in the measure, because the question is answered as a whole — the finest attribution the " +
-    "format allows, not a claim that all four were misread. Emitting the shape does not " +
+    "`activity.contentVersion` is null for legacy rounds and `eighths-v1` for assignments using " +
+    "that response profile. Settings plus the seed reproduce each round. Measure questions are " +
+    "reported as whole-question outcomes; a missed bar is not attributed to every cell in it. " +
+    "Emitting the shape does not " +
     "send this result; site-traffic measurement is separate.",
   supportDimensions:
     "The subdivision guide is a support, not a preference: an assignment pins it, and a gate " +

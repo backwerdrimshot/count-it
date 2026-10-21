@@ -69,6 +69,8 @@ export type Vocabulary =
 /** Every field a teacher can pin. `null` means "leave it to the student" for a
  *  control the student has, or "the app's own default" for one they do not. */
 export interface BuilderState {
+  /** Preserved when reopening a versioned round; not offered as a new picker. */
+  readonly response?: "eighths-v1";
   readonly name: string;
   readonly vocabulary: Vocabulary;
   readonly scope: "beat" | "measure" | null;
@@ -132,6 +134,7 @@ export function builderStateFromQuery(search: string): BuilderState | null {
   if (!parsed.ok) return null;
   const a = parsed.assignment;
   return {
+    ...(a.response ? { response: a.response } : {}),
     name: a.name ?? '',
     vocabulary: a.cells ? { kind: 'cells', cells: a.cells }
       : params.has('level') ? { kind: 'level', level: Number(a.level.slice(-1)) as 1 | 2 | 3 } : { kind: 'student' },
@@ -207,6 +210,7 @@ export function buildQuery(state: BuilderState): string {
     const chosen = new Set(state.vocabulary.cells);
     parts.push(`cells=${ALL_RHYTHM_CELLS.filter((cell) => chosen.has(cell.id)).map((cell) => cell.id).join(",")}`);
   }
+  if (state.response) parts.push(`response=${state.response}`);
   if (state.guide) parts.push(`guide=${state.guide}`);
   if (state.feedback) parts.push(`fb=${state.feedback}`);
   if (state.retry) parts.push(`retry=${state.retry}`);

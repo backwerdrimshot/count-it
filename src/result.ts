@@ -188,6 +188,7 @@ export function createPraxisEvidenceResult(options: {
 
   const settings: Record<string, string> = {};
   if (assignment) {
+    if (assignment.response) settings.response = assignment.response;
     if (assignment.name) settings.a = assignment.name;
     if (!assignment.cells) settings.level = String(level).slice(-1);
     settings.scope = assignment.scope;
@@ -219,11 +220,11 @@ export function createPraxisEvidenceResult(options: {
       type: "choose-the-count" as const,
       version: "1.0.0",
       /* Null, and stated rather than synthesized. This app does not version its
-         question content: questions are generated from the conditions below and
+         legacy question content: questions are generated from the conditions below and
          a seed, so the conditions plus `settings.seed` already reproduce the
          round exactly. A made-up string would read as a content revision that
-         never happened. */
-      contentVersion: null,
+         never happened. The opt-in response profile supplies its actual version. */
+      contentVersion: assignment?.response ?? null,
       scoringRuleVersion: SCORING_RULE_VERSION,
     },
     conditions: {
