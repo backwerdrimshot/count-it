@@ -40,6 +40,17 @@ describe("reading pasted summaries", () => {
     expect(STATUS_TEXT[row.status]).toBe("Score is impossible");
     expect(STATUS_TEXT[row.status]).not.toBe(STATUS_TEXT.invalid);
   });
+  it("still calls an impossible score impossible when its code is missing or wrong", () => {
+    const text = summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 });
+    const noCode = text.split("\n").filter((line) => !/^Code:/.test(line)).join("\n");
+    const wrongCode = text.replace(/Code: .*/, "Code: BRS-CI-261021-825-ZZZ9");
+    for (const variant of [noCode, wrongCode]) {
+      const [row] = parseSummaries(variant);
+      expect(row.status).toBe("impossible");
+      const result = canvasCsv([row], { column: "Step 2", score: "correct", onlyChecked: false, assignment: "Step 2" });
+      expect(result.included).toBe(0);
+    }
+  });
   it("keeps an impossible score out of the Canvas export even with unchecked rows included", () => {
     const rows = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
     const result = canvasCsv(rows, { column: "Step 2", score: "correct", onlyChecked: false, assignment: "Step 2" });
