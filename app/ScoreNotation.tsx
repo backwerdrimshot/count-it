@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tuplet, Voice } from 'vexflow';
 import { countLabelsForBeat, staffFurniture, type CountingProfileId } from '../src/rhythm';
 import { scoreLayout, type RhythmScore } from '../src/score';
@@ -8,6 +8,9 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
   score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; countsHidden?: boolean; revealed?: boolean; activeBeat?: number | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  // Set from the drawn width: when the bar is wider than its panel, the panel scrolls and says so.
+  const [overflowing, setOverflowing] = useState(false);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -95,6 +98,8 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       svg.setAttribute('data-grid-unit', String(layout.unit));
       add('line', { x1: String(layout.start), x2: String(layout.start), y1: '24', y2: showGuide ? '179' : '110', stroke: '#9a552e', 'stroke-width': '2', 'data-playhead': 'true', visibility: 'hidden' });
       notes.forEach((note, i) => add('circle', { cx: String(note.getNoteHeadBeginX() + note.getGlyphWidth() / 2), cy: '190', r: '0', 'data-note-at': String(score.notes[i].at), 'data-note-x': String(note.getNoteHeadBeginX() + note.getGlyphWidth() / 2) }));
+      const panel = scroller.current;
+      setOverflowing(Boolean(panel) && panel!.scrollWidth > panel!.clientWidth + 1);
     };
     draw();
     const observer = new ResizeObserver(draw); observer.observe(element);
@@ -108,5 +113,13 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     const x = Number(svg.getAttribute('data-grid-start')) + (activeBeat ?? 0) * Number(svg.getAttribute('data-grid-unit'));
     cursor.setAttribute('x1', String(x)); cursor.setAttribute('x2', String(x));
   }, [activeBeat]);
-  return <div className="notation-scroll"><div className="notation-canvas balanced-score" ref={host} /></div>;
+  // The panel is a keyboard stop, so keyboard users can scroll it with the arrow keys.
+  return (
+    <>
+      <div className="notation-scroll" ref={scroller} tabIndex={0} role="region" aria-label={`${label} Scrolls sideways when the bar is wider than the screen.`}>
+        <div className="notation-canvas balanced-score" ref={host} />
+      </div>
+      {overflowing && <p className="notation-scroll-cue">Scroll sideways to see the rest of the bar.</p>}
+    </>
+  );
 }

@@ -662,6 +662,17 @@ a:focus-visible,
   overflow-x: auto;
 }
 
+.notation-scroll:focus-visible {
+  outline: 3px solid #7CA368;
+  outline-offset: 2px;
+}
+
+.notation-scroll-cue {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: #55584f;
+}
+
 .notation-canvas {
   min-height: 112px;
   color: var(--paper-ink);
