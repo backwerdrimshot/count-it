@@ -13,7 +13,9 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     if (!element) return;
     const draw = () => {
       element.replaceChildren();
-      const layout = scoreLayout(score, element.clientWidth);
+      // The count row needs the room an eighth-note bar gets, even on a sparse bar.
+      const countsShown = !countsHidden || revealed;
+      const layout = scoreLayout(score, element.clientWidth, { countRow: showGuide && countsShown });
       const height = showGuide ? 205 : 140;
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(layout.width, height);
@@ -66,7 +68,6 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       };
       // A scored question can hold the count back until it is answered, so the student
       // has to produce the count instead of matching it to one printed under the staff.
-      const countsShown = !countsHidden || revealed;
       if (showGuide && countsShown) {
         add('line', { x1: String(layout.start), x2: String(layout.end), y1: '142', y2: '142', stroke: '#b7b5a5' });
         for (let beat = 0; beat < score.beats; beat++) {

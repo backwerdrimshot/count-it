@@ -38,12 +38,12 @@ export function scoreAnswer(score: RhythmScore, system: CountingProfileId): stri
       : countLabelsForBeat(beat + 1, system)[Math.round((note.at - beat) * 4)];
   }).join(' ');
 }
-export function scoreLayout(score: RhythmScore, available: number) {
+export function scoreLayout(score: RhythmScore, available: number, options: { countRow?: boolean } = {}) {
   /* Room per beat follows the finest note in the bar. A bar of quarters, halves and
-     wholes needs far less, so it can fit a phone panel; sixteenths and eighths keep
-     the room they need to be read. */
+     wholes needs far less, unless it draws a count row: that row labels every quarter
+     of a beat, so it needs the room an eighth-note bar gets, or the labels touch. */
   const finest = Math.min(...score.notes.map(n => n.length));
-  const perBeat = finest <= 0.25 ? 112 : finest <= 0.5 ? 68 : 24;
+  const perBeat = finest <= 0.25 ? 112 : finest <= 0.5 ? 68 : options.countRow ? 68 : 24;
   const minimum = score.fragment ? 240 : 124 + score.beats * perBeat;
   const width = score.fragment ? 260 : Math.max(minimum, Math.min(820, available));
   const start = score.fragment ? 62 : 94;
