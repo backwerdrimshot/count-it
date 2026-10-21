@@ -54,6 +54,7 @@ export default function ClassSummary() {
   const counts = useMemo(() => ({
     valid: rows.filter((row) => row.status === "valid").length,
     invalid: rows.filter((row) => row.status === "invalid").length,
+    impossible: rows.filter((row) => row.status === "impossible").length,
   }), [rows]);
 
   function downloadCanvas() {
@@ -62,6 +63,7 @@ export default function ClassSummary() {
     const left = [
       result.skipped.otherAssignment ? `${result.skipped.otherAssignment} for another assignment or practice` : "",
       result.skipped.codeFailed ? `${result.skipped.codeFailed} without a checked code` : "",
+      result.skipped.impossible ? `${result.skipped.impossible} with an impossible score` : "",
       result.skipped.noStudent ? `${result.skipped.noStudent} with no name or class ID` : "",
       result.skipped.duplicates ? `${result.skipped.duplicates} repeat results (best score kept)` : "",
     ].filter(Boolean);
@@ -102,7 +104,8 @@ export default function ClassSummary() {
           {rows.length === 0
             ? "No summaries yet."
             : `${rows.length} ${rows.length === 1 ? "summary" : "summaries"} · ${counts.valid} code${counts.valid === 1 ? "" : "s"} check` +
-              (counts.invalid ? ` · ${counts.invalid} do${counts.invalid === 1 ? "es" : ""} not match` : "")}
+              (counts.invalid ? ` · ${counts.invalid} do${counts.invalid === 1 ? "es" : ""} not match` : "") +
+              (counts.impossible ? ` · ${counts.impossible} ${counts.impossible === 1 ? "has" : "have"} an impossible score` : "")}
         </p>
 
         {rows.length > 0 && (
@@ -128,7 +131,7 @@ export default function ClassSummary() {
                       <td data-label="Threshold met">{row.metGoal === null ? "No pass mark" : row.metGoal ? "Yes" : "Not yet"}</td>
                       {withTime && <td data-label="Time">{row.time ?? "—"}</td>}
                       <td data-label="Code" className={`code-${row.status}`}>
-                        <span className="code-status">{row.status === "valid" ? "✓ " : row.status === "invalid" ? "✗ " : ""}{STATUS_TEXT[row.status]}</span>
+                        <span className="code-status">{row.status === "valid" ? "✓ " : row.status === "invalid" || row.status === "impossible" ? "✗ " : ""}{STATUS_TEXT[row.status]}</span>
                         {row.code && <code>{row.code}</code>}
                       </td>
                     </tr>

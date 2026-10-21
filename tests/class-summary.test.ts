@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { verificationCode } from "../src/assignment";
-import { canvasCsv, csvCell, parseSummaries, stampLine, summaryCsv } from "../src/class-summary";
+import { STATUS_TEXT, canvasCsv, csvCell, parseSummaries, stampLine, summaryCsv } from "../src/class-summary";
 import { timeTicketLine } from "../src/time-limit";
 import { hintsTicketLine } from "../src/hints";
 
@@ -34,9 +34,17 @@ function summary(options: {
 }
 
 describe("reading pasted summaries", () => {
-  it("refuses a score that cannot happen, even when its checksum matches", () => {
+  it("refuses a score that cannot happen, even when its checksum matches, and says so", () => {
     const [row] = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
-    expect(row.status).toBe("invalid");
+    expect(row.status).toBe("impossible");
+    expect(STATUS_TEXT[row.status]).toBe("Score is impossible");
+    expect(STATUS_TEXT[row.status]).not.toBe(STATUS_TEXT.invalid);
+  });
+  it("keeps an impossible score out of the Canvas export even with unchecked rows included", () => {
+    const rows = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
+    const result = canvasCsv(rows, { column: "Step 2", score: "correct", onlyChecked: false, assignment: "Step 2" });
+    expect(result.included).toBe(0);
+    expect(result.skipped.impossible).toBe(1);
   });
   it("checks the hints count on a summary from a hints-on assignment", () => {
     const text = summary({ assignment: "Step 2", student: "Ana", correct: 10, total: 12, hints: 2 });

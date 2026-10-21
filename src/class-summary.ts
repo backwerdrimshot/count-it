@@ -32,6 +32,8 @@ export type CodeStatus =
   | "valid"
   /** The facts and the code disagree: something was changed after copying. */
   | "invalid"
+  /** The score cannot be right: more correct answers than questions, or no questions. */
+  | "impossible"
   /** No Stamp line (made before this check existed), so it cannot be checked. */
   | "unchecked"
   /** The other app's summary; check it on that app's page. */
@@ -147,9 +149,10 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   if (!finishedAt || Number.isNaN(finishedAt.getTime()) || stamp !== finishedAt.toISOString()) {
     return { ...base, status: "unchecked" };
   }
-  /* A checksum proves only that the copied text matches its code, and anyone can
-     make a code for any numbers. A score that cannot happen is refused anyway. */
-  if (correct === null || total === null || total === 0 || correct > total) return { ...base, status: "invalid" };
+  if (correct === null || total === null) return { ...base, status: "invalid" };
+  /* Its own status, not "invalid": the code may well match, because anyone can make
+     a code for any numbers. The score itself is what is wrong. */
+  if (total === 0 || correct > total) return { ...base, status: "impossible" };
   if (attemptRaw !== undefined && !/^\d+$/.test(attemptRaw)) return { ...base, status: "invalid" };
   if (hintsRaw !== undefined && hintsUsed === null) return { ...base, status: "invalid" };
 
@@ -189,6 +192,7 @@ export function parseSummaries(text: string): ParsedSummary[] {
 export const STATUS_TEXT: Record<CodeStatus, string> = {
   valid: "Checksum matches",
   invalid: "Code does not match",
+  impossible: "Score is impossible",
   unchecked: "Cannot check (older summary)",
   "other-app": `${SIBLING.name} summary`,
   missing: "No code",
@@ -241,6 +245,8 @@ export interface CanvasExport {
     readonly duplicates: number;
     /** Summaries for a different assignment (or practice) than the one exported. */
     readonly otherAssignment: number;
+    /** Scores that cannot be right, whether or not their code matches. */
+    readonly impossible: number;
   };
 }
 
@@ -265,11 +271,12 @@ export function canvasCsv(
     readonly assignment: string | null;
   },
 ): CanvasExport {
-  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0, otherAssignment: 0 };
+  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0, otherAssignment: 0, impossible: 0 };
   const best = new Map<string, { name: string; score: number }>();
   for (const row of rows) {
     if (row.correct === null || row.total === null) continue;
     if ((row.assignment ?? null) !== options.assignment) { skipped.otherAssignment += 1; continue; }
+    if (row.status === "impossible") { skipped.impossible += 1; continue; }
     if (options.onlyChecked && row.status !== "valid") { skipped.codeFailed += 1; continue; }
     const name = row.studentId.trim();
     if (!name) { skipped.noStudent += 1; continue; }
