@@ -70,7 +70,7 @@ export type Vocabulary =
  *  control the student has, or "the app's own default" for one they do not. */
 export interface BuilderState {
   /** Preserved when reopening a versioned round; not offered as a new picker. */
-  readonly response?: "eighths-v1";
+  readonly response?: "eighths-v1" | "half-beats-v1";
   readonly name: string;
   readonly vocabulary: Vocabulary;
   readonly scope: "beat" | "measure" | null;

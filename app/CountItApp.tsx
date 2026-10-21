@@ -1,5 +1,6 @@
 "use client";
-import { BEGINNER_RESPONSE_LESSON } from "../src/assignment/beginner-v1";
+import { misconceptionMessage } from "../src/question/feedback";
+import { responseLessonForAssignment } from "../src/assignment/repairs-v1";
 import { ResponseVocabularyContext } from "./ResponseVocabulary";
 import { useRoundChangeGuard } from "./RoundChangeGuard";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
@@ -46,7 +47,6 @@ import {
   resetSession,
   type CountQuestion,
   type ChallengeSession,
-  type QuestionChoice,
   type QuestionScope,
 } from "../src/question";
 import { COUNT_IT_BUILD } from "../src/capabilities";
@@ -133,7 +133,7 @@ function assignmentLocks(assignment: Assignment, pinned: readonly string[]): str
 }
 
 interface RoundSpec {
-  readonly response?: "eighths-v1";
+  readonly response?: "eighths-v1" | "half-beats-v1";
   readonly level: LevelId;
   readonly scope: QuestionScope;
   readonly meter?: MeterId;
@@ -200,29 +200,6 @@ function ReadingScaffold({ prompt, system }: { prompt: RhythmPrompt; system: Cou
   );
 }
 
-function misconceptionMessage(choice: QuestionChoice | undefined, response?: "eighths-v1"): string {
-  if (response) {
-    switch (choice?.category) {
-      case "added_sound": return "That count adds a note start where none is written.";
-      case "omitted_sound": return "That count leaves out a written note start.";
-      case "shifted_subdivision": return "That count moves a note start between the beat and its halfway position.";
-    }
-  }
-  switch (choice?.category) {
-    case "omitted_sound":
-      return "That choice leaves out a subdivision where a note sounds.";
-    case "added_sound":
-      return "That choice adds a syllable where the rhythm is silent.";
-    case "shifted_subdivision":
-      return "That choice shifts a note to a different subdivision.";
-    case "eighth_sixteenth_confusion":
-      return "Check which subdivision position the note belongs on.";
-    case "wrong_beat_number":
-      return "The subdivision shape is close, but the beat number is not.";
-    default:
-      return "Compare each notehead with the complete subdivision underneath it.";
-  }
-}
 
 function SetupControls({
   level,
@@ -1820,9 +1797,11 @@ export default function CountItApp() {
     setSession((current) => advanceSession(current));
   }
 
+  const assignmentLesson = responseLessonForAssignment(assignment);
+
   return (
     <ResponseVocabularyContext.Provider value={assignment?.response}>
-    <div className={`app-shell${assignment?.response ? " beginner-response" : ""}`}>
+    <div className={`app-shell${assignmentLesson ? " beginner-response" : ""}`}>
       <a className="skip-link" href="#trainer">Skip to the trainer</a>
       <header className="site-header">
         <a className="brand-lockup" href="#top" aria-label="Count It home">
@@ -1842,7 +1821,7 @@ export default function CountItApp() {
       </nav>
 
       <main id="top">
-        {assignment?.response && <p className="beginner-response-lesson" role="note">{BEGINNER_RESPONSE_LESSON}</p>}
+        {assignmentLesson && <p className="beginner-response-lesson" role="note">{assignmentLesson}</p>}
         {/* The page's one <h1> used to sit in the hero, which now lives in the closed
             Help dialog and so is not in the page outline. It stays here, visually
             hidden, so the heading is there for screen readers and outline tools. */}

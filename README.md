@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-21.5`
+- **Build:** `2026-10-21.6`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -456,3 +456,7 @@ The laptop view keeps the main instrument or exercise and its practice controls 
 ## Local supplementary sequence (unpublished)
 
 `/beginner-v1` previews the separately versioned quarter/pair bridge. It does not replace the published assignment catalog. See [integration handoff](docs/beginner-v1-handoff.md) for IDs, links, prerequisites, response vocabulary and release gates. The `response=eighths-v1` setting is required: older builds ignore it and must not receive these links.
+
+## Local gap-repair candidates (unpublished)
+
+`/repairs-v1` contains three branch-specific supported candidates before legacy Counting Rhythms 4, 7 and 10. These are excluded from presets and published catalogs. `response=half-beats-v1` is a new opt-in contract for the exact 4/4 rest-bar and long-value pools; it does not broaden `eighths-v1`. New links require a future verified capability release. See `docs/repairs-v1-handoff.md` for prerequisites, exact coverage and integration limits.

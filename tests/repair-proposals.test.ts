@@ -24,7 +24,7 @@ const report={status:"proposal-diagnostics-only",base:"15e701cac75d2b37f1451a678
 const file=new URL("../docs/repair-proposal-evidence.json",import.meta.url);
 if(process.env.UPDATE_REPAIR_EVIDENCE==="1") writeFileSync(file,JSON.stringify(report,null,2)+"\n");
 
-describe("unimplemented repair proposal diagnostics",()=>{
+describe("historical repair proposal diagnostics",()=>{
   it("has three exact, valid supported practice links with documented capacities",()=>{
     expect(diagnostics).toHaveLength(3);
     expect(diagnostics.map(d=>d.capacity)).toEqual([256,3,44]);

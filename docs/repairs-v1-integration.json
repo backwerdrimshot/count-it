@@ -1,0 +1,926 @@
+{
+  "schema": "count-it.repair-candidates.v1",
+  "status": "local-unpublished",
+  "owner": "Charlie / Count It app",
+  "base": "e41e6b873d52ee8fa4bb90a0d9eef9dbe1fcad2e",
+  "sequenceId": "counting-repairs-v1",
+  "placement": "Three separate entry points, not consecutive levels",
+  "capabilityRequirement": "Verify half-beats-v1 exact pools, measure scope and4/4; do not infer from a date or HTTP success. Step2 uses existing full-position responses.",
+  "playingConnection": "After supported reading, choose a comfortable pulse with a teacher or partner. Speak a bar, then clap or play it while someone else keeps the beat. Keep a quarter note sounding or moving for the whole beat; divide paired eighths evenly. Repeat across a barline, then try a different bar. Observe pulse, even halves, duration and continuity separately from the app score. These skills need live observation; choosing a count on screen does not demonstrate them. Add a silent span or a long note, then change its placement in a new paper bar. Observe elapsed pulse, silent duration, held duration and next attack separately. Use the free kit/lesson for a later check; app accuracy is not validated mastery.",
+  "entries": [
+    {
+      "title": "Supported mixed-rest bars",
+      "scope": "measure",
+      "count": 8,
+      "cells": "quarter,eighths,eighth-rest,rest-eighth",
+      "response": "half-beats-v1",
+      "seed": "cr-repair-v1-rest-bars",
+      "beforeLegacyStep": 4,
+      "lesson": "In 4/4, follow four quarter-note beats. A quarter starts on the number; paired eighths start on the number and &. An eighth note followed by an eighth rest starts only on the number; an eighth rest followed by an eighth note starts only on &. Both rests still occupy time. Here & alone can be correct. Choices describe written note starts, not duration; | separates nonempty groups of starts. A quarter and an eighth followed by a rest share a count, so this app cannot tell whether you distinguished their durations. No e or a responses are used in this repair.",
+      "description": "Eight distinct notation bars from 256; this seed has seven distinct correct-count patterns. Every target cell appears in at least five bars. Quarter duration and eighth-note/rest duration can share a count, so selection does not assess that contrast.",
+      "prerequisites": {
+        "notation": "Prepare quarter notes, paired eighths, eighth-note/rest and rest/eighth-note order with Notes & Rests and the inline rest examples. Original step 2 is optional and requires extra four-position response instruction. This task adds supported whole-bar tracking.",
+        "meter": "Read 4/4 as four quarter-note beats, tracking 1–4 through rests and the barline.",
+        "response": "Use numbered starts and & only; & alone is now a valid correct answer. Read | as a separator of nonempty start groups.",
+        "support": "Guide on, immediate feedback, no hints, no pass threshold or time limit. Retry repeats this seed; a supported score may reflect guide matching."
+      },
+      "coverage": {
+        "capacity": 256,
+        "distinctNotation": 8,
+        "distinctCorrectCounts": 7,
+        "questionExposures": {
+          "quarter": 7,
+          "eighths": 7,
+          "eighth-rest": 5,
+          "rest-eighth": 5
+        },
+        "occurrences": {
+          "quarter": 10,
+          "eighths": 10,
+          "eighth-rest": 5,
+          "rest-eighth": 7
+        }
+      },
+      "links": {
+        "lesson": "https://backwerdrhythmshop.com/lessons/notes-and-rests/",
+        "meter": "https://backwerdrhythmshop.com/lessons/time-signatures/",
+        "practiceKit": "https://backwerdrhythmshop.com/resources/rhythm-practice-kits/",
+        "prerequisite": "https://backwerdrhythmshop.com/lessons/notes-and-rests/",
+        "prerequisiteRequirement": "Primary preparation is teacher-led Notes & Rests and the inline rest examples. Original step 2 below is optional: its wrong choices can use e and a, so teach number e & a and wrong beat labels before opening it.",
+        "prerequisiteLegacySteps": [
+          2
+        ],
+        "next": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+        "nextLegacyStep": 4,
+        "nextRequirement": "The unchanged legacy next steps can include e and a in wrong choices even when the written rhythm uses only quarter/eighth or long values. Before using those links, teach four equal positions (number e & a), added/omitted/moved starts, and wrong beat labels. This half-beat repair alone does not prepare that extra response demand. A teacher-led changed bar is an alternative next check.",
+        "prerequisiteLaunches": [
+          "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and"
+        ],
+        "nextLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers"
+      },
+      "id": "counting-repairs-v1-1",
+      "step": 1,
+      "query": "?seq=counting-repairs-v1&step=1&a=Repair+v1.1%3A+Supported+mixed-rest+bars&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=on&fb=each&retry=free&n=8&hints=off&seed=cr-repair-v1-rest-bars&response=half-beats-v1",
+      "settings": {
+        "seq": "counting-repairs-v1",
+        "step": "1",
+        "a": "Repair v1.1: Supported mixed-rest bars",
+        "sys": "standard",
+        "scope": "measure",
+        "meter": "4-4",
+        "cells": "quarter,eighths,eighth-rest,rest-eighth",
+        "guide": "on",
+        "fb": "each",
+        "retry": "free",
+        "n": "8",
+        "hints": "off",
+        "seed": "cr-repair-v1-rest-bars",
+        "response": "half-beats-v1"
+      },
+      "minimumCapability": "half-beats-v1",
+      "localLaunch": "/?seq=counting-repairs-v1&step=1&a=Repair+v1.1%3A+Supported+mixed-rest+bars&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=on&fb=each&retry=free&n=8&hints=off&seed=cr-repair-v1-rest-bars&response=half-beats-v1",
+      "futureProductionLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-repairs-v1&step=1&a=Repair+v1.1%3A+Supported+mixed-rest+bars&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=on&fb=each&retry=free&n=8&hints=off&seed=cr-repair-v1-rest-bars&response=half-beats-v1",
+      "questions": [
+        {
+          "id": "question-1-4-4:measure:quarter+rest-eighth+quarter+rest-eighth",
+          "cells": [
+            "quarter",
+            "rest-eighth",
+            "quarter",
+            "rest-eighth"
+          ],
+          "answer": "1 | & | 3 | &",
+          "choices": [
+            {
+              "id": "q1-d2",
+              "label": "1 | 2 & | 3 | &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-correct",
+              "label": "1 | & | 3 | &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q1-d1",
+              "label": "& | & | 3 | &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d3",
+              "label": "1 | & | & | &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-2-4-4:measure:quarter+quarter+rest-eighth+eighths",
+          "cells": [
+            "quarter",
+            "quarter",
+            "rest-eighth",
+            "eighths"
+          ],
+          "answer": "1 | 2 | & | 4 &",
+          "choices": [
+            {
+              "id": "q2-correct",
+              "label": "1 | 2 | & | 4 &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q2-d2",
+              "label": "1 | 2 | 3 | 4 &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d3",
+              "label": "1 | 2 | & | &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d1",
+              "label": "1 & | 2 | & | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-3-4-4:measure:eighths+eighths+quarter+eighth-rest",
+          "cells": [
+            "eighths",
+            "eighths",
+            "quarter",
+            "eighth-rest"
+          ],
+          "answer": "1 & | 2 & | 3 | 4",
+          "choices": [
+            {
+              "id": "q3-d3",
+              "label": "1 & | 2 | 3 | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d2",
+              "label": "1 & | 2 & | & | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d1",
+              "label": "1 & | 2 & | 3 | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-correct",
+              "label": "1 & | 2 & | 3 | 4",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-4-4-4:measure:rest-eighth+eighths+rest-eighth+eighth-rest",
+          "cells": [
+            "rest-eighth",
+            "eighths",
+            "rest-eighth",
+            "eighth-rest"
+          ],
+          "answer": "& | 2 & | & | 4",
+          "choices": [
+            {
+              "id": "q4-d1",
+              "label": "1 & | 2 & | & | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-correct",
+              "label": "& | 2 & | & | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q4-d2",
+              "label": "& | 2 & | 3 | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d3",
+              "label": "& | & | & | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-5-4-4:measure:eighth-rest+quarter+rest-eighth+eighths",
+          "cells": [
+            "eighth-rest",
+            "quarter",
+            "rest-eighth",
+            "eighths"
+          ],
+          "answer": "1 | 2 | & | 4 &",
+          "choices": [
+            {
+              "id": "q5-correct",
+              "label": "1 | 2 | & | 4 &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q5-d3",
+              "label": "1 | 2 | 3 & | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d1",
+              "label": "1 | 2 | & | &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d2",
+              "label": "& | 2 | & | 4 &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-6-4-4:measure:eighths+quarter+eighth-rest+eighths",
+          "cells": [
+            "eighths",
+            "quarter",
+            "eighth-rest",
+            "eighths"
+          ],
+          "answer": "1 & | 2 | 3 | 4 &",
+          "choices": [
+            {
+              "id": "q6-d1",
+              "label": "1 & | 2 & | 3 | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-correct",
+              "label": "1 & | 2 | 3 | 4 &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q6-d2",
+              "label": "1 & | 2 | & | 4 &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d3",
+              "label": "1 | 2 | 3 | 4 &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-7-4-4:measure:rest-eighth+quarter+eighths+quarter",
+          "cells": [
+            "rest-eighth",
+            "quarter",
+            "eighths",
+            "quarter"
+          ],
+          "answer": "& | 2 | 3 & | 4",
+          "choices": [
+            {
+              "id": "q7-correct",
+              "label": "& | 2 | 3 & | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q7-d3",
+              "label": "& | 2 & | 3 & | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-d2",
+              "label": "& | 2 | 3 | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-d1",
+              "label": "1 | 2 | 3 & | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-8-4-4:measure:eighth-rest+eighths+quarter+eighths",
+          "cells": [
+            "eighth-rest",
+            "eighths",
+            "quarter",
+            "eighths"
+          ],
+          "answer": "1 | 2 & | 3 | 4 &",
+          "choices": [
+            {
+              "id": "q8-d2",
+              "label": "1 & | 2 & | 3 | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-d1",
+              "label": "1 | 2 & | 3 | &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-correct",
+              "label": "1 | 2 & | 3 | 4 &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q8-d3",
+              "label": "& | 2 & | 3 | 4 &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Prepare three sixteenth-rest cells",
+      "scope": "beat",
+      "count": 6,
+      "cells": "two-rest,rest-two,rest-three",
+      "seed": "cr-repair-v1-rest-cells",
+      "beforeLegacyStep": 7,
+      "lesson": "This one-beat fragment starts on beat 1. Divide that beat into four equal positions: 1 e & a. A sixteenth note occupies one position; an eighth note or rest occupies two. Two sixteenth notes then an eighth rest count 1 e. An eighth rest then two sixteenth notes count & a. A sixteenth rest then three sixteenth notes count e & a. Silent positions still take time. Wrong choices may add, omit or move a start, or use 2 as a wrong beat number; 2 is not a second beat in this fragment. Read choices as note starts, not the duration of a sound.",
+      "description": "The complete three-cell target pool, each encountered twice in six responses. These are purposeful supported repetitions, not six different rhythms or an independent check.",
+      "prerequisites": {
+        "notation": "First prepare sixteenth notes/rests, beaming, eighth rests and the cells from legacy steps 5–6. Teach the three target note/rest patterns explicitly with the lesson above.",
+        "meter": "The fragment covers only beat 1 in configured 4/4; its display omits the time signature. It does not assess four-beat tracking.",
+        "response": "Teach all four equal positions 1 e & a; 2 in a wrong choice is a wrong beat label. All distractor tokens are within this stated convention.",
+        "support": "Guide on, immediate feedback, same-round replay, no hints/pass/time limit. Count local repeats separately; these scores do not establish first-ever performance."
+      },
+      "coverage": {
+        "capacity": 3,
+        "distinctNotation": 3,
+        "distinctCorrectCounts": 3,
+        "questionExposures": {
+          "two-rest": 2,
+          "rest-two": 2,
+          "rest-three": 2
+        },
+        "occurrences": {
+          "rest-three": 2,
+          "two-rest": 2,
+          "rest-two": 2
+        }
+      },
+      "links": {
+        "lesson": "https://backwerdrhythmshop.com/lessons/sixteenth-rhythms/",
+        "notes": "https://backwerdrhythmshop.com/lessons/notes-and-rests/",
+        "practiceKit": "https://backwerdrhythmshop.com/resources/rhythm-practice-kits/",
+        "prerequisite": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+        "prerequisiteRequirement": "Teach the sixteenth lesson and full-position response vocabulary before original steps 5 and 6, then explicitly prepare the three rest cells above.",
+        "prerequisiteLegacySteps": [
+          5,
+          6
+        ],
+        "next": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+        "nextLegacyStep": 7,
+        "nextRequirement": "Continue to unchanged legacy step 7 only after discussing the three taught cells; it removes the guide and broadens the pool. Multiple choice still supplies answers.",
+        "prerequisiteLaunches": [
+          "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+          "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos"
+        ],
+        "nextLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent"
+      },
+      "id": "counting-repairs-v1-2",
+      "step": 2,
+      "query": "?seq=counting-repairs-v1&step=2&a=Repair+v1.2%3A+Prepare+three+sixteenth-rest+cells&sys=standard&scope=beat&meter=4-4&cells=two-rest%2Crest-two%2Crest-three&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-rest-cells",
+      "settings": {
+        "seq": "counting-repairs-v1",
+        "step": "2",
+        "a": "Repair v1.2: Prepare three sixteenth-rest cells",
+        "sys": "standard",
+        "scope": "beat",
+        "meter": "4-4",
+        "cells": "two-rest,rest-two,rest-three",
+        "guide": "on",
+        "fb": "each",
+        "retry": "free",
+        "n": "6",
+        "hints": "off",
+        "seed": "cr-repair-v1-rest-cells"
+      },
+      "minimumCapability": null,
+      "localLaunch": "/?seq=counting-repairs-v1&step=2&a=Repair+v1.2%3A+Prepare+three+sixteenth-rest+cells&sys=standard&scope=beat&meter=4-4&cells=two-rest%2Crest-two%2Crest-three&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-rest-cells",
+      "futureProductionLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-repairs-v1&step=2&a=Repair+v1.2%3A+Prepare+three+sixteenth-rest+cells&sys=standard&scope=beat&meter=4-4&cells=two-rest%2Crest-two%2Crest-three&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-rest-cells",
+      "questions": [
+        {
+          "id": "question-1-4-4:beat:two-rest",
+          "cells": [
+            "two-rest"
+          ],
+          "answer": "1 e",
+          "choices": [
+            {
+              "id": "q1-d1",
+              "label": "1 &",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-correct",
+              "label": "1 e",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q1-d2",
+              "label": "a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d3",
+              "label": "1",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-2-4-4:beat:rest-three",
+          "cells": [
+            "rest-three"
+          ],
+          "answer": "e & a",
+          "choices": [
+            {
+              "id": "q2-correct",
+              "label": "e & a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q2-d3",
+              "label": "1 a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d1",
+              "label": "&",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d2",
+              "label": "1 e a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-3-4-4:beat:rest-two",
+          "cells": [
+            "rest-two"
+          ],
+          "answer": "& a",
+          "choices": [
+            {
+              "id": "q3-d2",
+              "label": "a",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d3",
+              "label": "1 & a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d1",
+              "label": "1",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-correct",
+              "label": "& a",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-4-4-4:beat:rest-three",
+          "cells": [
+            "rest-three"
+          ],
+          "answer": "e & a",
+          "choices": [
+            {
+              "id": "q4-d2",
+              "label": "1 a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d3",
+              "label": "1 e a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d1",
+              "label": "e",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-correct",
+              "label": "e & a",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-5-4-4:beat:two-rest",
+          "cells": [
+            "two-rest"
+          ],
+          "answer": "1 e",
+          "choices": [
+            {
+              "id": "q5-d2",
+              "label": "1",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d3",
+              "label": "2 e",
+              "category": "wrong_beat_number",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d1",
+              "label": "1 e & a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-correct",
+              "label": "1 e",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-6-4-4:beat:rest-two",
+          "cells": [
+            "rest-two"
+          ],
+          "answer": "& a",
+          "choices": [
+            {
+              "id": "q6-d3",
+              "label": "e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d1",
+              "label": "1 e &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d2",
+              "label": "1 e & a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-correct",
+              "label": "& a",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Supported long-value bars",
+      "scope": "measure",
+      "count": 6,
+      "cells": "whole,half,half-rest,quarter,eighths",
+      "response": "half-beats-v1",
+      "seed": "cr-repair-v1-long-notes",
+      "beforeLegacyStep": 10,
+      "lesson": "In 4/4 a whole note lasts four quarter-note beats and has just one written start, on 1. A half note lasts two beats with one start; keep its duration without starting it again on the second beat. A half rest occupies two beats without a note start. Paired eighths start on a number and &. Keep tracking all four beats even when a choice has no count for a held or silent beat. Choices list written note starts; | separates nonempty groups, not every beat. For example a half rest followed by a half note answers 3, while a whole note answers 1. Extra counts during a held note incorrectly ask for new starts; they do not mean that the held sound is silent. The guide marks possible starts, not sustained duration. No e or a responses are used in this repair.",
+      "description": "Six distinct bars from 44 nonsilent arrangements. This seed includes one whole-note model, two half notes and four half rests. Neither half note nor half rest begins on beat 2 here; this brief introduction is not comprehensive placement coverage or a duration assessment.",
+      "prerequisites": {
+        "notation": "Prepare whole/half notes and half rests alongside quarter notes and paired eighths. Name values, sustain or mark their full durations, and locate the next start with teacher-led Notes & Rests work.",
+        "meter": "Track four quarter-note beats including held and silent spans. A whole note fills 4/4; a half note/rest spans two beats.",
+        "response": "Count only new written starts using numbers and &. Whole note: 1; half rest then half note: 3. Missing count groups do not remove elapsed beats.",
+        "support": "Guide on, immediate feedback, same-round replay, no hints/pass/time limit. The app has no selectable empty response: wholly silent bars remain excluded; teach whole-bar silence and duration physically or on paper."
+      },
+      "coverage": {
+        "capacity": 44,
+        "distinctNotation": 6,
+        "distinctCorrectCounts": 6,
+        "questionExposures": {
+          "whole": 1,
+          "half": 2,
+          "half-rest": 4,
+          "quarter": 4,
+          "eighths": 2
+        },
+        "occurrences": {
+          "quarter": 6,
+          "eighths": 2,
+          "half": 2,
+          "half-rest": 4,
+          "whole": 1
+        }
+      },
+      "links": {
+        "lesson": "https://backwerdrhythmshop.com/lessons/notes-and-rests/",
+        "meter": "https://backwerdrhythmshop.com/lessons/time-signatures/",
+        "practiceKit": "https://backwerdrhythmshop.com/resources/rhythm-practice-kits/",
+        "prerequisite": "https://backwerdrhythmshop.com/lessons/notes-and-rests/",
+        "prerequisiteRequirement": "Prepare the long values and durations with teacher-led Notes & Rests; no prior app score is required.",
+        "prerequisiteLegacySteps": [],
+        "next": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
+        "nextLegacyStep": 10,
+        "nextRequirement": "The unchanged legacy next steps can include e and a in wrong choices even when the written rhythm uses only quarter/eighth or long values. Before using those links, teach four equal positions (number e & a), added/omitted/moved starts, and wrong beat labels. This half-beat repair alone does not prepare that extra response demand. A teacher-led changed bar is an alternative next check.",
+        "prerequisiteLaunches": [],
+        "nextLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=10&a=Step%2010%3A%20Notes%20That%20Last&scope=measure&cells=quarter,eighths,half,half-rest,whole&guide=off&n=12&pass=10&seed=cr10-notes-that-last"
+      },
+      "id": "counting-repairs-v1-3",
+      "step": 3,
+      "query": "?seq=counting-repairs-v1&step=3&a=Repair+v1.3%3A+Supported+long-value+bars&sys=standard&scope=measure&meter=4-4&cells=whole%2Chalf%2Chalf-rest%2Cquarter%2Ceighths&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-long-notes&response=half-beats-v1",
+      "settings": {
+        "seq": "counting-repairs-v1",
+        "step": "3",
+        "a": "Repair v1.3: Supported long-value bars",
+        "sys": "standard",
+        "scope": "measure",
+        "meter": "4-4",
+        "cells": "whole,half,half-rest,quarter,eighths",
+        "guide": "on",
+        "fb": "each",
+        "retry": "free",
+        "n": "6",
+        "hints": "off",
+        "seed": "cr-repair-v1-long-notes",
+        "response": "half-beats-v1"
+      },
+      "minimumCapability": "half-beats-v1",
+      "localLaunch": "/?seq=counting-repairs-v1&step=3&a=Repair+v1.3%3A+Supported+long-value+bars&sys=standard&scope=measure&meter=4-4&cells=whole%2Chalf%2Chalf-rest%2Cquarter%2Ceighths&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-long-notes&response=half-beats-v1",
+      "futureProductionLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-repairs-v1&step=3&a=Repair+v1.3%3A+Supported+long-value+bars&sys=standard&scope=measure&meter=4-4&cells=whole%2Chalf%2Chalf-rest%2Cquarter%2Ceighths&guide=on&fb=each&retry=free&n=6&hints=off&seed=cr-repair-v1-long-notes&response=half-beats-v1",
+      "questions": [
+        {
+          "id": "question-1-4-4:measure:whole",
+          "cells": [
+            "whole"
+          ],
+          "answer": "1",
+          "choices": [
+            {
+              "id": "q1-d3",
+              "label": "1 | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-correct",
+              "label": "1",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q1-d2",
+              "label": "1 | 2",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d1",
+              "label": "&",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-2-4-4:measure:half+quarter+quarter",
+          "cells": [
+            "half",
+            "quarter",
+            "quarter"
+          ],
+          "answer": "1 | 3 | 4",
+          "choices": [
+            {
+              "id": "q2-d1",
+              "label": "1 | 3 | &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d3",
+              "label": "1 | 3 | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-correct",
+              "label": "1 | 3 | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q2-d2",
+              "label": "1 | 3 & | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-3-4-4:measure:eighths+quarter+half-rest",
+          "cells": [
+            "eighths",
+            "quarter",
+            "half-rest"
+          ],
+          "answer": "1 & | 2",
+          "choices": [
+            {
+              "id": "q3-d1",
+              "label": "1 & | 2 | 3 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d2",
+              "label": "1 | 2",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d3",
+              "label": "1 & | &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-correct",
+              "label": "1 & | 2",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-4-4-4:measure:half-rest+half",
+          "cells": [
+            "half-rest",
+            "half"
+          ],
+          "answer": "3",
+          "choices": [
+            {
+              "id": "q4-d2",
+              "label": "&",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d3",
+              "label": "2 & | 3",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d1",
+              "label": "1 & | 3",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-correct",
+              "label": "3",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-5-4-4:measure:half-rest+quarter+eighths",
+          "cells": [
+            "half-rest",
+            "quarter",
+            "eighths"
+          ],
+          "answer": "3 | 4 &",
+          "choices": [
+            {
+              "id": "q5-correct",
+              "label": "3 | 4 &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q5-d2",
+              "label": "3 | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d1",
+              "label": "3 & | 4 &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d3",
+              "label": "& | 4 &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-6-4-4:measure:half-rest+quarter+quarter",
+          "cells": [
+            "half-rest",
+            "quarter",
+            "quarter"
+          ],
+          "answer": "3 | 4",
+          "choices": [
+            {
+              "id": "q6-d3",
+              "label": "1 | 3 | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d2",
+              "label": "& | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-correct",
+              "label": "3 | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q6-d1",
+              "label": "3 & | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

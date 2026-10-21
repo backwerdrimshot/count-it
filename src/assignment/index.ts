@@ -1,3 +1,4 @@
+import { acceptsResponseVocabulary } from "../response-vocabulary";
 /* The assignment link — Count It's Phase 0 wrapper.
  *
  * A teacher pins a round in a URL and posts it; every student who opens it gets
@@ -204,7 +205,7 @@ export interface AssignmentError {
 
 export interface Assignment {
   /** Opt-in response vocabulary; absent preserves every legacy round. */
-  readonly response?: "eighths-v1";
+  readonly response?: "eighths-v1" | "half-beats-v1";
   /** Present only when the link named one; display text, never an identity. */
   readonly name: string | null;
   readonly level: LevelId;
@@ -755,11 +756,9 @@ export function parseAssignment(search: string): AssignmentResult {
 
   const responseRaw = params.get("response");
   if (responseRaw !== null) {
-    if (params.getAll("response").length !== 1 || responseRaw !== "eighths-v1" ||
-        system !== "standard" || !meter || !["2-4", "3-4", "4-4"].includes(meter) ||
-        !cells || cells.length !== 2 || !cells.includes("quarter") || !cells.includes("eighths")) {
+    if (params.getAll("response").length !== 1 || !acceptsResponseVocabulary(responseRaw, system, scope, meter, cells)) {
       return { ok: false, error: { code: "response", message:
-        "The eighths-v1 response vocabulary needs quarter,eighths, Standard counting, and an explicit 2/4, 3/4 or 4/4 meter. Unknown or repeated response versions are refused." } };
+        "The eighths-v1 response vocabulary needs quarter,eighths, Standard counting, and an explicit 2/4, 3/4 or 4/4 meter. half-beats-v1 needs Standard 4/4 measures and an exact supported rest-bar or long-value repair pool. Unknown or repeated response versions are refused." } };
     }
     locked.push("response");
   }
@@ -770,7 +769,7 @@ export function parseAssignment(search: string): AssignmentResult {
   return {
     ok: true,
     assignment: Object.freeze({
-      ...(responseRaw ? { response: "eighths-v1" as const } : {}),
+      ...(responseRaw ? { response: responseRaw as "eighths-v1" | "half-beats-v1" } : {}),
       name,
       level,
       scope,
@@ -895,7 +894,7 @@ export function describeAssignment(assignment: Assignment): string {
   if (assignment.meter && assignment.meter !== DEFAULT_METER) {
     parts.push(getMeter(assignment.meter).label);
   }
-  if (assignment.response) parts.push("beat numbers and & only (eighths-v1)");
+  if (assignment.response) parts.push(`beat numbers and & only (${assignment.response})`);
   if (assignment.guide) parts.push(assignment.guide === "on" ? "guide visible" : "guide hidden");
   if (assignment.feedback === "end") parts.push("answers at the end");
   /* Only when it deviates from what the app does anyway, the same rule `fb`

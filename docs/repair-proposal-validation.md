@@ -1,5 +1,7 @@
 # Three proposed repairs — exact local coverage evidence
 
+Historical proposal snapshot: the subsequent local implementation is documented in [repairs-v1-handoff.md](repairs-v1-handoff.md), with a new response contract and regenerated distractor evidence. This file preserves the original diagnostic assumptions; it is not the current launch contract.
+
 These configurations are still documentation proposals, outside runtime presets, catalogs and launch pages. Their exact queries are in `next-gap-repairs-proposal.md`; `repair-proposal-evidence.json` records every generated question, correct answer and distractor for each proposed seed. `tests/repair-proposals.test.ts` extracts those exact queries, parses them, independently checks attack counts and bar sums, verifies unique choices and deterministic replay, and pins the report. No engine setting or assignment was added for this second batch.
 
 ## Seed coverage and sampling sufficiency

@@ -1,3 +1,4 @@
+import { acceptsResponseVocabulary } from "../response-vocabulary";
 import {
   createBeatPrompt,
   createMeasurePrompt,
@@ -37,7 +38,7 @@ export interface CountQuestion {
 }
 
 export interface GenerateQuestionsOptions {
-  readonly response?: "eighths-v1";
+  readonly response?: "eighths-v1" | "half-beats-v1";
   readonly level: LevelId;
   readonly scope: QuestionScope;
   /** The meter the round is read in. Absent, 4/4 — so every link, seed and
@@ -166,7 +167,7 @@ function buildQuestion(
   random: RandomSource,
   presentation: RandomSource | null,
   system: CountingProfileId,
-  response?: "eighths-v1",
+  response?: "eighths-v1" | "half-beats-v1",
 ): CountQuestion {
   const correctAnswer = getPromptAnswer(prompt, system);
   const correctChoiceId = `q${index + 1}-correct`;
@@ -230,10 +231,8 @@ export function generateQuestions({
      refused outright, because a teacher who wrote it meant something the round
      cannot deliver. */
   if (scope === "beat") cells = cells.filter((cell) => cell.beats === 1);
-  if (response && (response !== "eighths-v1" || system !== "standard" ||
-      !["2-4", "3-4", "4-4"].includes(meter) || cells.length !== 2 ||
-      !cells.every(cell => cell.id === "quarter" || cell.id === "eighths"))) {
-    throw new RangeError("eighths-v1 requires the quarter/pair pool, Standard counting and 2/4, 3/4 or 4/4.");
+  if (response && !acceptsResponseVocabulary(response, system, scope, meter, cells.map(cell => cell.id))) {
+    throw new RangeError("The response profile is incompatible with this counting system, scope, meter or pool.");
   }
   if (cells.length === 0) throw new RangeError("A round needs at least one rhythm cell.");
   // The seed string carries the vocabulary, so two rounds that share a seed but
