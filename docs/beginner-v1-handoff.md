@@ -1,5 +1,6 @@
 # Quarter/pair bridge v1 — local integration handoff
 
+Integration update: this document preserves the original `50749ed` candidate evidence. The separate combined worktree now reconciles PR88 locally; current status, exact upstream hashes, ownership and release boundaries are in [integration validation](integration-pr88-validation.md). The approved beginner design has no additional unresolved educator-approval question.
 Status: implemented locally for review, not published. Owner: Charlie / Count It app. Base: `15e701cac75d2b37f1451a678637ad55976bd93b` (fresh origin/main; PR89 merged). Branch: `charlie/beginner-supplement-v1`. Isolated checkout: `/Users/taylordwyer/Developer/Codex/2026-10-21/task/count-it`. No website checkout edited. Claude retains PR88 accessibility/default-size work and reporting work. The [ownership clarification](https://github.com/backwerdrimshot/count-it/pull/88#issuecomment-6308615395) was read before implementation; only PR88 was open, with no supplementary draft.
 
 ## Sources and launch contract

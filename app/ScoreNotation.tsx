@@ -1,5 +1,5 @@
 'use client';
-import { useResponseVocabulary } from "./ResponseVocabulary";
+import { useResponseVocabulary } from './ResponseVocabulary';
 import { useEffect, useRef, useState } from 'react';
 import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tuplet, Voice } from 'vexflow';
 import { countLabelsForBeat, staffFurniture, type CountingProfileId } from '../src/rhythm';
@@ -9,8 +9,10 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
   score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; countsHidden?: boolean; revealed?: boolean; activeBeat?: number | null;
 }) {
   const response = useResponseVocabulary();
-  const [beginnerOverflow, setBeginnerOverflow] = useState(false);
   const host = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  // Set from the drawn width: when the bar is wider than its panel, the panel scrolls and says so.
+  const [overflowing, setOverflowing] = useState(false);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -22,7 +24,6 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       const height = showGuide ? 205 : 140;
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(layout.width, height);
-      setBeginnerOverflow(Boolean(response) && layout.width > (element.parentElement?.clientWidth ?? layout.width) + 1);
       const context = renderer.getContext();
       const furniture = staffFurniture(score.fragment ? 'beat' : 'measure');
       const stave = new Stave(10, 28, layout.width - 20).addClef(furniture.clef);
@@ -99,6 +100,8 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       svg.setAttribute('data-grid-unit', String(layout.unit));
       add('line', { x1: String(layout.start), x2: String(layout.start), y1: '24', y2: showGuide ? '179' : '110', stroke: '#9a552e', 'stroke-width': '2', 'data-playhead': 'true', visibility: 'hidden' });
       notes.forEach((note, i) => add('circle', { cx: String(note.getNoteHeadBeginX() + note.getGlyphWidth() / 2), cy: '190', r: '0', 'data-note-at': String(score.notes[i].at), 'data-note-x': String(note.getNoteHeadBeginX() + note.getGlyphWidth() / 2) }));
+      const panel = scroller.current;
+      setOverflowing(Boolean(panel) && panel!.scrollWidth > panel!.clientWidth + 1);
     };
     draw();
     const observer = new ResizeObserver(draw); observer.observe(element);
@@ -112,8 +115,20 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     const x = Number(svg.getAttribute('data-grid-start')) + (activeBeat ?? 0) * Number(svg.getAttribute('data-grid-unit'));
     cursor.setAttribute('x1', String(x)); cursor.setAttribute('x2', String(x));
   }, [activeBeat]);
-  return <>
-    <div className="notation-scroll" tabIndex={beginnerOverflow ? 0 : undefined} role={beginnerOverflow ? "region" : undefined} aria-label={beginnerOverflow ? "Rhythm notation. Scroll sideways to read the whole bar." : undefined}><div className="notation-canvas balanced-score" ref={host} /></div>
-    {beginnerOverflow && <p className="beginner-scroll-cue">Scroll sideways to read the whole bar.</p>}
-  </>;
+  // Only a bar wider than its panel is a scrolling region. Such a panel is a keyboard stop, so keyboard
+  // users can scroll it with the arrow keys; a bar that fits has nothing to scroll and is not a stop.
+  return (
+    <>
+      <div
+        className="notation-scroll"
+        ref={scroller}
+        tabIndex={overflowing ? 0 : undefined}
+        role={overflowing ? 'region' : undefined}
+        aria-label={overflowing ? `${label} Scrolls sideways when the bar is wider than the screen.` : undefined}
+      >
+        <div className="notation-canvas balanced-score" ref={host} />
+      </div>
+      {overflowing && <p className="notation-scroll-cue">Scroll sideways to see the rest of the bar.</p>}
+    </>
+  );
 }

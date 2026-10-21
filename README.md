@@ -21,7 +21,7 @@ The app deliberately begins with a small, verified straight-subdivision catalog.
 
 ## Release information
 
-- **Build:** `2026-10-21.4`
+- **Build:** `2026-10-21.5`
 - **Status:** MVP built and publicly available
 - **Live app:** <https://count-it.backwerdrhythmshop.com/>
 - **Public app guide:** <https://guides.backwerdrhythmshop.com/count-it/>
@@ -33,7 +33,7 @@ documentation.
 
 ## Practice workspace update
 
-- The opening setup is **Practice, Level 1, a full 4/4 measure, guide on**.
+- The opening setup is **Practice, Level 1, one beat, guide on**. A full 4/4 measure is one setting away.
 - One-beat fragments use a compact centered staff. Full measures use a bounded responsive width. A teaching time grid aligns notehead centres, subdivision labels and the playback cursor; notation and guide scroll together. A lone whole-bar note keeps conventional centering and an explicit held-duration annotation.
 - **Choose individual rhythms** in setup selects a pool without writing an assignment. At least two rhythms must fit the current scope and meter. Changing the level restores that level's pool.
 - **Save my practice setup** restores the selected free-practice settings on this browser. Reset restores the agreed starting settings. Assignment links keep their historical parser defaults and seeded questions.
@@ -330,7 +330,7 @@ See [`docs/notation-engraving-standard.md`](docs/notation-engraving-standard.md)
 - Progress is device-local and intentionally lightweight.
 - Results can be copied or downloaded as PNG cards. The last 50 completed challenges are saved on this device without names or class IDs. No automatic submission to an LMS.
 - Answers are never timed or scored for speed. Only when a teacher's link sets `time` is a duration recorded: the card reports it beside the score, against the limit, and the round is never stopped. Without `time`, no duration is recorded.
-- Free practice opens in Practice / Level 1 / full 4/4 measure / guide on. Saving the practice setup is opt-in; it restores level, question size, meter, guide and an optional rhythm pool. A counting profile is saved separately. Assignment links take precedence and never overwrite either saved default.
+- Free practice opens in Practice / Level 1 / one beat / guide on. Saving the practice setup is opt-in; it restores level, question size, meter, guide and an optional rhythm pool. A counting profile is saved separately. Assignment links take precedence and never overwrite either saved default.
 
 ## Privacy and accessibility
 

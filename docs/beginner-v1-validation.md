@@ -1,5 +1,6 @@
 # Beginner bridge v1 — local verification
 
+Integration update: this document preserves the original `50749ed` candidate evidence. The separate combined worktree now reconciles PR88 locally; current status, exact upstream hashes, ownership and release boundaries are in [integration validation](integration-pr88-validation.md). The approved beginner design has no additional unresolved educator-approval question.
 Base: fresh `origin/main` at `15e701cac75d2b37f1451a678637ad55976bd93b`; isolated branch `charlie/beginner-supplement-v1`. No existing worktree/branch, website source, published preset/catalog or original launch fixture was edited. No `AGENTS.md` or `.agents/skills` exists in the cloned repository or its task ancestors; README, browser guidance, presets, notation catalog, capability contract and relevant plans were read.
 
 ## Automated evidence

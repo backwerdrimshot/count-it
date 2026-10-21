@@ -1,6 +1,6 @@
 # Next Count It gap repairs — exact local proposal
 
-Status: proposed configurations for owner/educator review after the five-step bridge. Not implemented or published. This repairs identified preparation gaps before designing broader assignments. No additional response mode, tie/multi-bar engine or authenticated reporting is proposed.
+Status: proposed configurations, now locally validated for exact seed coverage; see [coverage evidence](repair-proposal-validation.md). Not implemented or published. This repairs identified preparation gaps before designing broader assignments. No additional response mode, tie/multi-bar engine or authenticated reporting is proposed.
 
 Reviewed for overlap: current `src/assignment/presets.ts`, `public/praxis-assignment-catalog.json`, `docs/supported-rhythm-catalog.md`, `docs/followup-plan.md`, and the parent's full 13-assignment audit at main `15e701c`. Counting Rhythms 4 first mixes rests over a bar with guide off; 7 introduces `two-rest`, `rest-two`, `rest-three` with guide off; 10 introduces spanning values with guide off. Rhythms in Three 1 already supplies supported 3/4 mixed-rest bars, so do not duplicate that card. Count It has seven one-beat and six one-bar published steps, no multi-bar or physical-performance assessment.
 

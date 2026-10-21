@@ -2,7 +2,7 @@
   "schemaVersion": "1.1.0",
   "appId": "count-it",
   "title": "Count It",
-  "version": "2026-10-21.4",
+  "version": "2026-10-21.5",
   "launchUrl": "https://count-it.backwerdrhythmshop.com/",
   "launchUrlStatus": "Live. Cloudflare, custom domain.",
   "integrationLevel": 2,
@@ -175,7 +175,7 @@
   },
   "freePracticeDefaults": {
     "level": "level-1",
-    "scope": "measure",
+    "scope": "beat",
     "meter": "4-4",
     "guide": "on"
   },

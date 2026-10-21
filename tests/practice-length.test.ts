@@ -3,18 +3,21 @@ import { DEFAULT_PRACTICE, PRACTICE_SETTINGS_KEY, readPracticeSettings, supporte
 import { parseAssignment, roundLengthFor } from '../src/assignment';
 import { generateQuestions } from '../src/question';
 
+// The measure capacity rules below are about full bars. The free default is now one beat.
+const MEASURE = { ...DEFAULT_PRACTICE, scope: 'measure' as const };
+
 describe('free challenge length capacity', () => {
   it('keeps Quick 5 by default, offers twelve in the default sixteen-bar pool, and refuses twenty', () => {
-    expect(supportedPracticeLength(DEFAULT_PRACTICE, 5)).toBe(5);
-    expect(supportedPracticeLength(DEFAULT_PRACTICE, 12)).toBe(12);
-    expect(supportedPracticeLength(DEFAULT_PRACTICE, 20)).toBe(12);
+    expect(supportedPracticeLength(MEASURE, 5)).toBe(5);
+    expect(supportedPracticeLength(MEASURE, 12)).toBe(12);
+    expect(supportedPracticeLength(MEASURE, 20)).toBe(12);
   });
   it('uses real duration and silent-bar capacity, with Quick shortened for tiny pools', () => {
     for (const [meter, expected] of [['2-4', 5], ['3-4', 5], ['4-4', 12], ['5-4', 20]] as const) {
-      expect(supportedPracticeLength({ ...DEFAULT_PRACTICE, meter }, 20)).toBe(expected);
+      expect(supportedPracticeLength({ ...MEASURE, meter }, 20)).toBe(expected);
     }
-    expect(roundLengthFor({ ...DEFAULT_PRACTICE, meter: '2-4', cells: undefined, wanted: 5 })).toBe(4);
-    const held = { ...DEFAULT_PRACTICE, cells: ['whole', 'half'], meter: '4-4' as const };
+    expect(roundLengthFor({ ...MEASURE, meter: '2-4', cells: undefined, wanted: 5 })).toBe(4);
+    const held = { ...MEASURE, cells: ['whole', 'half'], meter: '4-4' as const };
     expect(supportedPracticeLength(held, 20)).toBe(5);
     expect(roundLengthFor({ ...held, wanted: 5 })).toBe(2);
     expect(supportedPracticeLength({ ...DEFAULT_PRACTICE, scope: 'beat' }, 20)).toBe(20);

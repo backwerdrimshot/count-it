@@ -48,7 +48,10 @@ try {
     await page.goto(BASE, { waitUntil: 'networkidle' });
     await player(page, tag + ' practice');
     await page.getByRole('tab', { name: /Choose the Count/ }).click();
-    await player(page, tag + ' challenge');
+    note(tag + ': unanswered challenge withholds playback', await page.locator('.rhythm-player').count() === 0);
+    await page.locator('.answer-grid button').first().click();
+    await page.getByRole('button', { name: 'Listen to rhythm', exact: true }).waitFor();
+    await player(page, tag + ' answered challenge');
     await shot(page.locator('.trainer-card'), `${tag}-challenge.png`);
     const tempo = page.getByRole('spinbutton', { name: 'Tempo BPM' });
     await tempo.fill('120');

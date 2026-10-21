@@ -23,7 +23,7 @@ for (const width of [320,768,1280]) for (const colorScheme of ["light","dark"]) 
     if(overflowing) {
       await scroller.focus(); await page.keyboard.press("ArrowRight"); await page.waitForTimeout(100);
       note(`${width} ${colorScheme} step ${i+1}: keyboard notation scroll`,await scroller.evaluate(el=>el.scrollLeft>0&&el.tabIndex===0));
-      note(`${width} ${colorScheme} step ${i+1}: visible cue`,await page.getByText("Scroll sideways to read the whole bar.",{exact:true}).count()===1);
+      note(`${width} ${colorScheme} step ${i+1}: visible cue`,await page.getByText("Scroll sideways to see the rest of the bar.",{exact:true}).count()===1);
     } else note(`${width} ${colorScheme} step ${i+1}: fitting notation has no tab stop`,await scroller.getAttribute("tabindex")===null);
     if(i===3) {
       const last=page.locator(".answer-choice").last(); await last.click();

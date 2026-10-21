@@ -662,6 +662,11 @@ a:focus-visible,
   overflow-x: auto;
 }
 
+/* PR88's general scroll affordance, with the reviewed focus ring kept inset
+   so the notation panel cannot clip its outer edges. */
+.notation-scroll:focus-visible { outline: 3px solid #365c35; outline-offset: -3px; }
+.notation-scroll-cue { margin: 6px 0 0; font-size: 0.85rem; color: #55584f; }
+
 .notation-canvas {
   min-height: 112px;
   color: var(--paper-ink);
@@ -2859,5 +2864,6 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
    viewport. Keep its actions in flow so every choice remains visible/clickable. */
 .beginner-response .dock { position: static; }
 .beginner-response-lesson { max-width: 1080px; margin: 16px auto; padding: 0 16px; }
-.beginner-scroll-cue { margin: 0; padding: 4px 12px; font-size: .875rem; }
-.beginner-response .notation-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+/* A focused sticky action can land under the pointer during smooth scrolling.
+   Moving its hit box on hover then alternates hover on/off at its top edge. */
+.dock .primary-button:hover { transform: none; }
