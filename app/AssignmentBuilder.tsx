@@ -169,7 +169,7 @@ export default function AssignmentBuilder() {
       setOrigin(window.location.origin);
       const params = new URLSearchParams(window.location.search);
       const from = params.get("from");
-      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed'].some(key => params.has(key));
+      const hasSettings = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints'].some(key => params.has(key));
       if (from && getPreset(from)) applyPreset(from);
       else if (hasSettings) {
         const saved = builderStateFromQuery(window.location.search);

@@ -32,6 +32,8 @@ export type CodeStatus =
   | "valid"
   /** The facts and the code disagree: something was changed after copying. */
   | "invalid"
+  /** The score cannot be right: more correct answers than questions, or no questions. */
+  | "impossible"
   /** No Stamp line (made before this check existed), so it cannot be checked. */
   | "unchecked"
   /** The other app's summary; check it on that app's page. */
@@ -123,7 +125,7 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
   const total = score ? Number(score[2]) : null;
   /* Always from the numbers the code covers, never from the "(92%)" text beside
      them: that text is not in the code, so a copy that edited only it would
-     otherwise still say "Code checks" and export the edited percent. */
+     otherwise still say "Checksum matches" and export the edited percent. */
   const percent = correct !== null && total ? Math.round((correct / total) * 100) : correct !== null ? 0 : null;
   const attemptRaw = fields.get("Attempt")?.trim();
   const attempt = attemptRaw && /^\d+$/.test(attemptRaw) ? Number(attemptRaw) : 1;
@@ -140,6 +142,9 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
     app, assignment, studentId, correct, total, percent, attempt, metGoal, time, hintsUsed,
     finished: fields.get("Finished")?.trim() || null, code,
   };
+  /* Checked before any code or stamp: a score that cannot be right stays out of
+     every export, whether or not it carries a code that could be checked. */
+  if (correct !== null && total !== null && (total === 0 || correct > total)) return { ...base, status: "impossible" };
   if (!code) return { ...base, status: "missing" };
   if (app !== APP.name) return { ...base, status: "other-app" };
   const stamp = fields.get(STAMP_LABEL)?.trim();
@@ -148,6 +153,8 @@ export function parseSummary(lines: readonly string[]): ParsedSummary {
     return { ...base, status: "unchecked" };
   }
   if (correct === null || total === null) return { ...base, status: "invalid" };
+  /* Its own status, not "invalid": the code may well match, because anyone can make
+     a code for any numbers. The score itself is what is wrong. */
   if (attemptRaw !== undefined && !/^\d+$/.test(attemptRaw)) return { ...base, status: "invalid" };
   if (hintsRaw !== undefined && hintsUsed === null) return { ...base, status: "invalid" };
 
@@ -185,8 +192,9 @@ export function parseSummaries(text: string): ParsedSummary[] {
 }
 
 export const STATUS_TEXT: Record<CodeStatus, string> = {
-  valid: "Code checks",
+  valid: "Checksum matches",
   invalid: "Code does not match",
+  impossible: "Score is impossible",
   unchecked: "Cannot check (older summary)",
   "other-app": `${SIBLING.name} summary`,
   missing: "No code",
@@ -239,6 +247,8 @@ export interface CanvasExport {
     readonly duplicates: number;
     /** Summaries for a different assignment (or practice) than the one exported. */
     readonly otherAssignment: number;
+    /** Scores that cannot be right, whether or not their code matches. */
+    readonly impossible: number;
   };
 }
 
@@ -263,11 +273,12 @@ export function canvasCsv(
     readonly assignment: string | null;
   },
 ): CanvasExport {
-  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0, otherAssignment: 0 };
+  const skipped = { noStudent: 0, codeFailed: 0, duplicates: 0, otherAssignment: 0, impossible: 0 };
   const best = new Map<string, { name: string; score: number }>();
   for (const row of rows) {
     if (row.correct === null || row.total === null) continue;
     if ((row.assignment ?? null) !== options.assignment) { skipped.otherAssignment += 1; continue; }
+    if (row.status === "impossible" || row.total === 0 || row.correct > row.total) { skipped.impossible += 1; continue; }
     if (options.onlyChecked && row.status !== "valid") { skipped.codeFailed += 1; continue; }
     const name = row.studentId.trim();
     if (!name) { skipped.noStudent += 1; continue; }

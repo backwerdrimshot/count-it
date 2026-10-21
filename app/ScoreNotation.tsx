@@ -4,8 +4,8 @@ import { Barline, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tu
 import { countLabelsForBeat, staffFurniture, type CountingProfileId } from '../src/rhythm';
 import { scoreLayout, type RhythmScore } from '../src/score';
 
-export default function ScoreNotation({ score, label, system = 'standard', showGuide = false, revealed = false, activeBeat = null }: {
-  score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; revealed?: boolean; activeBeat?: number | null;
+export default function ScoreNotation({ score, label, system = 'standard', showGuide = false, countsHidden = false, revealed = false, activeBeat = null }: {
+  score: RhythmScore; label: string; system?: CountingProfileId; showGuide?: boolean; countsHidden?: boolean; revealed?: boolean; activeBeat?: number | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -13,7 +13,9 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     if (!element) return;
     const draw = () => {
       element.replaceChildren();
-      const layout = scoreLayout(score, element.clientWidth);
+      // The count row needs the room an eighth-note bar gets, even on a sparse bar.
+      const countsShown = !countsHidden || revealed;
+      const layout = scoreLayout(score, element.clientWidth, { countRow: showGuide && countsShown });
       const height = showGuide ? 205 : 140;
       const renderer = new Renderer(element, Renderer.Backends.SVG);
       renderer.resize(layout.width, height);
@@ -54,14 +56,19 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
       (score.ties ?? []).forEach(([first, last]) => new StaveTie({ firstNote: notes[first], lastNote: notes[last], firstIndexes: [0], lastIndexes: [0] }).setDirection(-1).setContext(context).draw());
       const svg = element.querySelector('svg');
       if (!svg) return;
-      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', label); svg.setAttribute('focusable', 'false');
+      /* A one-beat prompt always begins on beat 1. Say so where it is seen and where it is heard, so a
+         student who cannot see the subdivision guide is not left guessing the beat number of the answers. */
+      const beatCue = score.fragment ? 'Starts on beat 1.' : '';
+      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', [label, beatCue].filter(Boolean).join(' ')); svg.setAttribute('focusable', 'false');
       const add = (tag: string, attributes: Record<string, string>, text?: string) => {
         const child = document.createElementNS('http://www.w3.org/2000/svg', tag);
         Object.entries(attributes).forEach(([key, value]) => child.setAttribute(key, value));
         if (text) child.textContent = text;
         svg.appendChild(child);
       };
-      if (showGuide) {
+      // A scored question can hold the count back until it is answered, so the student
+      // has to produce the count instead of matching it to one printed under the staff.
+      if (showGuide && countsShown) {
         add('line', { x1: String(layout.start), x2: String(layout.end), y1: '142', y2: '142', stroke: '#b7b5a5' });
         for (let beat = 0; beat < score.beats; beat++) {
           const triplet = score.triplets?.some(group => Math.floor(score.notes[group[0]].at) === beat);
@@ -83,6 +90,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
           at += group;
         });
       }
+      if (beatCue) add('text', { x: String(layout.width / 2), y: String(height - 8), 'text-anchor': 'middle', 'font-family': 'system-ui, sans-serif', 'font-size': '12', fill: '#55584f', 'data-beat-cue': 'true' }, 'Starts on beat 1');
       svg.setAttribute('data-grid-start', String(layout.start));
       svg.setAttribute('data-grid-unit', String(layout.unit));
       add('line', { x1: String(layout.start), x2: String(layout.start), y1: '24', y2: showGuide ? '179' : '110', stroke: '#9a552e', 'stroke-width': '2', 'data-playhead': 'true', visibility: 'hidden' });
@@ -91,7 +99,7 @@ export default function ScoreNotation({ score, label, system = 'standard', showG
     draw();
     const observer = new ResizeObserver(draw); observer.observe(element);
     return () => observer.disconnect();
-  }, [score, label, system, showGuide, revealed]);
+  }, [score, label, system, showGuide, countsHidden, revealed]);
   useEffect(() => {
     const svg = host.current?.querySelector('svg');
     const cursor = svg?.querySelector('[data-playhead]');

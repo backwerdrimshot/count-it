@@ -121,8 +121,42 @@ function measurePrompts(
     used.add(id);
     prompts.push(prompt);
   }
+  if (prompts.length < count) {
+    /* The draws can miss the last arrangements of a pool at capacity. Walk every
+       arrangement once, in a seeded order, so a link the parser accepted always builds. */
+    for (const selected of shuffle(everyBar(cells, beatsPerMeasure), random)) {
+      if (prompts.length === count) break;
+      const prompt = createMeasurePrompt(selected, meter);
+      const id = getPromptId(prompt);
+      if (used.has(id)) continue;
+      used.add(id);
+      prompts.push(prompt);
+    }
+  }
   if (prompts.length !== count) throw new Error("Unable to create a non-repeating measure session.");
   return prompts;
+}
+
+/** Every bar the pool fills exactly with at least one attack. Capped, so a large
+ *  pool that reaches this fallback cannot stall the page. */
+function everyBar(cells: readonly RhythmCell[], beats: number): RhythmCell[][] {
+  const limit = 20000;
+  const bars: RhythmCell[][] = [];
+  const build = (filled: number, bar: RhythmCell[]): void => {
+    if (bars.length >= limit) return;
+    if (filled === beats) {
+      if (bar.some((cell) => cell.activePositions.length > 0)) bars.push([...bar]);
+      return;
+    }
+    for (const cell of cells) {
+      if (filled + cell.beats > beats) continue;
+      bar.push(cell);
+      build(filled + cell.beats, bar);
+      bar.pop();
+    }
+  };
+  build(0, []);
+  return bars;
 }
 
 function buildQuestion(

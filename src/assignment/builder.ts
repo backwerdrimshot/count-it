@@ -121,7 +121,7 @@ export function defaultBuilderState(seed: string): BuilderState {
  * remains the sole validator of musical settings. */
 export function builderStateFromQuery(search: string): BuilderState | null {
   const params = new URLSearchParams(search);
-  const keys = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed'];
+  const keys = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints'];
   if (keys.some(key => params.getAll(key).length > 1) || params.has('seed') && !SEED_PATTERN.test(params.get('seed')!)) return null;
   const parsed = parseAssignment(search);
   if (!parsed.ok) return null;
@@ -135,6 +135,7 @@ export function builderStateFromQuery(search: string): BuilderState | null {
     system: a.systemPinned ? a.system : null,
     guide: a.guide, feedback: a.feedback, retry: a.retry,
     count: a.count, passing: a.passing, seed: a.seed ?? '',
+    timeLimit: a.timeLimit, hints: a.hints,
   };
 }
 

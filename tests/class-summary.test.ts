@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { verificationCode } from "../src/assignment";
-import { canvasCsv, csvCell, parseSummaries, stampLine, summaryCsv } from "../src/class-summary";
+import { STATUS_TEXT, canvasCsv, csvCell, parseSummaries, stampLine, summaryCsv } from "../src/class-summary";
 import { timeTicketLine } from "../src/time-limit";
 import { hintsTicketLine } from "../src/hints";
 
@@ -34,6 +34,29 @@ function summary(options: {
 }
 
 describe("reading pasted summaries", () => {
+  it("refuses a score that cannot happen, even when its checksum matches, and says so", () => {
+    const [row] = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
+    expect(row.status).toBe("impossible");
+    expect(STATUS_TEXT[row.status]).toBe("Score is impossible");
+    expect(STATUS_TEXT[row.status]).not.toBe(STATUS_TEXT.invalid);
+  });
+  it("still calls an impossible score impossible when its code is missing or wrong", () => {
+    const text = summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 });
+    const noCode = text.split("\n").filter((line) => !/^Code:/.test(line)).join("\n");
+    const wrongCode = text.replace(/Code: .*/, "Code: BRS-CI-261021-825-ZZZ9");
+    for (const variant of [noCode, wrongCode]) {
+      const [row] = parseSummaries(variant);
+      expect(row.status).toBe("impossible");
+      const result = canvasCsv([row], { column: "Step 2", score: "correct", onlyChecked: false, assignment: "Step 2" });
+      expect(result.included).toBe(0);
+    }
+  });
+  it("keeps an impossible score out of the Canvas export even with unchecked rows included", () => {
+    const rows = parseSummaries(summary({ assignment: "Step 2", student: "Ana", correct: 99, total: 12 }));
+    const result = canvasCsv(rows, { column: "Step 2", score: "correct", onlyChecked: false, assignment: "Step 2" });
+    expect(result.included).toBe(0);
+    expect(result.skipped.impossible).toBe(1);
+  });
   it("checks the hints count on a summary from a hints-on assignment", () => {
     const text = summary({ assignment: "Step 2", student: "Ana", correct: 10, total: 12, hints: 2 });
     expect(parseSummaries(text)[0]).toMatchObject({ status: "valid", hintsUsed: 2 });
@@ -154,7 +177,7 @@ describe("the CSV files", () => {
     const table = summaryCsv(rows).split("\r\n");
     expect(table[0]).toBe("Student ID,Assignment,Score,Out of,Percent,Threshold met,Attempt,Finished,Code,Code check");
     expect(table[1]).toMatch(/^4B-07,Step 2,9,12,75,no,1,/);
-    expect(table[1]).toMatch(/Code checks$/);
+    expect(table[1]).toMatch(/Checksum matches$/);
     expect(table[5]).toMatch(/Code does not match$/);
     expect(summaryCsv(parseSummaries(summary({ correct: 1, total: 2, timing: { elapsedSeconds: 60, limitMinutes: 5 } })))).toMatch(/Threshold met,Time,/);
   });

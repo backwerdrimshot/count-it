@@ -19,6 +19,19 @@ function ok(search: string) {
   return result;
 }
 
+describe("unrecognized settings are refused, not repaired", () => {
+  it.each(["?guide=OFF", "?guide=yes"])("refuses a guide setting that is not on or off: %s", (search) => {
+    const result = parseAssignment(search);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("guide");
+  });
+  it.each(["?seed=class.4B", "?seed="])("refuses a seed the link format cannot carry: %s", (search) => {
+    const result = parseAssignment(search);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("seed");
+  });
+});
+
 function bad(search: string) {
   const result = parseAssignment(search);
   if (result.ok) throw new Error("expected an invalid link");
@@ -166,6 +179,17 @@ describe("the assignment link", () => {
     ).toHaveLength(16);
     // Beat rounds are unaffected: a beat prompt may repeat once the pool cycles.
     expect(ok("?scope=beat&cells=quarter,eighths&n=20").assignment.count).toBe(20);
+  });
+
+  it("builds every round a link at pool capacity can ask for, for any seed", () => {
+    // A link the parser accepts must always build. These pools sit at capacity, where
+    // random draws can miss the last arrangements and the round used to throw.
+    for (const seed of ["w43", "w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8", "w9"]) {
+      expect(
+        generateQuestions({ level: "level-1", scope: "measure", meter: "7-4", count: 5, seed, cells: ["eighth-rest", "whole"] }),
+        seed,
+      ).toHaveLength(5);
+    }
   });
 
   it("lets the link choose what trying again means", () => {

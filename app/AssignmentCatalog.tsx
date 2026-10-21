@@ -142,14 +142,14 @@ export default function AssignmentCatalog() {
                           <p className="catalog-status">{triedText(attempts[key] ?? 0)}</p>
                         )}
                         <div className="catalog-actions">
-                          <a className="primary-button" href={href} aria-label={`Try step ${entry.step}: ${entry.title}`}>
+                          <a className="primary-button" href={href} aria-label={`Try it: step ${entry.step}, ${entry.title}`}>
                             Try it
                           </a>
                           <button
                             type="button"
                             className="secondary-button"
                             onClick={() => copyLink(entry)}
-                            aria-label={`Copy the link for step ${entry.step}: ${entry.title}`}
+                            aria-label={`Copy link: step ${entry.step}, ${entry.title}`}
                           >
                             Copy link
                           </button>
@@ -158,7 +158,7 @@ export default function AssignmentCatalog() {
                             href={classroomShareUrl(withHints(entry.link, hints), entry.title)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label={`Post step ${entry.step}: ${entry.title} to Google Classroom`}
+                            aria-label={`Post to Google Classroom: step ${entry.step}, ${entry.title}`}
                           >
                             Post to Google Classroom
                           </a>
@@ -166,7 +166,7 @@ export default function AssignmentCatalog() {
                             <a
                               className="quiet-button"
                               href={`/build?from=${entry.presetId}`}
-                              aria-label={`Customize step ${entry.step}: ${entry.title} in the builder`}
+                              aria-label={`Customize in builder: step ${entry.step}, ${entry.title}`}
                             >
                               Customize in builder
                             </a>

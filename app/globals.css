@@ -2133,6 +2133,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* Phones: every line counts on a 667px-tall screen. */
 @media (max-width: 520px) {
+  /* The docked action bar covers the bottom of the screen (up to about 160px
+     once answered). Keyboard focus scrolls a control under it into view, so
+     keep focused controls clear of it. */
+  html { scroll-padding-bottom: 180px; }
   :root { --hdr: 52px; }
   .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
   .mode-tabs button { min-height: 44px; }
