@@ -181,6 +181,17 @@ describe("the assignment link", () => {
     expect(ok("?scope=beat&cells=quarter,eighths&n=20").assignment.count).toBe(20);
   });
 
+  it("builds every round a link at pool capacity can ask for, for any seed", () => {
+    // A link the parser accepts must always build. These pools sit at capacity, where
+    // random draws can miss the last arrangements and the round used to throw.
+    for (const seed of ["w43", "w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8", "w9"]) {
+      expect(
+        generateQuestions({ level: "level-1", scope: "measure", meter: "7-4", count: 5, seed, cells: ["eighth-rest", "whole"] }),
+        seed,
+      ).toHaveLength(5);
+    }
+  });
+
   it("lets the link choose what trying again means", () => {
     expect(ok("?retry=reseed").assignment.retry).toBe("reseed");
     expect(ok("?retry=off").assignment.retry).toBe("off");
