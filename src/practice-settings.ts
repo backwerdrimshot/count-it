@@ -19,7 +19,7 @@ export function supportedPracticeLength(settings: Pick<PracticeSettings, 'level'
 }
 
 export const PRACTICE_SETTINGS_KEY = 'count-it-practice-defaults-v2';
-export const DEFAULT_PRACTICE: PracticeSettings = { level: 'level-1', scope: 'measure', meter: '4-4', showReference: true, cells: null, challengeLength: 5 };
+export const DEFAULT_PRACTICE: PracticeSettings = { level: 'level-1', scope: 'beat', meter: '4-4', showReference: true, cells: null, challengeLength: 5 };
 
 export function usablePool(ids: readonly string[], scope: PracticeSettings['scope'], meter: MeterId): boolean {
   const beats = Number(meter[0]);

@@ -8,8 +8,13 @@ import { wrapResultLines } from '../src/result-download';
 
 const storage = () => { const values = new Map<string, string>(); return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } } as Storage; };
 describe('practice settings', () => {
+  it('keeps a saved full-measure preference: the one-beat default is for a fresh session only', () => {
+    const store = storage();
+    store.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ ...DEFAULT_PRACTICE, scope: 'measure' }));
+    expect(readPracticeSettings(store)?.scope).toBe('measure');
+  });
   it('opens in the agreed setup and refuses corrupt or impossible saved pools', () => {
-    expect(DEFAULT_PRACTICE).toMatchObject({ level: 'level-1', scope: 'measure', meter: '4-4', showReference: true });
+    expect(DEFAULT_PRACTICE).toMatchObject({ level: 'level-1', scope: 'beat', meter: '4-4', showReference: true });
     const store = storage();
     store.setItem(PRACTICE_SETTINGS_KEY, JSON.stringify({ ...DEFAULT_PRACTICE, cells: ['whole', 'half'], meter: '3-4' }));
     expect(readPracticeSettings(store)).toBeNull();

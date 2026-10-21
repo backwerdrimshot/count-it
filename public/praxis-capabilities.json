@@ -150,7 +150,7 @@
   },
   "freePracticeDefaults": {
     "level": "level-1",
-    "scope": "measure",
+    "scope": "beat",
     "meter": "4-4",
     "guide": "on"
   },

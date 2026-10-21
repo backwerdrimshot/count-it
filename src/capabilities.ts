@@ -143,7 +143,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     transmitsResults: false,
     description: "Director-led framed practice on approved Praxis hosts; no learner launch or persistent Program results.",
   },
-  freePracticeDefaults: { level: "level-1", scope: "measure", meter: "4-4", guide: "on" },
+  freePracticeDefaults: { level: "level-1", scope: "beat", meter: "4-4", guide: "on" },
   freePracticeFeatures: ["individual-rhythm-selection", "optional-saved-setup", "synthesized-playback", "aligned-subdivision-guide", "download-result-png", "local-completed-challenge-history"],
   acceptedInputSources: ["touch", "mouse", "computer-keyboard"],
   evidenceTypes: ["A1_ANSWER_CORRECTNESS"],
