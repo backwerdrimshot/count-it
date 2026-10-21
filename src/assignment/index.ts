@@ -289,7 +289,7 @@ export function roundProblem({
         entry: tooLong[0].id,
         message:
           `${tooLong.length === 1 ? "The rhythm" : "The rhythms"} ` +
-          `${tooLong.map((cell) => `\u201c${cell.id}\u201d`).join(", ")} ` +
+          `${tooLong.map((cell) => `\u201c${cell.label.toLowerCase()}\u201d`).join(", ")} ` +
           `${tooLong.length === 1 ? "lasts" : "last"} longer than a ${activeMeter.label} ` +
           "measure holds, so this practice link could never ask for " +
           `${tooLong.length === 1 ? "it" : "them"}. Choose a longer meter, or drop ` +
