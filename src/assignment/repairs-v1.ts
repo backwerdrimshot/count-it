@@ -1,4 +1,4 @@
-/** Local repair candidates only. Do not add these to runtime catalogs or presets. */
+/** Separately versioned repair launches; website owns placement. Preserve legacy catalogs/presets. */
 import { parseAssignment, type Assignment } from ".";
 import { getCatalogEntry } from "./catalog";
 import { BEGINNER_RESPONSE_LESSON, BEGINNER_PLAYING_CONNECTION } from "./beginner-v1";

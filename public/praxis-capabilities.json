@@ -69,7 +69,7 @@
     },
     {
       "id": "half-beats-v1",
-      "status": "local-review",
+      "status": "supported",
       "countingSystem": "standard",
       "cells": [
         "quarter",
