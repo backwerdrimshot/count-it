@@ -1,0 +1,48 @@
+# Current early Counting Rhythms entry points — local candidate
+
+Owner: Charlie / Count It. Checkout `/Users/taylordwyer/Developer/Codex/2026-10-21/task/count-it-pool-repair`, branch `charlie/counting-pool-repair-v2`, base main `dd9e2724be45f70e3210cb859f78a429440114df`. Candidate build `2026-10-21.7` is not a live-release claim. Fresh read-only remote inventory found main unchanged and only PR88 open at0f747240; that branch is untouched. No repository or parent `.agents/skills` or AGENTS.md was present in the searched trees. No website or lesson worktree was edited.
+
+## Recommendation and actual student experience
+
+Fix existing entry points, retain literal original rounds in an explicit archive, reuse already released supported activities, and give each activity a teaching role. Do not multiply equivalent cards or inflate length beyond unique capacity. Original step4 already had variety; it changes role to meter transfer rather than pretending its old pool was small.
+
+| Original entry | Current role and canonical activity | Questions / distinct notation / distinct correct counts | Full notation capacity | Support |
+| --- | --- | --- | --- | --- |
+| 1 | Quarter/pair four-beat application; `quarters-pairs-bridge-v1-4` | 8 / 8 / 8 | 16 | Guide, each-answer feedback, free retry, eighths-v1 |
+| 2 | Prepared mixed-rest integration; `counting-repairs-v1-1` | 8 / 8 / 7 | 256 | Guide, each-answer feedback, free retry, half-beats-v1 |
+| 3 | Mixed-rest reduced-support recognition; `counting-early-v2-3` | 8 / 8 / 7 | 256 | Guide off, end feedback, retry button off, half-beats-v1 |
+| 4 | Familiar notes across three beats; `quarters-pairs-bridge-v1-3` | 6 / 6 / 6 | 8 | Guide restored for new3/4 context, each-answer feedback, free retry |
+| 5 | Five sixteenth patterns introduced once; `counting-early-v2-5` | 5 / 5 / 5 | 5 | Explicit notation/response instruction, guide, each-answer feedback, free retry |
+| Optional after5 | Sixteenth bar application; `counting-early-v2-6` | 8 / 8 / 8 | 625 | Same taught vocabulary, supported4/4 bars |
+
+Every current activity has no time limit or pass threshold. The two-pattern one-beat introduction remains a short optional warm-up with purposeful repetition; optional2/4 practice covers all4bars. No new meter, cell, response mode or generator behavior was added. These are recognition activities; even reduced support does not prove pulse, played duration, retention or independent mastery. Deliberate replay is appropriate for preparation. Varied bars are appropriate for application, not evidence of exhaustive coverage.
+
+Original1/2/3/5 had respectively2/2/4/5 one-beat patterns across12questions; original4 had12sampled four-beat arrangements from256, with count collisions. Quarter notes and eighth-note+rest cells can share the same attack count despite different written duration; choice reordering creates no new rhythm or answer. The rest palette has256notation arrangements but only81attack-count patterns; fixed seeds for current2/3 each produce7answer patterns from8notation arrangements. Quarter/pair answer capacities are16 in4/4 and8 in3/4; the five-pattern sixteenth palette has5one-beat and625four-beat answer patterns. Do not advertise these as8different answers. Explicit1/e/&/a instruction is supplied before the sixteenth introduction/application; half-beat practice exposes neither e nor a as prerequisite response tokens.
+
+## Legacy URLs and historical results — deliberate compatibility decision
+
+Exact normalized known original first-five **root** URLs (including unmarked saved builder versions) open current practice. A visible notice identifies the change, explains preparation, says old scores are not converted, and offers the archived original. The address updates to the canonical current query. Class codes carry through; no student accounts/backend are added. Different settings/seeds, nonstandard counting systems, conflicting sequence markers, duplicate parameters and unknown parameters remain literal or fail through the existing parser.
+
+`/archive` plus the unchanged original query bypasses migration and retains the old generator, question/choice set, settings, pass goal, result interpretation, attempt key and retries. Existing histories/results are never rewritten. Replaying an old exported settings query requires the explicit `/archive` path: a root URL cannot distinguish an old result replay from the identical saved assignment bookmark. This tradeoff is explicit, not a claim of byte-identical root behavior. Existing per-device answer ordering remains presentation only.
+
+The original snapshot is `src/assignment/catalog-original.ts`; engine/parser/presets are unchanged. The current UI and builder resolve entry points through `src/assignment/early-v2.ts`. Lower-level parsing stays literal. The new root launch resolver is the only migration boundary. Archived metadata still describes the original rounds. Existing repair prerequisite/next links targeting original1–5 now use `/archive`, preventing accidental loops or claiming a changed prerequisite is unchanged.
+
+## Exact website integration contract
+
+Machine handoff: `docs/early-v2-integration.json`, schema `count-it.early-entrypoints.v2`. It contains every old/current query, archive URL, canonical activity ID, result seq/step, serialized attempt key, pool capacity, selected rhythm/answer counts, cell exposures and all generated questions/choices. Tests compare this generated payload to the checked-in file. Paths/launch settings can be consumed without manually retyping queries.
+
+`public/praxis-assignment-catalog.json` retains original IDs/queries/goals and changes their literal `link` to `/archive`. Its additive `launchResolutionVersion:2` and `currentLaunch` object explicitly describe the recommended current activity, including its own ID/title/query/link/count/null pass/preparation. Consumers must use currentLaunch for current student-facing text/launches, or the archive link plus original metadata for historical rounds. Do not mix the old12-question text/10-pass goal with a current8-question launch. Canonical result identities are reused bridge/repair IDs for entries1/2/4; entries3/5 and optional6 are new. Completion tallies use current serialized settings, and old scores are not aggregated into them.
+
+The current catalog heading is now “Counting Rhythms — current practice”, since step4 is3/4. Preserve the old4/4 heading only in archive metadata. App source is authoritative for launch settings/capabilities; website owner owns sequence descriptions/cards/prerequisite/next navigation. Canonical lessons remain with their owner. Keep all free assignments/lessons/kits free. Public lesson URLs are in the machine payload. Update the existing first-five cards rather than adding three duplicate versions of reused activities. Link the short introductions as optional preparation and the sixteenth full-bar application as a separate next choice.
+
+Before publishing website changes verify the deployed capability includes `earlyLaunchResolution.version=2`, archivePath `/archive`, both response profiles, exact served commit/build and representative original/current/archive launches. A successful HTTP response or date alone is insufficient. App release precedes dependent website text/links; no dependent publication is authorized by this local handoff.
+
+## Release proposal and remaining decisions
+
+Local execution costs$0; no push, PR, hosted CI, merge or deploy occurred. This batch has **no publication budget**. The prior Count It allocations are completed; Staff Spot/Eight Time's new$.53 is unrelated.
+
+Propose a fresh **$0.35 maximum** for one final PR/head review, one main merge and its automatic Worker deploy, and a planned50live HTTP requests, with room for58total requests within the dollar ceiling. Configured workflow side effects: PR Validate+README; main Validate+README; one successful-main-Validate-gated production deploy job, which repeats pnpm check. No larger runner, new subscription/storage binding, extra deployment or paid retry is included. Public standard GitHub runners have expected incremental$0 cost. Pricing assumptions must be freshly confirmed at release preflight, including current cache/account/provider conditions and existing review integration. Conservative SSR bound at300,000CPUms/request and$.02/millionCPUms plus$.30/millionrequests gives50requests=$0.300015 (58requests=$0.3480174) before included usage, within$.35. The dollar ceiling governs; do not add a separate approval gate just because the internal50-request planning assumption changes. Actual expected marginal cost is near$0; this is a proposal, not permission to spend or a claim of billable invoice totals. Stop before expanding if release side effects differ.
+
+Remaining concrete gates are independent exact-head review, final regression receipts, fresh release-cost authorization, fresh remote collision/checks, hosted exact-head review/checks and live verification, then coordinated website integration. No vague educator approval or mastery validation is being added as a blocker. Classroom observation can refine sequencing later without holding this bounded repair hostage.
+
+Pricing sources checked read-only on2026-10-21: [GitHub Actions billing](https://docs.github.com/en/actions/concepts/billing-and-usage), [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/), and [Workers CPU limits](https://developers.cloudflare.com/workers/platform/limits/). Fresh API inventory confirms public visibility and one215,575,892-byte cache. Account-specific review billing and dashboard-side deployment configuration remain unverified; no new paid review product or automatic retry is proposed.

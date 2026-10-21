@@ -45,22 +45,22 @@ async function playRound(page) {
     et4.startsWith("https://eight-time.backwerdrhythmshop.com/?seq=rhythms-in-three&step=4") && et4.includes("seed=r3-4-eighth-beat"), et4.slice(0, 90));
   note("catalog: an Eight Time step has no builder link and no tally", (await page.locator("#rhythms-in-three-4 a:has-text('Customize')").count()) === 0 && (await page.locator("#rhythms-in-three-4 .catalog-status").count()) === 0);
   const hrefs = await page.$$eval(".catalog-actions a:first-child", (as) => as.map((a) => a.getAttribute("href")));
-  note("catalog: Try it opens the published link, relative for Count It's own steps", hrefs[0].startsWith("/?seq=counting-rhythms&step=1&") && hrefs[12].startsWith("/?seq=rhythms-in-three&step=3&"), hrefs[0].slice(0, 70));
+  note("catalog: Try it opens the published link, relative for Count It's own steps", hrefs[0].startsWith("/?seq=quarters-pairs-bridge-v1&step=4&") && hrefs[12].startsWith("/?seq=rhythms-in-three&step=3&"), hrefs[0].slice(0, 70));
 
   // copy
   await page.locator("#counting-rhythms-2 button:has-text('Copy link')").click();
   await page.waitForTimeout(300);
   const clip = await page.evaluate(() => navigator.clipboard.readText());
-  note("catalog: Copy link puts the absolute published link on the clipboard", clip.startsWith("https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=2&") && clip.includes("seed=cr2-wheres-the-and"), clip.slice(0, 80));
+  note("catalog: Copy link puts the absolute published link on the clipboard", clip.startsWith("https://count-it.backwerdrhythmshop.com/?seq=counting-repairs-v1&step=1&") && clip.includes("seed=cr-repair-v1-rest-bars"), clip.slice(0, 80));
   note("catalog: …and says so", /Copied/.test((await page.locator("#counting-rhythms-2 .builder-copied").textContent()) || ""));
 
   // play step 1 from the catalog and come back
   await page.locator("#counting-rhythms-1 a:has-text('Try it')").click();
-  await page.waitForURL(/seq=counting-rhythms&step=1/);
+  await page.waitForURL(/seq=quarters-pairs-bridge-v1&step=4/);
   const answered = await playRound(page);
-  note("catalog: a step opened from the catalog plays to a result card (12 questions)", (await page.locator(".result-card").count()) === 1 && answered === 12, `answered ${answered}`);
+  note("catalog: a step opened from the catalog plays to a result card (8 questions)", (await page.locator(".result-card").count()) === 1 && answered === 8, `answered ${answered}`);
   const cond = (await page.locator(".result-card").first().textContent()) || "";
-  note("catalog: the card names the step it was", /counting-rhythms/.test(cond) && /step 1/.test(cond), (await page.locator(".result-step").first().textContent().catch(() => "")) || "");
+  note("catalog: the card names the step it was", /quarters-pairs-bridge-v1/.test(cond) && /step 4/.test(cond), (await page.locator(".result-step").first().textContent().catch(() => "")) || "");
   await page.goto(BASE + "/assignments", { waitUntil: "networkidle" });
   await page.waitForTimeout(300);
   note("catalog: that step now says it was finished once on this device", /Finished 1 time on this device/.test((await page.locator("#counting-rhythms-1 .catalog-status").textContent()) || ""));
@@ -100,12 +100,12 @@ async function playRound(page) {
   note("builder: its link carries 3/4 and the step's own seed", link.includes("meter=3-4") && link.includes("seed=r3-2-sixteenths"), link.slice(0, 100));
   await b.goto(BASE + "/build?from=counting-rhythms-3", { waitUntil: "networkidle" });
   await b.waitForTimeout(300);
-  note("builder: a Counting Rhythms step says its meter is pinned to 4/4", /pinned to 4\/4/.test((await b.locator(".builder-preset-note").textContent()) || ""));
+  note("builder: a Counting Rhythms step says its meter is pinned to 4/4", /The meter is 4\/4/.test((await b.locator(".builder-preset-note").textContent()) || ""));
   await b.goto(BASE + "/build?from=nonsense", { waitUntil: "networkidle" });
   await b.waitForTimeout(300);
   note("builder: an unknown ?from= is ignored and the form opens normally with a fresh seed", (await b.locator("select").first().inputValue()) === "" && /seed=[a-z0-9]{6}/.test(await b.locator(".builder-linkbox input").inputValue()));
   const groups = await b.$$eval("select optgroup", (g) => g.map((x) => x.label + ":" + x.querySelectorAll("option").length));
-  note("builder: the step menu groups both sequences", groups.join("|") === "Counting Rhythms — 4/4:10|Rhythms in Three — 3/4:3", groups.join("|"));
+  note("builder: the step menu groups both sequences", groups.join("|") === "Counting Rhythms — current entry points:10|Rhythms in Three — 3/4:3", groups.join("|"));
 
   // quiz
   await b.goto(BASE + "/build", { waitUntil: "networkidle" });

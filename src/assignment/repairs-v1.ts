@@ -1,6 +1,6 @@
 /** Separately versioned repair launches; website owns placement. Preserve legacy catalogs/presets. */
 import { parseAssignment, type Assignment } from ".";
-import { getCatalogEntry } from "./catalog";
+import { getCatalogEntry } from "./catalog-original";
 import { BEGINNER_RESPONSE_LESSON, BEGINNER_PLAYING_CONNECTION } from "./beginner-v1";
 export const REPAIR_SEQUENCE_ID = "counting-repairs-v1";
 export const REST_BAR_LESSON = "In 4/4, follow four quarter-note beats. A quarter starts on the number; paired eighths start on the number and &. An eighth note followed by an eighth rest starts only on the number; an eighth rest followed by an eighth note starts only on &. Both rests still occupy time. Here & alone can be correct. Choices describe written note starts, not duration; | separates nonempty groups of starts. A quarter and an eighth followed by a rest share a count, so this app cannot tell whether you distinguished their durations. No e or a responses are used in this repair.";
@@ -31,7 +31,7 @@ export const REPAIR_STEPS=designs.map((design,index)=>{
  const params=new URLSearchParams({seq:REPAIR_SEQUENCE_ID,step:String(step),a:`Repair v1.${step}: ${design.title}`,sys:"standard",scope:design.scope,meter:"4-4",cells:design.cells,guide:"on",fb:"each",retry:"free",n:String(design.count),hints:"off",seed:design.seed});
  if(design.response)params.set("response",design.response);
  const query=`?${params.toString()}`;const parsed=parseAssignment(query);if(!parsed.ok)throw Error(parsed.error.message);
- return Object.freeze({...design, links:{...design.links, prerequisiteLaunches:design.links.prerequisiteLegacySteps.map(n=>getCatalogEntry(`counting-rhythms-${n}`)!.link),nextLaunch:getCatalogEntry(`counting-rhythms-${design.beforeLegacyStep}`)!.link},id:`${REPAIR_SEQUENCE_ID}-${step}`,step,query,assignment:parsed.assignment});
+ return Object.freeze({...design, links:{...design.links, prerequisiteLaunches:design.links.prerequisiteLegacySteps.map(n=>(n <= 5 ? `https://count-it.backwerdrhythmshop.com/archive${getCatalogEntry(`counting-rhythms-${n}`)!.query}` : getCatalogEntry(`counting-rhythms-${n}`)!.link)),nextLaunch:design.beforeLegacyStep <= 5 ? `https://count-it.backwerdrhythmshop.com/archive${getCatalogEntry(`counting-rhythms-${design.beforeLegacyStep}`)!.query}` : getCatalogEntry(`counting-rhythms-${design.beforeLegacyStep}`)!.link},id:`${REPAIR_SEQUENCE_ID}-${step}`,step,query,assignment:parsed.assignment});
 });
 export const REPAIR_PLAYING_CONNECTION=BEGINNER_PLAYING_CONNECTION+" Add a silent span or a long note, then change its placement in a new paper bar. Observe elapsed pulse, silent duration, held duration and next attack separately. Use the free kit/lesson for a later check; app accuracy is not validated mastery.";
 

@@ -1,4 +1,5 @@
 "use client";
+import { resolveEarlyLaunch, earlyInstruction, SIXTEENTH_INTRO_LESSON, SIXTEENTH_APPLICATION } from "../src/assignment/early-v2";
 import { misconceptionMessage } from "../src/question/feedback";
 import { responseLessonForAssignment } from "../src/assignment/repairs-v1";
 import { ResponseVocabularyContext } from "./ResponseVocabulary";
@@ -1226,7 +1227,9 @@ function BuildStamp() {
   return <span className="build-stamp">Build {BUILD_ID}</span>;
 }
 
-export default function CountItApp() {
+export default function CountItApp({archiveOriginal=false}:{archiveOriginal?:boolean}={}) {
+  const [archiveQuery,setArchiveQuery]=useState("");
+  const [launchUpdate,setLaunchUpdate]=useState<ReturnType<typeof resolveEarlyLaunch>>(null);
   const [mode, setMode] = useState<AppMode>("practice");
   const modeTabRefs = useRef<Record<AppMode, HTMLButtonElement | null>>({
     practice: null,
@@ -1421,8 +1424,13 @@ export default function CountItApp() {
       /* Read before the assignment is validated: a link that names a step and
          then fails validation is still evidence of which step was attempted,
          and refusing the round does not make the marker untrue. */
-      setSequenceStep(parseSequenceStep(window.location.search));
-      const result = parseAssignment(window.location.search);
+      setArchiveQuery(window.location.search);
+      const updated = archiveOriginal ? null : resolveEarlyLaunch(window.location.search);
+      const search = updated?.query ?? window.location.search;
+      setLaunchUpdate(updated);
+      if (updated) window.history.replaceState(window.history.state,"",`/${search}`);
+      setSequenceStep(parseSequenceStep(search));
+      const result = parseAssignment(search);
       if (!result.ok) {
         setLinkError(result.error);
         return;
@@ -1490,7 +1498,7 @@ export default function CountItApp() {
     }, 0);
 
     return () => window.clearTimeout(applyLink);
-  }, []);
+  }, [archiveOriginal]);
 
   /* Practice pages through as many prompts as the pool can actually make, up
      to twelve.
@@ -1797,7 +1805,7 @@ export default function CountItApp() {
     setSession((current) => advanceSession(current));
   }
 
-  const assignmentLesson = responseLessonForAssignment(assignment);
+  const assignmentLesson = earlyInstruction(assignment) ?? responseLessonForAssignment(assignment);
 
   return (
     <ResponseVocabularyContext.Provider value={assignment?.response}>
@@ -1821,7 +1829,10 @@ export default function CountItApp() {
       </nav>
 
       <main id="top">
+        {archiveOriginal && <p className="beginner-response-lesson" role="note"><strong>Archived original round.</strong> These literal settings preserve the old questions, goals and replay. For current practice, <a href={`/${archiveQuery}`}>open the updated entry point</a>.</p>}
+        {launchUpdate && <section className="beginner-response-lesson" aria-label="Updated assignment"><h2>This saved assignment now opens updated practice</h2><p>{launchUpdate.purpose}</p>{launchUpdate.preparation !== assignmentLesson && <p>{launchUpdate.preparation}</p>}<p>The new round has its own settings, seed and result identity; old scores are not converted. <a href={launchUpdate.archiveLink}>Open the archived original round for historical replay</a>.</p>{launchUpdate.warmup && <p><a href={`/${launchUpdate.warmup}`}>Optional short one-beat introduction</a> · <a href={`/${launchUpdate.twoBeatPractice}`}>Four distinct two-beat bars in 2/4</a></p>}</section>}
         {assignmentLesson && <p className="beginner-response-lesson" role="note">{assignmentLesson}</p>}
+        {assignmentLesson === SIXTEENTH_INTRO_LESSON && <p><a href={`/${SIXTEENTH_APPLICATION.query}`}>When ready: supported sixteenth patterns across a full bar</a></p>}
         {/* The page's one <h1> used to sit in the hero, which now lives in the closed
             Help dialog and so is not in the page outline. It stays here, visually
             hidden, so the heading is there for screen readers and outline tools. */}

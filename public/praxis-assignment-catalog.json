@@ -1,12 +1,13 @@
 {
   "schema": "count-it.assignment-catalog.v1",
-  "description": "Every published teaching-sequence step that runs in Count It or its sibling Eight Time. Each `link` is the assignment link the shop site publishes for that step. All entries are free: a named assignment is a set of link settings, not a locked resource.",
+  "launchResolutionVersion": 2,
+  "description": "Original settings and explicit archive links remain literal for historical replay. currentLaunch describes the recommended activity for the first five Counting Rhythms entry points. Exact old root URLs upgrade with a visible notice; /archive preserves their original rounds. All activities are free.",
   "sequences": [
     {
       "id": "counting-rhythms",
-      "name": "Counting Rhythms — 4/4",
+      "name": "Counting Rhythms — current practice",
       "url": "https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/",
-      "blurb": "Quarters and pairs, rest entry, sixteenths in stages, full measures with the guide off, then notes that last longer than a beat."
+      "blurb": "Short introductions, supported bar applications and reduced-support recognition, including a supported 3/4 transfer. Original first-five rounds remain available in the archive."
     },
     {
       "id": "rhythms-in-three",
@@ -29,8 +30,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
-      "presetId": "counting-rhythms-1"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+      "presetId": "counting-rhythms-1",
+      "archiveLink": "/archive?seq=counting-rhythms&step=1&a=Step%201%3A%20Quarters%20%26%20Pairs&scope=beat&cells=quarter,eighths&guide=on&n=12&pass=10&seed=cr1-quarters-pairs",
+      "currentLaunch": {
+        "activityId": "quarters-pairs-bridge-v1-4",
+        "title": "Carry the count through four",
+        "name": "Bridge v1.4: Carry the count through four",
+        "focus": "Supported application: eight different four-beat quarter/pair bars, not twelve alternating one-beat prompts.",
+        "query": "?seq=quarters-pairs-bridge-v1&step=4&a=Bridge+v1.4%3A+Carry+the+count+through+four&response=eighths-v1&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths&guide=on&fb=each&retry=free&n=8&hints=off&seed=qp-bridge-v1-4",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=quarters-pairs-bridge-v1&step=4&a=Bridge+v1.4%3A+Carry+the+count+through+four&response=eighths-v1&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths&guide=on&fb=each&retry=free&n=8&hints=off&seed=qp-bridge-v1-4",
+        "summary": "2 rhythms · one measure · Standard counting · beat numbers and & only (eighths-v1) · guide visible · 8 questions",
+        "count": 8,
+        "passing": null,
+        "preparation": "Teach four numbered quarter-note beats and the number/& response lesson first. The short one-beat introduction and two-beat practice remain available as warm-ups.",
+        "archivedSummary": "2 rhythms · one beat · guide visible · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-2",
@@ -45,8 +60,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
-      "presetId": "counting-rhythms-2"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+      "presetId": "counting-rhythms-2",
+      "archiveLink": "/archive?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and",
+      "currentLaunch": {
+        "activityId": "counting-repairs-v1-1",
+        "title": "Supported mixed-rest bars",
+        "name": "Repair v1.1: Supported mixed-rest bars",
+        "focus": "Supported integration of already prepared quarter/pair cells and eighth-rest order over a full bar. Eight notation arrangements give seven distinct count patterns.",
+        "query": "?seq=counting-repairs-v1&step=1&a=Repair+v1.1%3A+Supported+mixed-rest+bars&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=on&fb=each&retry=free&n=8&hints=off&seed=cr-repair-v1-rest-bars&response=half-beats-v1",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-repairs-v1&step=1&a=Repair+v1.1%3A+Supported+mixed-rest+bars&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=on&fb=each&retry=free&n=8&hints=off&seed=cr-repair-v1-rest-bars&response=half-beats-v1",
+        "summary": "4 rhythms · one measure · Standard counting · beat numbers and & only (half-beats-v1) · guide visible · 8 questions",
+        "count": 8,
+        "passing": null,
+        "preparation": "Teach eighth-note/rest order using the inline examples and Notes & Rests before this application. Different written durations can share a count.",
+        "archivedSummary": "2 rhythms · one beat · guide visible · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-3",
@@ -61,8 +90,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
-      "presetId": "counting-rhythms-3"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+      "presetId": "counting-rhythms-3",
+      "archiveLink": "/archive?seq=counting-rhythms&step=3&a=Step%203%3A%20Pulse%20%26%20Pairs%2C%20No%20Help&scope=beat&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr3-no-help",
+      "currentLaunch": {
+        "activityId": "counting-early-v2-3",
+        "title": "Mixed-rest reduced-support sample",
+        "name": "Early v2: Mixed-rest reduced-support sample",
+        "focus": "A brief reduced-support recognition sample of the same prepared four-beat rest vocabulary. Multiple choice, previous practice and possible pool overlap remain supports; this is not independent mastery.",
+        "query": "?seq=counting-early-v2&step=3&a=Early+v2%3A+Mixed-rest+reduced-support+sample&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=off&fb=end&retry=off&n=8&hints=off&seed=cr-early-v2-rest-check&response=half-beats-v1",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=3&a=Early+v2%3A+Mixed-rest+reduced-support+sample&sys=standard&scope=measure&meter=4-4&cells=quarter%2Ceighths%2Ceighth-rest%2Crest-eighth&guide=off&fb=end&retry=off&n=8&hints=off&seed=cr-early-v2-rest-check&response=half-beats-v1",
+        "summary": "4 rhythms · one measure · Standard counting · beat numbers and & only (half-beats-v1) · guide hidden · answers at the end · one attempt · 8 questions",
+        "count": 8,
+        "passing": null,
+        "preparation": "Complete supported mixed-rest bars first. Guide off, feedback at the end, retry button off; reopening remains possible.",
+        "archivedSummary": "4 rhythms · one beat · guide hidden · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-4",
@@ -77,8 +120,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
-      "presetId": "counting-rhythms-4"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+      "presetId": "counting-rhythms-4",
+      "archiveLink": "/archive?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers",
+      "currentLaunch": {
+        "activityId": "quarters-pairs-bridge-v1-3",
+        "title": "Carry the count through three",
+        "name": "Bridge v1.3: Carry the count through three",
+        "focus": "Supported meter transfer: six of eight quarter/pair bars in 3/4. Restore the guide and use familiar note values while learning a different bar length.",
+        "query": "?seq=quarters-pairs-bridge-v1&step=3&a=Bridge+v1.3%3A+Carry+the+count+through+three&response=eighths-v1&sys=standard&scope=measure&meter=3-4&cells=quarter%2Ceighths&guide=on&fb=each&retry=free&n=6&hints=off&seed=qp-bridge-v1-3",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=quarters-pairs-bridge-v1&step=3&a=Bridge+v1.3%3A+Carry+the+count+through+three&response=eighths-v1&sys=standard&scope=measure&meter=3-4&cells=quarter%2Ceighths&guide=on&fb=each&retry=free&n=6&hints=off&seed=qp-bridge-v1-3",
+        "summary": "2 rhythms · one measure · Standard counting · 3/4 · beat numbers and & only (eighths-v1) · guide visible · 6 questions",
+        "count": 6,
+        "passing": null,
+        "preparation": "Teach three quarter-note beats per 3/4 bar and restarting at 1. This is not a harder notation pool. Use the optional two-beat practice if changing bar length is new.",
+        "archivedSummary": "4 rhythms · one measure · guide hidden · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-5",
@@ -93,8 +150,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
-      "presetId": "counting-rhythms-5"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+      "presetId": "counting-rhythms-5",
+      "archiveLink": "/archive?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+      "currentLaunch": {
+        "activityId": "counting-early-v2-5",
+        "title": "Meet five sixteenth patterns",
+        "name": "Early v2: Meet five sixteenth patterns",
+        "focus": "A short notation/response introduction: all five target one-beat patterns once each. Small pools and deliberate replay are appropriate here; twelve responses are unnecessary.",
+        "query": "?seq=counting-early-v2&step=5&a=Early+v2%3A+Meet+five+sixteenth+patterns&scope=beat&cells=three-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Csixteenths&guide=on&n=5&seed=cr-early-v2-sixteenth-intro&sys=standard&meter=4-4&fb=each&retry=free&hints=off",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=5&a=Early+v2%3A+Meet+five+sixteenth+patterns&scope=beat&cells=three-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Csixteenths&guide=on&n=5&seed=cr-early-v2-sixteenth-intro&sys=standard&meter=4-4&fb=each&retry=free&hints=off",
+        "summary": "5 rhythms · one beat · Standard counting · guide visible · 5 questions",
+        "count": 5,
+        "passing": null,
+        "preparation": "Divide one quarter-note beat into four equal positions: 1 e & a. Four sixteenth notes start at all four positions. A sixteenth rest, one sixteenth note, then an eighth rest starts only on e. An eighth rest, a sixteenth rest, then one sixteenth note starts only on a. Alternating sixteenth rests and notes start on e and a. A sixteenth rest, two sixteenth notes, then a sixteenth rest starts on e and &. Rests take time but have no note start. This fragment starts on beat 1; 2 in a wrong choice is a wrong beat number, not another beat here. Read supplied choices as note starts. Five questions introduce these five patterns once each; replay them deliberately if helpful, then try the separate supported bar application when ready.",
+        "archivedSummary": "5 rhythms · one beat · guide visible · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-6",

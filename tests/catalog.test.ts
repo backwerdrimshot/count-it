@@ -97,7 +97,7 @@ describe("the assignment catalog", () => {
   });
 
   it("points each entry at the app that runs it", () => {
-    for (const entry of countIt) expect(entry.link).toBe(`${PRODUCTION_ORIGIN}/${entry.query}`);
+    for (const entry of countIt) expect(entry.link).toBe(`${PRODUCTION_ORIGIN}${entry.sequence === "counting-rhythms" && entry.step <= 5 ? "/archive" : "/"}${entry.query}`);
     for (const entry of eightTime) {
       expect(entry.link).toBe(`${EIGHT_TIME_ORIGIN}/${entry.query}`);
       expect(new URLSearchParams(entry.query).get("meter")).toBe("3-8");

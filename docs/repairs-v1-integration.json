@@ -54,9 +54,9 @@
         "nextLegacyStep": 4,
         "nextRequirement": "The unchanged legacy next steps can include e and a in wrong choices even when the written rhythm uses only quarter/eighth or long values. Before using those links, teach four equal positions (number e & a), added/omitted/moved starts, and wrong beat labels. This half-beat repair alone does not prepare that extra response demand. A teacher-led changed bar is an alternative next check.",
         "prerequisiteLaunches": [
-          "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and"
+          "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=2&a=Step%202%3A%20Where's%20the%20%26%3F&scope=beat&cells=eighth-rest,rest-eighth&guide=on&n=12&pass=10&seed=cr2-wheres-the-and"
         ],
-        "nextLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers"
+        "nextLaunch": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=4&a=Step%204%3A%20Beat%20Numbers%20Travel&scope=measure&cells=quarter,eighths,eighth-rest,rest-eighth&guide=off&n=12&pass=10&seed=cr4-beat-numbers"
       },
       "id": "counting-repairs-v1-1",
       "step": 1,
@@ -415,7 +415,7 @@
         "nextLegacyStep": 7,
         "nextRequirement": "Continue to unchanged legacy step 7 only after discussing the three taught cells; it removes the guide and broadens the pool. Multiple choice still supplies answers.",
         "prerequisiteLaunches": [
-          "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
+          "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
           "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos"
         ],
         "nextLaunch": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent"
