@@ -54,10 +54,12 @@ import {
   parseAssignment,
   playedAssignment,
   retakeSeed,
+  roundKey,
   roundLengthFor,
   serializeAssignment,
   unavailableChoices,
   uniqueMeasures,
+  uniqueQuestions,
   verificationCode,
   type Assignment,
   type AssignmentError,
@@ -218,6 +220,7 @@ function SetupControls({
   meter,
   system,
   savedSystem,
+  repeatNote,
   systemSaveMessage,
   showReference,
   assignment,
@@ -239,6 +242,8 @@ function SetupControls({
   meter: MeterId;
   system: CountingProfileId;
   savedSystem: CountingProfileId | null;
+  /** Said where the round is set up when it would repeat questions; null otherwise. */
+  repeatNote: string | null;
   systemSaveMessage: string;
   showReference: boolean;
   assignment: Assignment | null;
@@ -285,6 +290,7 @@ function SetupControls({
         <p className="eyebrow">{assignment ? "Assigned practice" : "Set your focus"}</p>
         <h2 id="setup-title">{assignment ? "Your teacher set this up." : "What do you want to read?"}</h2>
       </div>
+      {repeatNote && <p className="setup-note" role="note">{repeatNote}</p>}
       {assignment && (
         // The conditions, stated where the student can see them. A locked
         // control that just refuses to move is a bug from the outside; one
@@ -724,6 +730,10 @@ function ChallengeMode({
   onHint,
   badgeNews,
   onStudentIdChange,
+  roundId,
+  uniqueQuestionCount,
+  classEntry,
+  onClassEntryChange,
   onAnswer,
   onAdvance,
   onRetry,
@@ -758,6 +768,14 @@ function ChallengeMode({
    *  storage is unavailable or before the round is saved. Never in the summary. */
   badgeNews: BadgeNews | null;
   onStudentIdChange: (value: string) => void;
+  /** The identity of the round as played (null for practice): what the summary's
+   *  Round line names, so two different rounds are never merged on export. */
+  roundId: string | null;
+  /** How many different questions the played round can ask. A round longer than
+   *  this repeats questions, and the summary says so. */
+  uniqueQuestionCount: number;
+  classEntry: string;
+  onClassEntryChange: (value: string) => void;
   onAnswer: (choiceId: string) => void;
   onAdvance: () => void;
   onRetry: () => void;
@@ -832,6 +850,17 @@ function ChallengeMode({
       ? elapsedSeconds(startedAt, finishedAt.getTime())
       : null;
     const timing = limitMinutes !== null && elapsed !== null ? { elapsedSeconds: elapsed, limitMinutes } : null;
+    /* A link that asks for a class code gets a summary only once the student has
+       typed that code, so a result can never reach the teacher unlabelled. A
+       practice round has no class, no round and no class gate. */
+    const classCode = assignment?.classCode && classEntry.trim().toLowerCase() === assignment.classCode.toLowerCase()
+      ? assignment.classCode
+      : null;
+    const classMissing = Boolean(assignment?.classCode) && !classCode;
+    const round = assignment && roundId ? roundId : null;
+    /* A round longer than the questions it can ask repeats some of them. Said in
+       the summary, so the teacher can tell a repeated question from a new one. */
+    const repeats = session.questions.length > uniqueQuestionCount;
     const code = verificationCode({
       assignment: assignment?.name ?? "",
       studentId,
@@ -841,6 +870,9 @@ function ChallengeMode({
       attempt,
       ...(timing ? { timing } : {}),
       ...(hinted ? { hintsUsed: hinted.size } : {}),
+      ...(round ? { round } : {}),
+      ...(classCode ? { classCode } : {}),
+      ...(repeats ? { repeats } : {}),
     });
     const conditions = result.conditions.stated;
     const passed = result.outcome.metGoal;
@@ -858,11 +890,14 @@ function ChallengeMode({
     const summary = [
       `Count It — Choose the Count`,
       assignment?.name ? `Assignment: ${assignment.name}` : "Practice session",
+      round ? `Round: ${round}` : null,
       sequenceStep ? `Step: ${sequenceStep.seq} #${sequenceStep.step}` : null,
       studentId ? `Student: ${studentId}` : null,
+      classCode ? `Class: ${classCode}` : null,
       `Score: ${session.score}/${session.questions.length} (${accuracy}%)`,
       attempt > 1 ? `Attempt: ${attempt}` : null,
       `Conditions: ${conditions}`,
+      repeats ? "Repeats: yes" : null,
       timing ? timeTicketLine(timing.elapsedSeconds, timing.limitMinutes) : null,
       hinted ? hintsTicketLine(hinted.size) : null,
       passed === null ? null : `Result: ${passed ? "met the goal" : "not yet at the goal"}`,
@@ -887,11 +922,11 @@ function ChallengeMode({
     };
     const saveButtons = (
       <>
-        <button type="button" className="secondary-button" onClick={async () => {
+        <button type="button" className="secondary-button" disabled={classMissing} onClick={async () => {
           const copied = await copyResultImage(summary);
           setCopyNotice(copied ? "Result image copied. Paste it into an app that accepts images." : "Image copy unavailable. Use Download PNG instead.");
         }}>Copy result image</button>
-        <button type="button" className="secondary-button" onClick={async () => {
+        <button type="button" className="secondary-button" disabled={classMissing} onClick={async () => {
           const downloaded = await downloadResultImage(summary);
           setCopyNotice(downloaded ? "PNG download started." : `PNG unavailable. Use ${assignment ? "Turn this in" : "Copy summary"} instead.`);
         }}>Download PNG</button>
@@ -952,6 +987,27 @@ function ChallengeMode({
             {badgeNews.streak > 1 && streakText(badgeNews.streak)}
           </p>
         )}
+        {assignment?.classCode && (
+          <label className="student-id-field class-code-field">
+            <span>Class code from your teacher</span>
+            <input
+              type="text"
+              value={classEntry}
+              maxLength={24}
+              autoComplete="off"
+              aria-describedby="class-code-note"
+              onChange={(event) => onClassEntryChange(event.target.value)}
+            />
+            <small id="class-code-note">
+              You type this yourself, so it shows which class sent the result. It does not prove who you are.
+            </small>
+            {classMissing && (
+              <small role="status">
+                {classEntry.trim() ? "That is not the class code on this link." : "Type the class code to turn this in."}
+              </small>
+            )}
+          </label>
+        )}
         {assignment && (
           <label className="student-id-field">
             <span>Your name or class ID (optional)</span>
@@ -972,7 +1028,7 @@ function ChallengeMode({
             rounds keep their row of buttons exactly as it was. */}
         <div className="result-actions">
           {assignment ? (
-            <button type="button" className="primary-button turn-in-button" onClick={() => copySummary(true)}>
+            <button type="button" className="primary-button turn-in-button" disabled={classMissing} onClick={() => copySummary(true)}>
               Turn this in
             </button>
           ) : (
@@ -1236,6 +1292,9 @@ export default function CountItApp() {
   const [sequenceStep, setSequenceStep] = useState<SequenceStep | null>(null);
   const [linkError, setLinkError] = useState<AssignmentError | null>(null);
   const [studentId, setStudentId] = useState("");
+  /* The class code the student types for a link that asks for one. Typed, not
+     checked against anything but the link: it says which class sent a result. */
+  const [classEntry, setClassEntry] = useState("");
   const [finishedAt, setFinishedAt] = useState<Date | null>(null);
   /** When the current run of a time-limited round was first shown. Null with no
    *  limit, and between runs; set by the effect below, never during a render. */
@@ -1293,6 +1352,19 @@ export default function CountItApp() {
   );
   const sessionLength = assignment ? assignment.count ?? SESSION_LENGTH : freeLength;
   const assignedCells = assignment?.cells ?? freeCells ?? undefined;
+  /* How many different questions this round can ask. A longer round repeats some
+     of them. That is said where the round is set up and recorded on the summary,
+     so repetition is never read as a plain score. Published links keep their
+     length: the parser does not refuse them, it labels them. */
+  const uniqueQuestionCount = useMemo(
+    () => uniqueQuestions({ scope, level, meter, cells: assignedCells ?? null }),
+    [assignedCells, level, meter, scope],
+  );
+  const repeatNote = sessionLength > uniqueQuestionCount
+    ? `This round asks ${sessionLength} questions, but its rhythms make only ${uniqueQuestionCount} different ` +
+      `${scope === "beat" ? "one-beat question" : "measure"}${uniqueQuestionCount === 1 ? "" : "s"}, so some questions repeat. ` +
+      "A repeated question is practice, not an independent check of the same skill."
+    : null;
   const holdFeedback = assignment?.feedback === "end";
   /* `free` is what this app has always done, so an existing link keeps it. */
   const retryPolicy = assignment?.retry ?? "free";
@@ -1840,6 +1912,7 @@ export default function CountItApp() {
                 meter={meter}
                 system={system}
                 savedSystem={savedSystem}
+                repeatNote={repeatNote}
                 systemSaveMessage={systemSaveMessage}
                 showReference={showReference}
                 assignment={assignment}
@@ -1957,6 +2030,10 @@ export default function CountItApp() {
                 }))}
                 badgeNews={badgeNews?.session === session ? badgeNews : null}
                 onStudentIdChange={changeStudentId}
+                roundId={reportedAssignment ? roundKey(reportedAssignment) : null}
+                uniqueQuestionCount={uniqueQuestionCount}
+                classEntry={classEntry}
+                onClassEntryChange={setClassEntry}
                 onAnswer={(choiceId) => setSession((current) => answerSession(current, choiceId))}
                 onAdvance={advanceChallenge}
                 onRetry={retryChallenge}

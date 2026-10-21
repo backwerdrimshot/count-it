@@ -48,6 +48,7 @@ import {
   MIN_QUESTIONS,
   describeAssignment,
   parseAssignment,
+  questionRepeats,
   uniqueMeasures,
   type Assignment,
   type FeedbackPolicy,
@@ -86,6 +87,9 @@ export interface BuilderState {
   readonly timeLimit?: number | null;
   /** One tip per question, on request. Optional for the same reason. */
   readonly hints?: boolean;
+  /** The class code students must type before turning a result in. Optional, and
+   *  null or absent for every link that does not ask for one. */
+  readonly classCode?: string | null;
   /** Empty string: none. */
   readonly seed: string;
 }
@@ -113,6 +117,7 @@ export function defaultBuilderState(seed: string): BuilderState {
     passing: 8,
     timeLimit: null,
     hints: false,
+    classCode: null,
     seed,
   });
 }
@@ -121,7 +126,7 @@ export function defaultBuilderState(seed: string): BuilderState {
  * remains the sole validator of musical settings. */
 export function builderStateFromQuery(search: string): BuilderState | null {
   const params = new URLSearchParams(search);
-  const keys = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints'];
+  const keys = ['a', 'cells', 'level', 'scope', 'meter', 'sys', 'guide', 'fb', 'retry', 'n', 'pass', 'seed', 'time', 'hints', 'class'];
   if (keys.some(key => params.getAll(key).length > 1) || params.has('seed') && !SEED_PATTERN.test(params.get('seed')!)) return null;
   const parsed = parseAssignment(search);
   if (!parsed.ok) return null;
@@ -135,7 +140,7 @@ export function builderStateFromQuery(search: string): BuilderState | null {
     system: a.systemPinned ? a.system : null,
     guide: a.guide, feedback: a.feedback, retry: a.retry,
     count: a.count, passing: a.passing, seed: a.seed ?? '',
-    timeLimit: a.timeLimit, hints: a.hints,
+    timeLimit: a.timeLimit, hints: a.hints, classCode: a.classCode,
   };
 }
 
@@ -209,6 +214,7 @@ export function buildQuery(state: BuilderState): string {
   if (state.passing !== null) parts.push(`pass=${state.passing}`);
   if (state.timeLimit != null) parts.push(`time=${state.timeLimit}`);
   if (state.hints) parts.push("hints=on");
+  if (state.classCode) parts.push(`class=${encodeURIComponent(state.classCode)}`);
   if (state.seed) parts.push(`seed=${encodeURIComponent(state.seed)}`);
   return parts.length ? `?${parts.join("&")}` : "";
 }
@@ -270,6 +276,19 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
   const meter = assignment.meter ?? DEFAULT_METER;
   const length = assignment.count ?? DEFAULT_QUESTIONS;
 
+  /* Whether the round repeats questions. A published link is judged here and
+     labelled; a link a teacher writes is refused by repeatProblem, which the form
+     asks as well. The vocabulary must be pinned for either, because a
+     student-chosen level can have more one-beat rhythms than the one named. */
+  const vocabularyPinned = assignment.cells !== null || parsed.locked.includes("level");
+  const repeat = questionRepeats({
+    scope: assignment.scope,
+    level: assignment.level,
+    meter,
+    cells: assignment.cells,
+    count: length,
+  });
+
   let measureCeiling: number | null = null;
   if (assignment.scope === "measure") {
     const pool = assignment.cells ? getCellsByIds(assignment.cells) : getCellsForLevel(assignment.level);
@@ -292,6 +311,13 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
           `so their round would be shorter than the ${length} you set. Pin the question size to avoid this.`,
       );
     }
+  }
+  if (repeat.repeats && !vocabularyPinned && assignment.scope === "beat") {
+    notes.push(
+      `Rhythm choice is left to the student. On the level they start from, ${length} questions ` +
+        `would repeat some of the ${repeat.unique} one-beat rhythms; a repeated question is practice, ` +
+        "not an independent check of the same skill.",
+    );
   }
   if (!state.seed) {
     notes.push(
@@ -344,6 +370,34 @@ export function evaluateBuilder(state: BuilderState, origin: string = PRODUCTION
 }
 
 /** The levels, for the form's select, in the app's own words. */
+/** Why a link the teacher is writing now would repeat questions, or null.
+ *
+ *  Refused for the builder only. The parser keeps every link it accepted before,
+ *  because the links students already have must keep working, and the published
+ *  presets are checked as published (labelled, not refused). A repeat is judged
+ *  only where the vocabulary is pinned: with the level left to the student, the
+ *  round they get depends on the level they choose, and it is noted instead. */
+export function repeatProblem(state: BuilderState): string | null {
+  const parsed = parseAssignment(buildQuery(state));
+  if (!parsed.ok) return null;
+  const { assignment, locked } = parsed;
+  const length = assignment.count ?? DEFAULT_QUESTIONS;
+  const vocabularyPinned = assignment.cells !== null || locked.includes("level");
+  const repeat = questionRepeats({
+    scope: assignment.scope,
+    level: assignment.level,
+    meter: assignment.meter ?? DEFAULT_METER,
+    cells: assignment.cells,
+    count: length,
+  });
+  if (!repeat.repeats || !vocabularyPinned || assignment.scope !== "beat") return null;
+  return (
+    `This round asks ${length} questions, but its rhythms make only ${repeat.unique} different ` +
+    `one-beat question${repeat.unique === 1 ? "" : "s"}, so some would repeat. Ask for ` +
+    `${repeat.unique} or fewer questions, or add rhythms.`
+  );
+}
+
 /* "Make this a quiz": the settings that turn practice into a check.
  *
  *   * the subdivision guide hidden — reading without the grid printed is what is

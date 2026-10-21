@@ -134,6 +134,45 @@ export function roundLengthFor({
   return Math.max(1, Math.min(wanted, uniqueMeasures(pool, getMeter(meter).beatsPerMeasure)));
 }
 
+/** How many different questions a round can ask before one repeats. A one-beat
+ *  round draws from the one-beat rhythms; a full-measure round from the distinct
+ *  measures. Counted the way the generator draws, so the warning and the round
+ *  cannot disagree. */
+export function uniqueQuestions({
+  scope,
+  level,
+  meter = DEFAULT_METER,
+  cells: cellIds,
+}: {
+  readonly scope: AssignmentScope;
+  readonly level: LevelId;
+  readonly meter?: MeterId;
+  readonly cells?: readonly string[] | null;
+}): number {
+  const pool = cellIds ? getCellsByIds(cellIds) : getCellsForLevel(level);
+  return scope === "beat"
+    ? pool.filter((cell) => cell.beats === 1).length
+    : uniqueMeasures(pool, getMeter(meter).beatsPerMeasure);
+}
+
+/** Whether a round of `count` questions has to repeat some of them. Repetition
+ *  is never independent evidence of mastery, so anything that says it is
+ *  reported as repetition, never as a plain score. */
+export function questionRepeats(args: {
+  readonly scope: AssignmentScope;
+  readonly level: LevelId;
+  readonly meter?: MeterId;
+  readonly cells?: readonly string[] | null;
+  readonly count: number;
+}): { readonly unique: number; readonly repeats: boolean } {
+  const unique = uniqueQuestions(args);
+  return { unique, repeats: args.count > unique };
+}
+
+/** Class codes are typed by students, so they stay to a plain alphabet a
+ *  student can type from a board. */
+export const CLASS_CODE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9-]{0,23}$/;
+
 export interface AssignmentError {
   readonly code:
     | "cell"
@@ -153,6 +192,7 @@ export interface AssignmentError {
     | "measure-pool"
     | "time"
     | "hints"
+    | "class"
     /** Raised by the app, not the parser: a round that refused to build for a
      *  reason validation did not anticipate. The link is still rejected whole. */
     | "round";
@@ -189,6 +229,10 @@ export interface Assignment {
    *  tip on request, and the card counts the hints used. Off for every link
    *  written before hints existed, and for `hints=off`. */
   readonly hints: boolean;
+  /** The class code the student must type, exactly as the teacher wrote it
+   *  (letters are matched without regard to case). Null when the link asks for
+   *  none. Self-entered: it says which class sent a result, not who sent it. */
+  readonly classCode: string | null;
   readonly seed: string | null;
   readonly system: CountingSystemParam;
   /** True only when the URL explicitly chose `sys`; links without it remain Standard. */
@@ -671,6 +715,24 @@ export function parseAssignment(search: string): AssignmentResult {
   const hints = hintsRaw === "on";
   if (hints) locked.push("hints");
 
+  /* The class code a student must type before the result can be turned in. Refused
+     rather than ignored: a link that asked for a class code and silently ran
+     without the check would hand the teacher results they did not ask for. */
+  const classRaw = params.get("class");
+  if (classRaw !== null && !CLASS_CODE_PATTERN.test(classRaw)) {
+    return {
+      ok: false,
+      error: {
+        code: "class",
+        entry: classRaw,
+        message:
+          `“${classRaw}” is not a class code. A class code is 1 to 24 letters, digits or hyphens, ` +
+          "and it cannot start with a hyphen.",
+      },
+    };
+  }
+  const classCode = classRaw;
+
   /* Refused rather than replaced: a link that named a class seed and silently ran
      the default round would give every student the same questions the teacher
      did not choose. */
@@ -706,6 +768,7 @@ export function parseAssignment(search: string): AssignmentResult {
       passing,
       timeLimit,
       hints,
+      classCode,
       seed,
       system: system as CountingProfileId,
       systemPinned: systemRaw !== null,
@@ -735,7 +798,7 @@ export function retakeSeed(seed: string | number, attempt: number): string | num
 
 /** True when the link pinned anything at all — the app is in assignment mode. */
 export function isAssigned(result: AssignmentResult): boolean {
-  return result.ok && (result.locked.length > 0 || result.assignment.name !== null);
+  return result.ok && (result.locked.length > 0 || result.assignment.name !== null || result.assignment.classCode !== null);
 }
 
 /** The assignment as the student actually played it, for the result card,
@@ -780,9 +843,22 @@ export function serializeAssignment(assignment: Assignment): string {
   if (assignment.passing !== null) parts.push(`pass=${assignment.passing}`);
   if (assignment.timeLimit !== null) parts.push(`time=${assignment.timeLimit}`);
   if (assignment.hints) parts.push("hints=on");
+  if (assignment.classCode) parts.push(`class=${encodeURIComponent(assignment.classCode)}`);
   if (assignment.seed) parts.push(`seed=${encodeURIComponent(assignment.seed)}`);
   if (assignment.systemPinned) parts.push(`sys=${assignment.system}`);
   return parts.length ? `?${parts.join("&")}` : "";
+}
+
+/** A stable identity for the round a link asks, from the settings that decide
+ *  its questions. The name is left out: it is display text, and the same round
+ *  can be posted under two names. Everything that changes a question or the
+ *  conditions it is asked under is in, so two rounds that differ on any setting
+ *  get two identities. Pass the PLAYED assignment, not the link's: a student
+ *  who changes level, scope or meter on an open link has played a different
+ *  round. Attempts are not part of it; the summary's Attempt line counts those. */
+export function roundKey(assignment: Assignment): string {
+  const digest = fnv1a(serializeAssignment({ ...assignment, name: null })).toString(36).toUpperCase();
+  return `R${digest.padStart(6, "0").slice(-6)}`;
 }
 
 /** A one-line description of the conditions, for the result card and the
@@ -852,6 +928,13 @@ export interface VerificationInput {
    *  a hint for. In the code, so a card cannot claim fewer than it used.
    *  Absent, the code is exactly what it always was. */
   readonly hintsUsed?: number;
+  /** Only when the summary carries a Round line: the round's identity. Covered
+   *  so a card cannot claim a different round than the one it was answered on. */
+  readonly round?: string;
+  /** Only when the link asked for a class code and the student entered it. */
+  readonly classCode?: string;
+  /** Only when the round had to repeat some of its questions. */
+  readonly repeats?: boolean;
 }
 
 function twoDigit(value: number): string {
@@ -868,6 +951,9 @@ export function verificationCode({
   attempt = 1,
   timing,
   hintsUsed,
+  round,
+  classCode,
+  repeats,
 }: VerificationInput): string {
   const percent = total === 0 ? 0 : Math.round((correct / total) * 100);
   const stamp =
@@ -877,7 +963,10 @@ export function verificationCode({
   const digest = fnv1a(
     `count-it|${assignment}|${studentId}|${correct}/${total}|#${attempt}|${finishedAt.toISOString()}` +
       (timing ? `|t${Math.floor(timing.elapsedSeconds)}/${timing.limitMinutes * 60}` : "") +
-      (hintsUsed !== undefined ? `|h${hintsUsed}` : ""),
+      (hintsUsed !== undefined ? `|h${hintsUsed}` : "") +
+      (round !== undefined ? `|R${round}` : "") +
+      (classCode !== undefined ? `|c${classCode}` : "") +
+      (repeats ? "|rep" : ""),
   )
     .toString(36)
     .toUpperCase()

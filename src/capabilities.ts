@@ -31,7 +31,7 @@ import {
 /* The build identifier, single-sourced here so the footer stamp, the manifest,
    and the README release line cannot disagree. The repo's release gate checks
    the README against this value appearing in app code. */
-export const COUNT_IT_BUILD = "2026-10-21.1";
+export const COUNT_IT_BUILD = "2026-10-21.3";
 
 export const COUNT_IT_CAPABILITY_MANIFEST = {
   schemaVersion: "1.1.0",
@@ -56,7 +56,7 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
   supportedActivityTypes: ["choose-the-count", "practice-reading"],
   /* The URL parameters an assignment link may carry, exactly as the parser
      reads them. Kept honest by tests/capabilities.test.ts. */
-  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys"],
+  configurableSettings: ["a", "level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "class", "seed", "sys"],
   lockableSettings: ["level", "scope", "meter", "cells", "guide", "fb", "retry", "n", "pass", "time", "hints", "seed", "sys"],
   assignmentLink:
     "A teacher pins a round in the URL and posts it: `cells` names an explicit rhythm " +
@@ -66,7 +66,9 @@ export const COUNT_IT_CAPABILITY_MANIFEST = {
     "question or only at the end, `retry` chooses what trying again means, `n` and `pass` set " +
     "the length and the goal, `time` sets an optional time limit in whole minutes (recorded " +
     "on the card against the limit, never enforced), `hints=on` offers one tip per question on " +
-    "request (the card counts the hints used), and `seed` makes " +
+    "request (the card counts the hints used), `class` asks students to type a class code before " +
+    "they turn a result in (self-entered, so it shows which class sent a result, not who sent it), " +
+    "and `seed` makes " +
     "every student's questions identical. `level` is a shorthand for a cumulative vocabulary " +
     "and is superseded when `cells` is present. `a` is a display name and `sys` pins one of " +
     "the versioned counting profiles.",
