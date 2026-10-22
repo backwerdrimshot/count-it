@@ -1,5 +1,6 @@
 "use client";
 
+import { checkIdentity, IDENTITY_HINT } from "../src/identity-check";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BUILDER_CELLS,
@@ -131,7 +132,15 @@ export default function AssignmentBuilder() {
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
-  const result = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
+  const evaluated = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
+  /* Names-free check on the two teacher-typed fields that travel in the link.
+     Runs in this browser only; nothing is sent anywhere. */
+  const nameCheck = useMemo(() => checkIdentity(name), [name]);
+  const classCheck = useMemo(() => checkIdentity(classText), [classText]);
+  const blockedBy = [nameCheck, classCheck].find((check) => check.verdict === "block");
+  const result: typeof evaluated = blockedBy
+    ? ({ ok: false, problem: blockedBy.message } as typeof evaluated)
+    : evaluated;
 
   const heldNotesAllowed = scope === "measure";
 
@@ -341,7 +350,8 @@ export default function AssignmentBuilder() {
                   placeholder="Step 3 — Pulse & pairs, no help"
                   onChange={(event) => setName(event.target.value)}
                 />
-                <small>Shown to students at the top and on their result card.</small>
+                <small>Shown to students at the top and on their result card. {IDENTITY_HINT}</small>
+                {nameCheck.verdict !== "ok" && <small className="builder-problem" role="alert">{nameCheck.message}</small>}
               </label>
             </fieldset>
 
@@ -530,8 +540,10 @@ export default function AssignmentBuilder() {
                   onChange={(event) => setClassText(event.target.value)} />
                 <small>
                   Students must type this code before they can turn in a result. They type it themselves, so it shows
-                  which class sent a result, not who the student is. It is not checked against any list.
+                  which class sent a result, not who the student is. It is not checked against any list. Use a class
+                  or period code, never a student name or ID.
                 </small>
+                {classCheck.verdict !== "ok" && <small className="builder-problem" role="alert">{classCheck.message}</small>}
               </label>
             </fieldset>
 
