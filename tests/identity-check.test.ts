@@ -1,3 +1,4 @@
+import { identityPolicyCases } from "./fixtures/identity-policy-cases.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -36,22 +37,15 @@ describe("explicit marker token boundaries", () => {
 const IC = { checkIdentity };
 const policy = JSON.parse(readFileSync(new URL("./fixtures/explicit-identifier-policy.json", import.meta.url), "utf8"));
 function assertPolicyMatrix() {
-  const check = (text: string, verdict: string) => assert.equal(IC.checkIdentity(text).verdict, verdict, JSON.stringify(text));
-  for (const verdict of ["ok", "warn", "block"]) for (const text of policy[verdict]) check(text, verdict);
-  for (const marker of policy.numericMarkers) for (const value of policy.numericValues) for (const suffix of policy.suffixes) check(marker + value + suffix, "block");
-  for (const prefix of policy.overlapPrefixes) for (const marker of policy.numericMarkers) for (const value of policy.numericValues) for (const suffix of policy.suffixes) check(prefix + marker + value + suffix, "block");
-  for (const marker of policy.separatedMarkers) for (const value of policy.alphanumericValues) for (const suffix of policy.suffixes) check(marker + value + suffix, "block");
-  for (const prefix of policy.leftBoundaryBlockPrefixes) check(prefix + "ID1234_ABC", "block");
-  for (const prefix of policy.leftBoundaryAllowPrefixes) check(prefix + "ID 1234", "ok");
-  for (const value of ["ID 1234_ABC", "ID A1234_B", "ID α1234", "ID １２３４_alpha", "ID ١٢٣٤_alpha", "student#1234_"]) {
-    for (const text of [value + " call 555-123-4567", "555-123-4567 " + value, "555-123-4567 " + value + " 555-234-5678"]) check(text, "block");
-  }
+  const cases = identityPolicyCases(policy);
+  assert.equal(cases.length - policy.unicodeOk.length - policy.unicodeBlock.length, 3176, "retain the original policy matrix");
+  for (const [text, verdict] of cases) assert.equal(IC.checkIdentity(text).verdict, verdict, JSON.stringify(text));
 }
 
 it("enforces the explicit identifier policy across the systematic fixture matrix", assertPolicyMatrix);
 
 it("guards every decoded duplicate name/class token without rewriting", () => {
-  for (const text of policy.block) for (const key of ["a", "class"]) {
+  for (const text of [...policy.block,...policy.unicodeBlock]) for (const key of ["a", "class"]) {
     const link = "/?" + key + "=Band%202&" + key + "=" + encodeURIComponent(text);
     expect(checkAssignmentIdentity(link).verdict).toBe("block");
   }
