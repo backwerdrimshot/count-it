@@ -25,6 +25,8 @@ function hasExplicitIdentifier(text: string) {
   const markers = new RegExp(ID_MARKER.source, ID_MARKER.flags);
   let marker;
   while ((marker = markers.exec(text))) {
+    // Candidate starts are ASCII letters: revisit overlaps one code unit later.
+    markers.lastIndex = marker.index + 1;
     // Inspect, never consume, the left boundary: a rejected no. must not hide ID.
     if (ID_PREFIX_WORD.test(text.slice(0, marker.index))) continue;
     let rest = text.slice(marker.index + marker[0].length);

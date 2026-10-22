@@ -39,6 +39,7 @@ function assertPolicyMatrix() {
   const check = (text: string, verdict: string) => assert.equal(IC.checkIdentity(text).verdict, verdict, JSON.stringify(text));
   for (const verdict of ["ok", "warn", "block"]) for (const text of policy[verdict]) check(text, verdict);
   for (const marker of policy.numericMarkers) for (const value of policy.numericValues) for (const suffix of policy.suffixes) check(marker + value + suffix, "block");
+  for (const prefix of policy.overlapPrefixes) for (const marker of policy.numericMarkers) for (const value of policy.numericValues) for (const suffix of policy.suffixes) check(prefix + marker + value + suffix, "block");
   for (const marker of policy.separatedMarkers) for (const value of policy.alphanumericValues) for (const suffix of policy.suffixes) check(marker + value + suffix, "block");
   for (const prefix of policy.leftBoundaryBlockPrefixes) check(prefix + "ID1234_ABC", "block");
   for (const prefix of policy.leftBoundaryAllowPrefixes) check(prefix + "ID 1234", "ok");

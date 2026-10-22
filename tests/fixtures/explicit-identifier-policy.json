@@ -26,7 +26,9 @@
     "_ID1234",
     "‿ID1234",
     "ID",
-    "student no.identity1234"
+    "student no.identity1234",
+    "nonstudent_ID1234_ABC",
+    "nonstudentID1234"
   ],
   "warn": [
     "555-123-4567",
@@ -66,7 +68,9 @@
     "student no.ID1234",
     "student no.SID1234",
     "student no.ID １２３４",
-    "student no.ID α1234"
+    "student no.ID α1234",
+    "nonstudent-ID1234_ABC",
+    "αstudent-ID1234_ABC"
   ],
   "numericMarkers": [
     "ID",
@@ -132,7 +136,9 @@
     "-",
     "💥",
     "α ",
-    "student no."
+    "student no.",
+    "nonstudent-",
+    "αstudent-"
   ],
   "leftBoundaryAllowPrefixes": [
     "α",
@@ -143,5 +149,10 @@
     "_",
     "A",
     "‿"
+  ],
+  "overlapPrefixes": [
+    "student no.",
+    "nonstudent-",
+    "αstudent-"
   ]
 }
