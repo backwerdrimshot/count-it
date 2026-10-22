@@ -208,5 +208,62 @@
     "ID𝟙",
     "ID 𝅧1234",
     "ID 𞥄1234"
+  ],
+  "qualifierPrefixes": [
+    "ID",
+    "SID",
+    "student ID",
+    "Student SID",
+    "id",
+    "iD",
+    "STUDENT id",
+    "student_ID"
+  ],
+  "compactQualifierWords": [
+    "no.tation4",
+    "no.𐐀4",
+    "no.𝒜4",
+    "no.𠀀4",
+    "no.α4",
+    "no.é4",
+    "no.́4",
+    "no.𝅧4",
+    "no.𞥄4",
+    "notation4",
+    "no𐐀4",
+    "no𝅧4",
+    "numberline4",
+    "number𐐀4",
+    "NO.TATION4",
+    "No.𐐀4",
+    "NUMBERline4",
+    "No𞥄4"
+  ],
+  "compactQualifierValues": [
+    "no1234",
+    "no.1234",
+    "No.١٢٣٤",
+    "no.𝟙",
+    "no.𐒠",
+    "number1234",
+    "NUMBER１２３４",
+    "no._alpha4",
+    "no.-alpha4",
+    "no./alpha4",
+    "no..alpha4",
+    "no. alpha4",
+    "no:alpha4",
+    "number:alpha4",
+    "number.alpha4",
+    "no.#A4",
+    "no.\nalpha4",
+    "no.𝟙_alpha",
+    "no.１２３４",
+    "no.١٢٣٤_alpha"
+  ],
+  "qualifierSeparators": [
+    " ",
+    ":",
+    "-"
   ]
 }

@@ -17,5 +17,10 @@ export function identityPolicyCases(policy) {
   }
   for (const text of policy.unicodeOk) add(text, "ok");
   for (const text of policy.unicodeBlock) add(text, "block");
+  for (const prefix of policy.qualifierPrefixes) {
+    for (const word of policy.compactQualifierWords) add(prefix + word, "ok");
+    for (const value of policy.compactQualifierValues) add(prefix + value, "block");
+    for (const separator of policy.qualifierSeparators) for (const word of policy.compactQualifierWords) add(prefix + separator + word, "block");
+  }
   return cases;
 }
