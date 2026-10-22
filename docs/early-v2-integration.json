@@ -55,6 +55,24 @@
       "preparation": "Teach three quarter-note beats per 3/4 bar and restarting at 1. This is not a harder notation pool. Use the optional two-beat practice if changing bar length is new."
     },
     {
+      "legacyId": "counting-rhythms-6",
+      "legacyQuery": "?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+      "archive": "/archive?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+      "currentId": "counting-early-v2-combos-bars",
+      "currentQuery": "?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "purpose": "Supported application: eight different four-beat bars from these four sixteenth combinations, not twelve questions that repeat four one-beat prompts.",
+      "preparation": "Teach the four combinations one beat at a time with the guide on, as in step 6. Full bars are a supported application sample, not a mastery test."
+    },
+    {
+      "legacyId": "counting-rhythms-7",
+      "legacyQuery": "?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+      "archive": "/archive?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+      "currentId": "counting-early-v2-silent-bars",
+      "currentQuery": "?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "purpose": "Supported application: twelve different four-beat bars built from the nine rest and note patterns, not twelve questions that repeat three of nine.",
+      "preparation": "Teach the rest patterns one beat at a time with the guide off, as in step 7. Full bars are a supported application sample, not a mastery test."
+    },
+    {
       "legacyId": "counting-rhythms-5",
       "legacyQuery": "?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
       "archive": "/archive?seq=counting-rhythms&step=5&a=Step%205%3A%20Meet%20the%20Sixteenths&scope=beat&cells=three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,sixteenths&guide=on&n=12&pass=10&seed=cr5-sixteenths",
@@ -1317,6 +1335,828 @@
       "exposures": {
         "quarter": 7,
         "eighths": 11
+      }
+    },
+    {
+      "id": "counting-early-v2-combos-bars",
+      "query": "?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "settings": {
+        "name": "Early v2: Sixteenth combos across a bar",
+        "level": "level-2",
+        "scope": "measure",
+        "meter": "4-4",
+        "cells": [
+          "dotted-eighth-sixteenth",
+          "eighth-two",
+          "two-eighth",
+          "sixteenth-eighth-sixteenth"
+        ],
+        "guide": "on",
+        "feedback": "each",
+        "retry": "free",
+        "count": 8,
+        "passing": 6,
+        "timeLimit": null,
+        "hints": false,
+        "classCode": null,
+        "seed": "cr6-combos-bars-v2",
+        "system": "standard",
+        "systemPinned": true,
+        "levelIgnored": false
+      },
+      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "resultIdentity": {
+        "seq": "counting-early-v2",
+        "step": 6
+      },
+      "attemptKey": "?a=Early%20v2%3A%20Sixteenth%20combos%20across%20a%20bar&scope=measure&meter=4-4&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&n=8&pass=6&seed=cr6-combos-bars-v2&sys=standard",
+      "capacity": 256,
+      "answerCapacity": 256,
+      "questions": [
+        {
+          "id": "question-1-4-4:measure:sixteenth-eighth-sixteenth+dotted-eighth-sixteenth+sixteenth-eighth-sixteenth+sixteenth-eighth-sixteenth",
+          "cells": [
+            "sixteenth-eighth-sixteenth",
+            "dotted-eighth-sixteenth",
+            "sixteenth-eighth-sixteenth",
+            "sixteenth-eighth-sixteenth"
+          ],
+          "correctAnswer": "1 e a | 2 a | 3 e a | 4 e a",
+          "choices": [
+            {
+              "id": "q1-d1",
+              "label": "1 e a | 2 a | e | 4 e a",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d2",
+              "label": "1 e & a | 2 a | 3 e a | 4 e a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d3",
+              "label": "1 e a | & | 3 e a | 4 e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-correct",
+              "label": "1 e a | 2 a | 3 e a | 4 e a",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-2-4-4:measure:two-eighth+sixteenth-eighth-sixteenth+two-eighth+two-eighth",
+          "cells": [
+            "two-eighth",
+            "sixteenth-eighth-sixteenth",
+            "two-eighth",
+            "two-eighth"
+          ],
+          "correctAnswer": "1 e & | 2 e a | 3 e & | 4 e &",
+          "choices": [
+            {
+              "id": "q2-correct",
+              "label": "1 e & | 2 e a | 3 e & | 4 e &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q2-d3",
+              "label": "1 e & | e & | 3 e & | 4 e &",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d2",
+              "label": "1 e & | 2 e a | 3 e & | & a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d1",
+              "label": "& | 2 e a | 3 e & | 4 e &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-3-4-4:measure:dotted-eighth-sixteenth+dotted-eighth-sixteenth+dotted-eighth-sixteenth+two-eighth",
+          "cells": [
+            "dotted-eighth-sixteenth",
+            "dotted-eighth-sixteenth",
+            "dotted-eighth-sixteenth",
+            "two-eighth"
+          ],
+          "correctAnswer": "1 a | 2 a | 3 a | 4 e &",
+          "choices": [
+            {
+              "id": "q3-d2",
+              "label": "1 a | & a | 3 a | 4 e &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d3",
+              "label": "1 a | 2 a | 3 a | 4 e",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-correct",
+              "label": "1 a | 2 a | 3 a | 4 e &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q3-d1",
+              "label": "1 a | & | 3 a | 4 e &",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-4-4-4:measure:two-eighth+two-eighth+dotted-eighth-sixteenth+two-eighth",
+          "cells": [
+            "two-eighth",
+            "two-eighth",
+            "dotted-eighth-sixteenth",
+            "two-eighth"
+          ],
+          "correctAnswer": "1 e & | 2 e & | 3 a | 4 e &",
+          "choices": [
+            {
+              "id": "q4-d1",
+              "label": "1 e & | 2 e & | 3 a | 4 e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-correct",
+              "label": "1 e & | 2 e & | 3 a | 4 e &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q4-d2",
+              "label": "1 e & | 2 e & | 3 a | 4 & a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d3",
+              "label": "1 e & | 2 e & | 3 a | 4 e & a",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-5-4-4:measure:dotted-eighth-sixteenth+sixteenth-eighth-sixteenth+eighth-two+two-eighth",
+          "cells": [
+            "dotted-eighth-sixteenth",
+            "sixteenth-eighth-sixteenth",
+            "eighth-two",
+            "two-eighth"
+          ],
+          "correctAnswer": "1 a | 2 e a | 3 & a | 4 e &",
+          "choices": [
+            {
+              "id": "q5-d2",
+              "label": "1 a | 2 e & a | 3 & a | 4 e &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d1",
+              "label": "1 e | 2 e a | 3 & a | 4 e &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d3",
+              "label": "1 e & | 2 e a | 3 & a | 4 e &",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-correct",
+              "label": "1 a | 2 e a | 3 & a | 4 e &",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "id": "question-6-4-4:measure:sixteenth-eighth-sixteenth+eighth-two+dotted-eighth-sixteenth+sixteenth-eighth-sixteenth",
+          "cells": [
+            "sixteenth-eighth-sixteenth",
+            "eighth-two",
+            "dotted-eighth-sixteenth",
+            "sixteenth-eighth-sixteenth"
+          ],
+          "correctAnswer": "1 e a | 2 & a | 3 a | 4 e a",
+          "choices": [
+            {
+              "id": "q6-d3",
+              "label": "1 e a | 2 & a | 3 a | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d1",
+              "label": "1 & a | 2 & a | 3 a | 4 e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-correct",
+              "label": "1 e a | 2 & a | 3 a | 4 e a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q6-d2",
+              "label": "1 e a | 2 & a | 3 a | 4 e & a",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-7-4-4:measure:eighth-two+two-eighth+two-eighth+two-eighth",
+          "cells": [
+            "eighth-two",
+            "two-eighth",
+            "two-eighth",
+            "two-eighth"
+          ],
+          "correctAnswer": "1 & a | 2 e & | 3 e & | 4 e &",
+          "choices": [
+            {
+              "id": "q7-d2",
+              "label": "1 & a | e | 3 e & | 4 e &",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-correct",
+              "label": "1 & a | 2 e & | 3 e & | 4 e &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q7-d3",
+              "label": "e & | 2 e & | 3 e & | 4 e &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-d1",
+              "label": "1 & a | 2 e & | 3 e & | 4 e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-8-4-4:measure:dotted-eighth-sixteenth+eighth-two+sixteenth-eighth-sixteenth+dotted-eighth-sixteenth",
+          "cells": [
+            "dotted-eighth-sixteenth",
+            "eighth-two",
+            "sixteenth-eighth-sixteenth",
+            "dotted-eighth-sixteenth"
+          ],
+          "correctAnswer": "1 a | 2 & a | 3 e a | 4 a",
+          "choices": [
+            {
+              "id": "q8-d2",
+              "label": "1 a | 2 & | 3 e a | 4 a",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-d3",
+              "label": "1 a | 2 & a | 3 e a | e a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-correct",
+              "label": "1 a | 2 & a | 3 e a | 4 a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q8-d1",
+              "label": "1 a | e a | 3 e a | 4 a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        }
+      ],
+      "distinctRhythms": 8,
+      "distinctAnswers": 8,
+      "exposures": {
+        "dotted-eighth-sixteenth": 9,
+        "eighth-two": 4,
+        "two-eighth": 11,
+        "sixteenth-eighth-sixteenth": 8
+      }
+    },
+    {
+      "id": "counting-early-v2-silent-bars",
+      "query": "?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "settings": {
+        "name": "Early v2: Silent rests across a bar",
+        "level": "level-2",
+        "scope": "measure",
+        "meter": "4-4",
+        "cells": [
+          "eighth-rest",
+          "rest-eighth",
+          "three-rest-note",
+          "rest-sixteenth-rest",
+          "alternating-rests",
+          "rest-two-rest",
+          "rest-three",
+          "two-rest",
+          "rest-two"
+        ],
+        "guide": "off",
+        "feedback": "each",
+        "retry": "free",
+        "count": 12,
+        "passing": 10,
+        "timeLimit": null,
+        "hints": false,
+        "classCode": null,
+        "seed": "cr7-silent-bars-v2",
+        "system": "standard",
+        "systemPinned": true,
+        "levelIgnored": false
+      },
+      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "resultIdentity": {
+        "seq": "counting-early-v2",
+        "step": 7
+      },
+      "attemptKey": "?a=Early%20v2%3A%20Silent%20rests%20across%20a%20bar&scope=measure&meter=4-4&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&fb=each&retry=free&n=12&pass=10&seed=cr7-silent-bars-v2&sys=standard",
+      "capacity": 6561,
+      "answerCapacity": 6561,
+      "questions": [
+        {
+          "id": "question-1-4-4:measure:rest-three+three-rest-note+eighth-rest+eighth-rest",
+          "cells": [
+            "rest-three",
+            "three-rest-note",
+            "eighth-rest",
+            "eighth-rest"
+          ],
+          "correctAnswer": "e & a | a | 3 | 4",
+          "choices": [
+            {
+              "id": "q1-d2",
+              "label": "e & a | a | 3 e a | 4",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-correct",
+              "label": "e & a | a | 3 | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q1-d1",
+              "label": "e & a | a | e & a | 4",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q1-d3",
+              "label": "a | a | 3 | 4",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-2-4-4:measure:three-rest-note+eighth-rest+rest-eighth+rest-sixteenth-rest",
+          "cells": [
+            "three-rest-note",
+            "eighth-rest",
+            "rest-eighth",
+            "rest-sixteenth-rest"
+          ],
+          "correctAnswer": "a | 2 | & | e",
+          "choices": [
+            {
+              "id": "q2-d2",
+              "label": "a | e & | & | e",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-correct",
+              "label": "a | 2 | & | e",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q2-d3",
+              "label": "a | 2 | & | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q2-d1",
+              "label": "1 & a | 2 | & | e",
+              "category": "added_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-3-4-4:measure:alternating-rests+alternating-rests+two-rest+alternating-rests",
+          "cells": [
+            "alternating-rests",
+            "alternating-rests",
+            "two-rest",
+            "alternating-rests"
+          ],
+          "correctAnswer": "e a | e a | 3 e | e a",
+          "choices": [
+            {
+              "id": "q3-d3",
+              "label": "e a | e a | 3 e & | e a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-d2",
+              "label": "e & | e a | 3 e | e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q3-correct",
+              "label": "e a | e a | 3 e | e a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q3-d1",
+              "label": "e a | e a | e & | e a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-4-4-4:measure:alternating-rests+two-rest+alternating-rests+rest-three",
+          "cells": [
+            "alternating-rests",
+            "two-rest",
+            "alternating-rests",
+            "rest-three"
+          ],
+          "correctAnswer": "e a | 2 e | e a | e & a",
+          "choices": [
+            {
+              "id": "q4-d3",
+              "label": "e a | 2 e & | e a | e & a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-correct",
+              "label": "e a | 2 e | e a | e & a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q4-d2",
+              "label": "e a | 2 e | e a | 4 e &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q4-d1",
+              "label": "e a | 2 e | e a | 4 a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-5-4-4:measure:two-rest+rest-two-rest+two-rest+rest-two",
+          "cells": [
+            "two-rest",
+            "rest-two-rest",
+            "two-rest",
+            "rest-two"
+          ],
+          "correctAnswer": "1 e | e & | 3 e | & a",
+          "choices": [
+            {
+              "id": "q5-correct",
+              "label": "1 e | e & | 3 e | & a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q5-d1",
+              "label": "1 e | e & | a | & a",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d3",
+              "label": "1 e | e & | 3 e | a",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q5-d2",
+              "label": "1 e | 2 a | 3 e | & a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-6-4-4:measure:rest-eighth+rest-two+eighth-rest+two-rest",
+          "cells": [
+            "rest-eighth",
+            "rest-two",
+            "eighth-rest",
+            "two-rest"
+          ],
+          "correctAnswer": "& | & a | 3 | 4 e",
+          "choices": [
+            {
+              "id": "q6-d2",
+              "label": "1 & a | & a | 3 | 4 e",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-d1",
+              "label": "& | & | 3 | 4 e",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q6-correct",
+              "label": "& | & a | 3 | 4 e",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q6-d3",
+              "label": "a | & a | 3 | 4 e",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-7-4-4:measure:rest-sixteenth-rest+three-rest-note+rest-two+rest-sixteenth-rest",
+          "cells": [
+            "rest-sixteenth-rest",
+            "three-rest-note",
+            "rest-two",
+            "rest-sixteenth-rest"
+          ],
+          "correctAnswer": "e | a | & a | e",
+          "choices": [
+            {
+              "id": "q7-d3",
+              "label": "e | & | & a | e",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-d1",
+              "label": "e | e a | & a | e",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q7-correct",
+              "label": "e | a | & a | e",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q7-d2",
+              "label": "e | 2 e | & a | e",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-8-4-4:measure:rest-two+rest-two-rest+three-rest-note+eighth-rest",
+          "cells": [
+            "rest-two",
+            "rest-two-rest",
+            "three-rest-note",
+            "eighth-rest"
+          ],
+          "correctAnswer": "& a | e & | a | 4",
+          "choices": [
+            {
+              "id": "q8-d2",
+              "label": "& a | 2 e a | a | 4",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-correct",
+              "label": "& a | e & | a | 4",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q8-d1",
+              "label": "& a | e & | a | 4 e a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q8-d3",
+              "label": "e & | e & | a | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-9-4-4:measure:rest-two-rest+rest-three+rest-three+alternating-rests",
+          "cells": [
+            "rest-two-rest",
+            "rest-three",
+            "rest-three",
+            "alternating-rests"
+          ],
+          "correctAnswer": "e & | e & a | e & a | e a",
+          "choices": [
+            {
+              "id": "q9-d1",
+              "label": "e & | 2 e & a | e & a | e a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q9-correct",
+              "label": "e & | e & a | e & a | e a",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q9-d3",
+              "label": "& | e & a | e & a | e a",
+              "category": "omitted_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q9-d2",
+              "label": "1 | e & a | e & a | e a",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-10-4-4:measure:rest-two-rest+rest-sixteenth-rest+rest-three+rest-eighth",
+          "cells": [
+            "rest-two-rest",
+            "rest-sixteenth-rest",
+            "rest-three",
+            "rest-eighth"
+          ],
+          "correctAnswer": "e & | e | e & a | &",
+          "choices": [
+            {
+              "id": "q10-d1",
+              "label": "e & a | e | e & a | &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q10-correct",
+              "label": "e & | e | e & a | &",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q10-d2",
+              "label": "e & | e | 3 & a | &",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q10-d3",
+              "label": "1 a | e | e & a | &",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-11-4-4:measure:rest-sixteenth-rest+two-rest+two-rest+rest-sixteenth-rest",
+          "cells": [
+            "rest-sixteenth-rest",
+            "two-rest",
+            "two-rest",
+            "rest-sixteenth-rest"
+          ],
+          "correctAnswer": "e | 2 e | 3 e | e",
+          "choices": [
+            {
+              "id": "q11-d3",
+              "label": "e | 2 & a | 3 e | e",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q11-correct",
+              "label": "e | 2 e | 3 e | e",
+              "category": "correct",
+              "isCorrect": true
+            },
+            {
+              "id": "q11-d1",
+              "label": "e | 2 e | 3 e | e &",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q11-d2",
+              "label": "e | e | 3 e | e",
+              "category": "omitted_sound",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "id": "question-12-4-4:measure:rest-sixteenth-rest+alternating-rests+rest-eighth+eighth-rest",
+          "cells": [
+            "rest-sixteenth-rest",
+            "alternating-rests",
+            "rest-eighth",
+            "eighth-rest"
+          ],
+          "correctAnswer": "e | e a | & | 4",
+          "choices": [
+            {
+              "id": "q12-d2",
+              "label": "e | e a | 3 | 4",
+              "category": "shifted_subdivision",
+              "isCorrect": false
+            },
+            {
+              "id": "q12-d3",
+              "label": "e | e a | 3 e | 4",
+              "category": "eighth_sixteenth_confusion",
+              "isCorrect": false
+            },
+            {
+              "id": "q12-d1",
+              "label": "e | e a | & | 4 e a",
+              "category": "added_sound",
+              "isCorrect": false
+            },
+            {
+              "id": "q12-correct",
+              "label": "e | e a | & | 4",
+              "category": "correct",
+              "isCorrect": true
+            }
+          ]
+        }
+      ],
+      "distinctRhythms": 12,
+      "distinctAnswers": 12,
+      "exposures": {
+        "eighth-rest": 6,
+        "rest-eighth": 4,
+        "three-rest-note": 4,
+        "rest-sixteenth-rest": 7,
+        "alternating-rests": 7,
+        "rest-two-rest": 4,
+        "rest-three": 5,
+        "two-rest": 7,
+        "rest-two": 4
       }
     },
     {
