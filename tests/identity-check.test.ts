@@ -38,7 +38,7 @@ const IC = { checkIdentity };
 const policy = JSON.parse(readFileSync(new URL("./fixtures/explicit-identifier-policy.json", import.meta.url), "utf8"));
 function assertPolicyMatrix() {
   const cases = identityPolicyCases(policy);
-  assert.equal(cases.length - policy.unicodeOk.length - policy.unicodeBlock.length, 3176, "retain the original policy matrix");
+  assert.equal(identityPolicyCases({...policy, qualifierPrefixes: []}).length, 3226, "retain every prior policy and Unicode control");
   for (const [text, verdict] of cases) assert.equal(IC.checkIdentity(text).verdict, verdict, JSON.stringify(text));
 }
 

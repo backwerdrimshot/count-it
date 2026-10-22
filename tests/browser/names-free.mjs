@@ -33,18 +33,18 @@ try {
   for(const [text,expected] of cases){const actual=identityPolicyHelper.checkIdentity(text).verdict;if(actual!==expected)throw Error(JSON.stringify({text,expected,actual}));}
   return cases.length;
  },matrixCases),matrixCases.length);
- console.log('PASS browser helper matrix: '+matrixCases.length+' cases (3,176 original plus '+(policy.unicodeOk.length+policy.unicodeBlock.length)+' Unicode controls)');
+ console.log('PASS browser helper matrix: '+matrixCases.length+' cases (3,226 prior controls plus compact-qualifier regressions)');
  await page.goto(BASE+'/build');
  const input=page.getByLabel(/^Assignment name/);
  await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),1);
- for(const marker of [...policy.block,...policy.unicodeBlock]) {
+ for(const marker of [...policy.block,...policy.unicodeBlock,'ID no.tation4','student ID no.tation4','IDno.1234','IDno._alpha4','ID no.𐐀4']) {
   await input.fill(marker);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
   assert.equal(await page.locator('.builder-linkbox input').count(),0);
   for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
  }
- for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234','𐐀ID 1234','𝟙ID 1234','áID 1234','ID𐐀1234','𠀀ID 1234']) {
+ for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234','𐐀ID 1234','𝟙ID 1234','áID 1234','ID𐐀1234','𠀀ID 1234','IDno.tation4','student IDno.tation4','IDno.𐐀4','IDno.𝅧4']) {
   await input.fill(label);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),1);
   assert.ok((await page.locator('.builder-linkbox input').inputValue()).includes(encodeURIComponent(label)));
@@ -68,10 +68,15 @@ try {
   await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
  }
- for(const text of ['ID 1234_ABC','ID α1234','ID １２３４_alpha']) {
+ for(const text of ['ID 1234_ABC','ID α1234','ID １２３４_alpha','ID no.tation4']) {
   await page.goto(BASE+'/build?a='+encodeURIComponent(text)+'&level=2&seed=band');
   await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+ }
+ for(const text of ['IDno.tation4','IDno.𐐀4']) {
+  await page.goto(BASE+'/build?a='+encodeURIComponent(text)+'&level=2&seed=band');
+  await page.getByRole('button',{name:'Copy link',exact:true}).press('Enter');
+  assert.ok((await page.evaluate(()=>outbound.at(-1))).includes(encodeURIComponent(text)));
  }
  await context.route('https://count-it.backwerdrhythmshop.com/**',async route=>{const url=new URL(route.request().url());const response=await route.fetch({url:BASE+url.pathname+url.search});await route.fulfill({response});});
  await context.route('https://praxispercussion.com/names-free-fixture',route=>route.fulfill({contentType:'text/html',body:`<script>window.saved=[];addEventListener('message',e=>{if(e.data.type==='count-it.configuration.save'){saved.push(e.data);e.source.postMessage({type:'count-it.configuration.saved',version:1,requestId:e.data.requestId,ok:true},e.origin)}})</script><iframe title="Builder" src="https://count-it.backwerdrhythmshop.com/build?praxisContext=program&praxisReturnOrigin=https%3A%2F%2Fpraxispercussion.com&a=Band%202&level=2&seed=band"></iframe>`}));
@@ -83,7 +88,7 @@ try {
  await frameName.fill('ID A1234_B');
  assert.equal(await frame.getByRole('button',{name:'Save to Program',exact:true}).count(),0);
  assert.equal(await page.evaluate(()=>saved.length),1);
- await frameName.fill('Band 3');await frame.getByRole('button',{name:'Save to Program',exact:true}).press('Enter');
+ await frameName.fill('IDno.tation4');await frame.getByRole('button',{name:'Save to Program',exact:true}).press('Enter');
  await page.waitForFunction(()=>saved.length===2);
  await page.goto(BASE+'/build');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  console.log('PASS Count It Chromium: current/reopened name/class, Copy/Try/Classroom/Program gating, stale links, warning/focus/clipboard fallback/keyboard retry, narrow layout');

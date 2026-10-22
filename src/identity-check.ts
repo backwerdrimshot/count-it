@@ -17,7 +17,8 @@ const LONG_NUMBER = /(?<!\d)\d{5,}(?!\d)/;
 const ID_MARKER = /(?:(?:student[\s_-]*)?(?:id|sid)|student[\s_-]*(?:number|no\.?|#))/giu;
 // Standalone property alternatives preserve astral left boundaries across tested runtimes.
 const ID_PREFIX_WORD = /(?:\p{L}|\p{M}|\p{N}|\p{Pc})$/u;
-const ID_QUALIFIER = /^(?:number|no\.?)(?![\p{L}\p{M}])/iu;
+// A present dot belongs to no.; the bare form must not rescue a rejected dotted word.
+const ID_QUALIFIER = /^(?:number|no(?:\.|(?!\.)))(?![\p{L}\p{M}])/iu;
 const LETTER_START = /^[\p{L}\p{M}]/u;
 const ID_SEPARATORS = /^[^\p{L}\p{M}\p{N}]*/u;
 const DECIMAL_DIGIT = /\p{Nd}/u;
