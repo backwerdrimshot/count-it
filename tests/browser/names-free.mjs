@@ -24,6 +24,12 @@ try {
  const input=page.getByLabel(/^Assignment name/);
  await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),1);
+ for(const marker of ['Student ID: #1234','student number 1234','student # 1234','ID A1234']) {
+  await input.fill(marker);
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+  assert.equal(await page.locator('.builder-linkbox input').count(),0);
+  for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
+ }
  await input.fill('12345 call 555-123-4567');
  await assertFeedbackContrast(page.locator('.builder-problem').first());
  for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
@@ -37,7 +43,7 @@ try {
  await input.fill('Band 2');await page.evaluate(()=>copyFails=false);await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),2);
  for(const key of ['a','class']) {
-  await page.goto(BASE+'/build?level=2&scope=beat&meter=4-4&sys=standard&guide=on&n=10&pass=8&seed=band&'+key+'='+encodeURIComponent(key==='class'?'12345-555-123-4567':'12345 555-123-4567'));
+  await page.goto(BASE+'/build?level=2&scope=beat&meter=4-4&sys=standard&guide=on&n=10&pass=8&seed=band&'+key+'='+encodeURIComponent(key==='class'?'12345-555-123-4567':'student number 1234'));
   await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
  }
@@ -48,7 +54,7 @@ try {
  await frame.getByRole('button',{name:'Save to Program',exact:true}).click();
  await page.waitForFunction(()=>saved.length===1);
  const frameName=frame.getByLabel(/^Assignment name/);
- await frameName.fill('12345 call 555-123-4567');
+ await frameName.fill('ID A1234');
  assert.equal(await frame.getByRole('button',{name:'Save to Program',exact:true}).count(),0);
  assert.equal(await page.evaluate(()=>saved.length),1);
  await frameName.fill('Band 3');await frame.getByRole('button',{name:'Save to Program',exact:true}).press('Enter');

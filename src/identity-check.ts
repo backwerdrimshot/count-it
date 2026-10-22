@@ -12,7 +12,7 @@ const SURNAMES = new Set("garcia martinez hernandez lopez gonzalez rodriguez per
 const EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u;
 const PHONE = /(?<!\d)(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\b\d{3})[\s.-]?\d{3}[\s.-]?\d{4}\b|\b\d{3}[\s.-]\d{4}\b/;
 const LONG_NUMBER = /(?<!\d)\d{5,}(?!\d)/;
-const ID_MARKER = /\b(?:student\s*)?(?:id|sid)\s*(?:#|no\.?|number)?\s*:?\s*\d+/i;
+const ID_MARKER = /\b(?:(?:student\s*)?(?:id|sid)(?=\s|[:#\d]|no\.?|number)|student\s+(?:number\b|no\.?|#))\s*(?::\s*)?(?:#|no\.?|number\b)?\s*:?\s*[a-z]*\d+[a-z\d-]*\b/i;
 const SSN_LIKE = /\b\d{3}-\d{2}-\d{4}\b/;
 const WORD = /[\p{L}][\p{L}'’-]*/gu;
 const CAPITALIZED = /^\p{Lu}[\p{Ll}'’-]+$/u;
