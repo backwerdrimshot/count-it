@@ -10,7 +10,7 @@ const VOCABULARY = new Set("snare snares tenor tenors quad quads quint quints ba
 const FIRST_NAMES = new Set("james john robert michael william david richard joseph thomas charles christopher daniel matthew anthony donald steven paul andrew joshua kenneth kevin brian george timothy ronald edward jason jeffrey ryan jacob gary nicholas eric jonathan stephen larry justin scott brandon benjamin samuel gregory alexander patrick frank raymond jack dennis jerry tyler aaron jose adam nathan henry zachary douglas peter kyle noah ethan jeremy walter christian keith roger terry austin sean gerald carl harold dylan arthur lawrence jordan jesse bryan billy bruce gabriel joe logan albert willie alan juan wayne elijah randy roy vincent ralph eugene russell bobby mason philip louis liam lucas aiden jayden caleb isaac luke owen hunter carter landon wyatt grayson levi julian isaiah eli josiah jaxon connor colton cameron evan gavin luis carlos jesus miguel diego angel alejandro adrian javier antonio francisco manuel ricardo eduardo fernando jorge mateo santiago emiliano sebastian leonardo marcos oscar pedro rafael sergio victor hector mary patricia jennifer linda elizabeth barbara susan jessica sarah karen lisa nancy betty margaret sandra ashley kimberly emily donna michelle carol amanda dorothy melissa deborah stephanie rebecca sharon laura cynthia kathleen amy angela shirley anna brenda pamela emma nicole helen samantha katherine christine debra rachel carolyn janet catherine maria heather diane ruth julie olivia joyce virginia victoria kelly lauren christina joan evelyn judith megan andrea cheryl hannah jacqueline martha gloria teresa ann sara madison frances kathryn janice jean abigail alice julia judy sophia grace denise amber doris marilyn danielle beverly isabella theresa diana natalie brittany charlotte marie kayla alexis lori ava mia harper amelia evelyn ella avery sofia camila aria scarlett chloe zoey riley nora lily layla zoe penelope addison aubrey ellie stella natalia leah hazel violet aurora savannah brooklyn bella claire skylar lucy paisley everly anna caroline nova genesis emilia kennedy maya willow kinsley naomi valentina ximena valeria camila lucia daniela gabriela fernanda mariana alejandra guadalupe juana rosa ana carmen veronica adriana yesenia esmeralda jasmine destiny alyssa brianna jade jaylen jalen deshawn darius malik jamal tyrone terrell marcus andre kendrick devin trevor".split(" "));
 const SURNAMES = new Set("garcia martinez hernandez lopez gonzalez rodriguez perez sanchez ramirez flores rivera gomez torres diaz reyes cruz morales gutierrez ortiz ramos chavez castillo jimenez vasquez vazquez ruiz mendoza alvarez romero herrera medina aguilar moreno guerrero salinas trevino cantu rios delgado silva ortega smith johnson williams brown jones miller davis wilson anderson taylor thomas moore jackson martin lee thompson white harris clark lewis robinson walker young allen king wright scott hill green adams nelson baker hall campbell mitchell carter roberts phillips evans turner parker collins edwards stewart morris murphy cook rogers morgan peterson cooper reed bailey bell kelly howard ward cox richardson wood watson brooks bennett gray james hughes price sanders myers long ross foster nguyen tran".split(" ").filter((w) => !VOCABULARY.has(w)));
 const EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u;
-const PHONE = /(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\b\d{3})[\s.-]?\d{3}[\s.-]?\d{4}\b|\b\d{3}[\s.-]\d{4}\b/;
+const PHONE = /(?<!\d)(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\b\d{3})[\s.-]?\d{3}[\s.-]?\d{4}\b|\b\d{3}[\s.-]\d{4}\b/;
 const LONG_NUMBER = /(?<!\d)\d{5,}(?!\d)/;
 const ID_MARKER = /\b(?:student\s*)?(?:id|sid)\s*(?:#|no\.?|number)?\s*:?\s*\d+/i;
 const SSN_LIKE = /\b\d{3}-\d{2}-\d{4}\b/;
@@ -29,7 +29,9 @@ export const IDENTITY_HINT = "Don't use student names.";
 export type IdentityVerdict = { verdict: "ok" | "warn" | "block"; message: string };
 export function checkIdentity(value: unknown): IdentityVerdict {
   const text = typeof value === "string" ? value.normalize("NFC") : "";
-  if (SSN_LIKE.test(text) || ID_MARKER.test(text) || (LONG_NUMBER.test(text) && !PHONE.test(text))) {
+  // Check explicit identifiers before masking phones; phone spans alone are warnings.
+  if (SSN_LIKE.test(text) || ID_MARKER.test(text)
+    || LONG_NUMBER.test(text.replace(new RegExp(PHONE.source, "g"), (span) => " ".repeat(span.length)))) {
     return { verdict: "block", message: "Remove the ID number. Links can't carry student IDs." };
   }
   if (EMAIL.test(text) || PHONE.test(text)) {
@@ -44,4 +46,12 @@ export function checkIdentity(value: unknown): IdentityVerdict {
   return nameLike
     ? { verdict: "warn", message: "This looks like a person's name. Don't use student names." }
     : { verdict: "ok", message: "" };
+}
+
+/** Check the actual outbound configuration, including reopened query values. */
+export function checkAssignmentIdentity(link: string, name = ""): IdentityVerdict {
+  const query = new URL(link, "https://count-it.backwerdrhythmshop.com").searchParams;
+  const checks = [name, ...query.getAll("a"), ...query.getAll("class")].map(checkIdentity);
+  return checks.find(check => check.verdict === "block")
+    ?? checks.find(check => check.verdict === "warn") ?? checks[0];
 }

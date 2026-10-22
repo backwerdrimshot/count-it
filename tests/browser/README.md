@@ -61,3 +61,8 @@ Real phones, tablets and screen readers. Every check is an automated Chromium se
 ## Local gap-repair candidates
 
 `repairs.mjs` checks the three independent `/repairs-v1` branches at320/768/1280px in light/dark. It verifies direct response instructions, taught guide/choice vocabulary, in-flow feedback, pointer access, keyboard scrolling/answer/Next focus, full-round scores, profile history/results, builder persistence (including the unprofiled rest-cell lesson) and malformed links. Correct counts are matched to rendered labels because the existing device variant deliberately reshuffles choice order. These candidates remain outside published presets/catalogs; use a local build, not production.
+
+`names-free.mjs` exercises Copy/fallback, Try/Classroom visibility, reopened name/class
+queries, and Save to Program through a synthetic HTTPS frame routed to the local build.
+It checks blocked-to-valid retry, warning-only values, feedback contrast and narrow
+layout. It does not contact Program or a real classroom service.

@@ -1,6 +1,6 @@
 "use client";
 
-import { checkIdentity, IDENTITY_HINT } from "../src/identity-check";
+import { checkIdentity, checkAssignmentIdentity, IDENTITY_HINT } from "../src/identity-check";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BUILDER_CELLS,
@@ -234,8 +234,17 @@ export default function AssignmentBuilder() {
     setCells((current) => (checked ? [...current, id] : current.filter((existing) => existing !== id)));
   }
 
+  function allowLink(event?: React.MouseEvent<HTMLAnchorElement>) {
+    const check = result.ok ? checkAssignmentIdentity(result.link, name) : blockedBy;
+    if (!result.ok || check?.verdict === "block") {
+      event?.preventDefault();
+      setCopyMessage(check?.message || "This can’t be a link yet.");
+      return false;
+    }
+    return true;
+  }
   async function copyLink() {
-    if (!result.ok) return;
+    if (!result.ok || !allowLink()) return;
     window.clearTimeout(copyTimer.current);
     try {
       await navigator.clipboard.writeText(result.link);
@@ -243,6 +252,7 @@ export default function AssignmentBuilder() {
     } catch {
       /* Some school browsers refuse clipboard access from a page. The link is
          still on screen, so select it for the teacher and say what to press. */
+      if (!linkField.current || checkAssignmentIdentity(linkField.current.value).verdict === "block") return;
       linkField.current?.focus();
       linkField.current?.select();
       setCopyMessage("Your browser would not copy it for you. The link is selected — press Ctrl+C (or ⌘C).");
@@ -632,12 +642,13 @@ export default function AssignmentBuilder() {
                 </label>
                 <div className="builder-actions">
                   <button type="button" className="primary-button" onClick={copyLink}>Copy link</button>
-                  <a className="secondary-button" href={result.link} target={programOrigin ? undefined : '_blank'} rel="noopener noreferrer">
+                  <a className="secondary-button" href={result.link} onClick={allowLink} target={programOrigin ? undefined : '_blank'} rel="noopener noreferrer">
                     Try it as a student
                   </a>
                   <a
                     className="secondary-button"
                     href={classroomShareUrl(result.link, result.assignment.name || "Count It assignment")}
+                    onClick={allowLink}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

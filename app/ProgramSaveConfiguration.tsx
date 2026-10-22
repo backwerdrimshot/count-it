@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useProgramOrigin } from './useProgramOrigin';
+import { checkAssignmentIdentity } from '../src/identity-check';
 import { acceptsConfigurationSaveReply } from '../src/program-frame';
 export default function ProgramSaveConfiguration({ name, link }: { name: string; link: string }) {
   const origin = useProgramOrigin();
@@ -23,6 +24,8 @@ export default function ProgramSaveConfiguration({ name, link }: { name: string;
   }, [name, link]);
   if (!origin) return null;
   function save() {
+    const check = checkAssignmentIdentity(link, name);
+    if (check.verdict === 'block') { setMessage(check.message); return; }
     const query = new URL(link).searchParams.toString(), payload = JSON.stringify({ name: name.trim(), query });
     if (pending.current?.payload !== payload) pending.current = { id: crypto.randomUUID(), payload };
     const requestId = pending.current.id;
