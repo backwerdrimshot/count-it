@@ -18,5 +18,9 @@
     ],
     "answerChoices": "Four multiple-choice answers remain visible.",
     "scope": "General instruction and named pool labels remain help; they do not reveal the exact bar answer."
+  },
+  "modelExposure": {
+    "duringAssignment": "Practice models locked and playback absent while the round is unfinished.",
+    "afterCompletion": "All eight result models expose notation, chosen and correct counts, verdicts and explanations. Practice and its playback controls unlock after completion; using them adds exposure."
   }
 }

@@ -26,8 +26,9 @@ it('documents retained instruction, Settings pattern labels and multiple-choice 
  expect(earlyInstruction(parsed.assignment)).toBe(SIXTEENTH_BAR_LESSON);
  expect(proposal.retainedSupports.settingsPatternLabels).toEqual(getCellsByIds(parsed.assignment.cells!).map(c=>c.shortLabel));
  const review=readFileSync(new URL('../docs/five-pattern-companion-review.md',import.meta.url),'utf8');
- for(const phrase of ['early bar-reading instruction','number e & a','five named pattern labels in Settings','four multiple-choice answers','not an exact-bar answer leak'])expect(review).toContain(phrase);
+ for(const phrase of ['early bar-reading instruction','number e & a','five named pattern labels in Settings','four multiple-choice answers','not an exact-bar answer leak','After completion, Practice and its playback controls unlock','chosen and correct counts, verdicts and explanations'])expect(review).toContain(phrase);
  for(const label of proposal.retainedSupports.settingsPatternLabels)expect(review).toContain('"'+label+'"');
  expect(proposal.retainedSupports.barReadingInstruction).toContain('Early bar-reading instruction remains visible');
  expect(proposal.retainedSupports.answerChoices).toContain('Four multiple-choice answers');
+ expect(proposal.modelExposure.afterCompletion).toContain('Practice and its playback controls unlock after completion');
 });
