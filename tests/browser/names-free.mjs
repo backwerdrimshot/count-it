@@ -1,3 +1,5 @@
+import ts from "typescript";
+import {identityPolicyCases} from "../fixtures/identity-policy-cases.mjs";
 import {readFileSync} from "node:fs";
 import assert from 'node:assert/strict';
 import {launch,BASE} from './harness.mjs';
@@ -22,20 +24,32 @@ try {
   Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{if(window.copyFails)throw Error('Synthetic failure');outbound.push(text);}}});
  });
  const page=await context.newPage();
+ // Compile the exact TypeScript helper without lowering its regex syntax.
+ // This blank-page probe adds no product global; actual bundled output is tested below.
+ const helperSource=ts.transpileModule(readFileSync(new URL('../../src/identity-check.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ await page.addScriptTag({content:'{const exports={};'+helperSource+';window.identityPolicyHelper=exports;}'});
+ const matrixCases=identityPolicyCases(policy);
+ assert.equal(await page.evaluate(cases=>{
+  for(const [text,expected] of cases){const actual=identityPolicyHelper.checkIdentity(text).verdict;if(actual!==expected)throw Error(JSON.stringify({text,expected,actual}));}
+  return cases.length;
+ },matrixCases),matrixCases.length);
+ console.log('PASS browser helper matrix: '+matrixCases.length+' cases (3,176 original plus '+(policy.unicodeOk.length+policy.unicodeBlock.length)+' Unicode controls)');
  await page.goto(BASE+'/build');
  const input=page.getByLabel(/^Assignment name/);
  await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),1);
- for(const marker of policy.block) {
+ for(const marker of [...policy.block,...policy.unicodeBlock]) {
   await input.fill(marker);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
   assert.equal(await page.locator('.builder-linkbox input').count(),0);
   for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
  }
- for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234']) {
+ for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234','𐐀ID 1234','𝟙ID 1234','áID 1234','ID𐐀1234','𠀀ID 1234']) {
   await input.fill(label);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),1);
   assert.ok((await page.locator('.builder-linkbox input').inputValue()).includes(encodeURIComponent(label)));
+  await page.evaluate(()=>outbound=[]);await page.getByRole('button',{name:'Copy link',exact:true}).press('Enter');
+  assert.equal(await page.evaluate(()=>outbound.length),1);assert.ok((await page.evaluate(()=>outbound[0])).includes(encodeURIComponent(label)));
  }
  await input.fill('12345 call 555-123-4567');
  await assertFeedbackContrast(page.locator('.builder-problem').first());
