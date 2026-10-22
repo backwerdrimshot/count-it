@@ -1,0 +1,13 @@
+# Five-pattern companion: owner decision required
+
+This is a tested proposed configuration, not a registered activity or a new curriculum step. Source: Count reduced-support plan https://app.notion.com/p/400de6e8cc8781c596c4dc18ab2a8a4f . The current request authorizes a review batch; publication remains held.
+
+Approve the proposed standalone ID `five-pattern-bars-reduced-v1` and support contract in `five-pattern-companion-proposal.json` before registration. The established plan does not settle that identity or the exact retry/model policy. Do not silently label it counting-early-v2-7 or replace -5/-6.
+
+The proposal preserves the exact five-cell vocabulary, standard counting, full four-beat 4/4 scope, eight questions, and selected seed from counting-early-v2-6. Eight different bars and eight answers cover all five cells within 32 beat positions, from a capacity of 625 bars. This deliberately compares familiar selected music with changed support; it is not unseen or an equivalent form. The regression test independently derives each answer and checks cell exposure, distinct bars, answers, distractors and query round-trip. Historical fixtures and original seeds remain untouched.
+
+Guide off; feedback at end; retry button off; hints off; no time or pass threshold. Choices remain visible. During an assignment, practice models are locked and playback is absent; end feedback exposes review models. Reopening, outside help and previous practice remain possible. Record first response, prior exposure and help before correction; later review is additional exposure. These conditions do not establish independent mastery.
+
+Proposed route: Rhythm Literacy C05 / Foundations Block 2 teaching and https://backwerdrhythmshop.com/lessons/sixteenth-rhythms/ → counting-early-v2-5 (all five one-beat patterns once) → counting-early-v2-6 (supported full bars) → this companion when the teacher judges readiness. Repair the specific note/rest entry with the spoken number e & a grid and an explicit model; return to -5 for cell reading or -6 for bar tracking, then recheck. Continue with a teacher-previewed changed paper/count/explain/play item and later return before reminders. Teacher-held later returns and observed played subdivisions remain separate outcomes. Do not substitute the broader 16-cell banks or original combination step 6.
+
+Before publishing: owner resolves the two choices above, permanent catalog/detail and lesson backlinks are implemented together, exact deployed capabilities and source heads are rechecked, and teacher/device/accessibility acceptance is completed. No classroom, physical-print or musician acceptance is claimed here.
