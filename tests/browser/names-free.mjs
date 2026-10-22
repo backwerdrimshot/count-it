@@ -1,6 +1,8 @@
+import {readFileSync} from "node:fs";
 import assert from 'node:assert/strict';
 import {launch,BASE} from './harness.mjs';
 const browser=await launch();
+const policy=JSON.parse(readFileSync(new URL('../fixtures/explicit-identifier-policy.json',import.meta.url),'utf8'));
 async function assertFeedbackContrast(locator){
  const ratio=await locator.evaluate(el=>{
   const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
@@ -24,13 +26,13 @@ try {
  const input=page.getByLabel(/^Assignment name/);
  await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),1);
- for(const marker of ['Student ID: #1234','student number 1234','student # 1234','ID A1234','student#1234','student number1234']) {
+ for(const marker of policy.block) {
   await input.fill(marker);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
   assert.equal(await page.locator('.builder-linkbox input').count(),0);
   for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
  }
- for(const label of ['student notation4','student notebook4']) {
+ for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234']) {
   await input.fill(label);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),1);
   assert.ok((await page.locator('.builder-linkbox input').inputValue()).includes(encodeURIComponent(label)));
@@ -52,6 +54,11 @@ try {
   await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
  }
+ for(const text of ['ID 1234_ABC','ID α1234','ID １２３４_alpha']) {
+  await page.goto(BASE+'/build?a='+encodeURIComponent(text)+'&level=2&seed=band');
+  await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+ }
  await context.route('https://count-it.backwerdrhythmshop.com/**',async route=>{const url=new URL(route.request().url());const response=await route.fetch({url:BASE+url.pathname+url.search});await route.fulfill({response});});
  await context.route('https://praxispercussion.com/names-free-fixture',route=>route.fulfill({contentType:'text/html',body:`<script>window.saved=[];addEventListener('message',e=>{if(e.data.type==='count-it.configuration.save'){saved.push(e.data);e.source.postMessage({type:'count-it.configuration.saved',version:1,requestId:e.data.requestId,ok:true},e.origin)}})</script><iframe title="Builder" src="https://count-it.backwerdrhythmshop.com/build?praxisContext=program&praxisReturnOrigin=https%3A%2F%2Fpraxispercussion.com&a=Band%202&level=2&seed=band"></iframe>`}));
  await page.goto('https://praxispercussion.com/names-free-fixture');
@@ -59,7 +66,7 @@ try {
  await frame.getByRole('button',{name:'Save to Program',exact:true}).click();
  await page.waitForFunction(()=>saved.length===1);
  const frameName=frame.getByLabel(/^Assignment name/);
- await frameName.fill('ID A1234');
+ await frameName.fill('ID A1234_B');
  assert.equal(await frame.getByRole('button',{name:'Save to Program',exact:true}).count(),0);
  assert.equal(await page.evaluate(()=>saved.length),1);
  await frameName.fill('Band 3');await frame.getByRole('button',{name:'Save to Program',exact:true}).press('Enter');

@@ -12,14 +12,35 @@ const SURNAMES = new Set("garcia martinez hernandez lopez gonzalez rodriguez per
 const EMAIL = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/u;
 const PHONE = /(?<!\d)(?:\+?1[\s.-]?)?(?:\(\d{3}\)|\b\d{3})[\s.-]?\d{3}[\s.-]?\d{4}\b|\b\d{3}[\s.-]\d{4}\b/;
 const LONG_NUMBER = /(?<!\d)\d{5,}(?!\d)/;
-// A word marker ends before a delimiter or digit, never inside "notation".
-// Digits may follow directly ("number1234"); # needs no separating space.
-const NUMBER_MARKER = "(?:number|no\\.?)(?=\\s|[:#\\d]|$)";
-const ID_MARKER = new RegExp(
-  "\\b(?:(?:student\\s*)?(?:id|sid)(?=\\s|[:#\\d]|" + NUMBER_MARKER + ")"
-  + "|student\\s*(?:#|" + NUMBER_MARKER + "))"
-  + "\\s*(?::\\s*)?(?:#|" + NUMBER_MARKER + ")?\\s*:?\\s*[a-z]*\\d+[a-z\\d-]*\\b", "i",
-);
+// Explicit markers and value tokens are separate; see docs/explicit-identifier-policy.md.
+// A Unicode word/connector character cannot begin a new embedded marker.
+const ID_MARKER = /(?:(?:student[\s_-]*)?(?:id|sid)|student[\s_-]*(?:number|no\.?|#))/giu;
+const ID_PREFIX_WORD = /[\p{L}\p{M}\p{N}\p{Pc}]$/u;
+const ID_QUALIFIER = /^(?:number|no\.?)(?![\p{L}\p{M}])/iu;
+const LETTER_START = /^[\p{L}\p{M}]/u;
+const ID_SEPARATORS = /^[^\p{L}\p{M}\p{N}]*/u;
+const DECIMAL_DIGIT = /\p{Nd}/u;
+function hasExplicitIdentifier(text: string) {
+  // Each call owns its scanner so repeated checks cannot share lastIndex state.
+  const markers = new RegExp(ID_MARKER.source, ID_MARKER.flags);
+  let marker;
+  while ((marker = markers.exec(text))) {
+    // Inspect, never consume, the left boundary: a rejected no. must not hide ID.
+    if (ID_PREFIX_WORD.test(text.slice(0, marker.index))) continue;
+    let rest = text.slice(marker.index + marker[0].length);
+    const idMarker = /(?:id|sid)$/i.test(marker[0]);
+    const compactQualifier = idMarker ? rest.match(ID_QUALIFIER) : null;
+    if (compactQualifier) rest = rest.slice(compactQualifier[0].length);
+    else if (LETTER_START.test(rest) && !marker[0].endsWith("#")) continue;
+    rest = rest.replace(ID_SEPARATORS, "");
+    const qualifier = idMarker ? rest.match(ID_QUALIFIER) : null;
+    if (qualifier) rest = rest.slice(qualifier[0].length).replace(ID_SEPARATORS, "");
+    const value = rest.match(/^\S+/u);
+    // Once explicitly marked, punctuation/Unicode suffixes cannot exempt a digit.
+    if (value && DECIMAL_DIGIT.test(value[0])) return true;
+  }
+  return false;
+}
 const SSN_LIKE = /\b\d{3}-\d{2}-\d{4}\b/;
 const WORD = /[\p{L}][\p{L}'’-]*/gu;
 const CAPITALIZED = /^\p{Lu}[\p{Ll}'’-]+$/u;
@@ -37,7 +58,7 @@ export type IdentityVerdict = { verdict: "ok" | "warn" | "block"; message: strin
 export function checkIdentity(value: unknown): IdentityVerdict {
   const text = typeof value === "string" ? value.normalize("NFC") : "";
   // Check explicit identifiers before masking phones; phone spans alone are warnings.
-  if (SSN_LIKE.test(text) || ID_MARKER.test(text)
+  if (SSN_LIKE.test(text) || hasExplicitIdentifier(text)
     || LONG_NUMBER.test(text.replace(new RegExp(PHONE.source, "g"), (span) => " ".repeat(span.length)))) {
     return { verdict: "block", message: "Remove the ID number. Links can't carry student IDs." };
   }
