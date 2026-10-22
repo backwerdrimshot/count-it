@@ -25,3 +25,8 @@ it("checks decoded reopened and duplicate outbound name/class values", () => {
 it.each(["Student ID: #1234", "student number 1234", "student # 1234", "ID A1234"])("blocks reopened marker %s", text => {
   expect(checkAssignmentIdentity("/?a=" + encodeURIComponent(text)).verdict).toBe("block");
 });
+
+describe("explicit marker token boundaries", () => {
+  it.each(["student notation4", "student notebook4", "student notable4", "student numbering4", "student normal4", "student no.tation4", "student numberline4", "identity4", "sideline4", "Class A1234", "4B-SPRING"])("ok: %s", text => expect(checkIdentity(text).verdict).toBe("ok"));
+  it.each(["student#1234", "student #1234", "student# 1234", "student number1234", "student number 1234", "student no1234", "student no.1234", "student number:1234", "student ID:number1234", "Student ID: #A1234", "IDnumber1234", "IDno1234", "SID1234"])("block: %s", text => expect(checkIdentity(text).verdict).toBe("block"));
+});

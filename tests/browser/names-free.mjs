@@ -24,11 +24,16 @@ try {
  const input=page.getByLabel(/^Assignment name/);
  await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
  assert.equal(await page.evaluate(()=>outbound.length),1);
- for(const marker of ['Student ID: #1234','student number 1234','student # 1234','ID A1234']) {
+ for(const marker of ['Student ID: #1234','student number 1234','student # 1234','ID A1234','student#1234','student number1234']) {
   await input.fill(marker);
   assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
   assert.equal(await page.locator('.builder-linkbox input').count(),0);
   for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
+ }
+ for(const label of ['student notation4','student notebook4']) {
+  await input.fill(label);
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),1);
+  assert.ok((await page.locator('.builder-linkbox input').inputValue()).includes(encodeURIComponent(label)));
  }
  await input.fill('12345 call 555-123-4567');
  await assertFeedbackContrast(page.locator('.builder-problem').first());
