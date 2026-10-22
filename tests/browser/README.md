@@ -1,6 +1,6 @@
 # Browser checks
 
-Seven scripts that drive a real Chromium against a running Count It. They cover what the unit and rendered-HTML tests cannot: layout at real widths, focus order, the clipboard, a round played through to its result card, and the links a teacher actually clicks.
+Scripts that drive a real Chromium against a running Count It. They cover what the unit and rendered-HTML tests cannot: layout at real widths, focus order, the clipboard, a round played through to its result card, and the links a teacher actually clicks.
 
 They are **not part of `pnpm check` and not run in CI**. Whether to run a browser in CI is an open decision; until it is made, run them by hand before a release that changes a page or the header, and after a deploy.
 
@@ -30,9 +30,10 @@ Analytics (Cloudflare Insights) is blocked in every context, so a run never coun
 | File | Covers |
 | --- | --- |
 | `trainer.mjs` | A 2/4 measure challenge answered by keyboard shortcut, an assigned 7/4 link, a refused link (a whole note in 3/4), a legacy link with no meter, phone width. |
-| `presets.mjs` | Each step in the builder's menu opens the same first question as the link the shop site publishes for it. |
+| `presets.mjs` | Each builder step opens the same seeded first question as its published root link; first-five launches match the pinned current-entry contract, and advisory identity warnings remain distinct from blocking output refusals. |
 | `builder.mjs` | The link the builder makes, Copy, the quiz setting, refusals in plain words, routes to and from the app. |
-| `meter-guard.mjs` | A choice that cannot make a round is greyed out with the reason, never offered. |
+| `meter-guard.mjs` | Unlocked choices that cannot fill an assigned round are disabled with a reason; current Step 1 retains its pinned meter/count, while `/archive` preserves the original one-beat open-meter contract. |
+| `practice-length.mjs` | The one-beat default permits all lengths; full-measure pools limit longer sets. Checks cancellation, capacity fallback, opt-in persistence, assignment overrides and reset to the one-beat default. |
 | `catalog.mjs` | `/assignments`: sixteen steps, their links, Copy, a step played from the catalog to its result, the finished count. |
 | `notation.mjs` | `/notation`: the seven topics, every example staff drawn, the one-beat example without a closing barline and every measure example with one (as the page says), the contents links, phone width. |
 | `challenge.mjs` | Challenge: the count row follows the guide in free rounds and the teacher's policy in assigned ones; the one-beat "Starts on beat 1" cue shows with the guide on or off; Enter keeps focus in the round and Next moves it on; keys 1–4 answer once; answer choices are not marked as toggles. |
@@ -42,7 +43,7 @@ Analytics (Cloudflare Insights) is blocked in every context, so a run never coun
 
 ## Keeping them true
 
-- Published step links come from `tests/fixtures/published-links.ts`, the same file the unit tests hold verbatim. When the shop site's sequence pages change, that file changes first and both kinds of test follow.
+- Historical published queries come from `tests/fixtures/published-links.ts` and stay literal in parser/golden tests. Exact known first-five root links intentionally resolve to current activities; `docs/early-v2-integration.json` pins those canonical settings. Browser checks must distinguish current root behavior from explicit `/archive` replay rather than assume the old root query stays literal. See `docs/early-v2-handoff.md` and `tests/early-v2.test.ts`.
 - Some checks count things on purpose (sixteen catalog steps, five meters, seven notation topics). When the catalog or the topics change on purpose, update the number in the check in the same change.
 - To add a check file: `import { launch, BASE, reporter, shot } from "./harness.mjs"`, open contexts with `browser.newContext(...)` (the harness adds the analytics block and the Node routing), and finish with `process.exit(failed ? 1 : 0)` or `finish()`. The runner picks up any other `.mjs` in this folder.
 

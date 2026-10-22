@@ -1,7 +1,9 @@
 /* Meter guard: a choice that cannot make a round is greyed out with the reason, never offered.
    Run with `pnpm test:browser` (see README.md in this folder). */
+import { readFileSync } from "node:fs";
 import { launch, BASE, reporter, shot, publishedLinks } from "./harness.mjs";
 const PUBLISHED = publishedLinks("counting-rhythms");
+const CURRENT_FIRST = JSON.parse(readFileSync(new URL("../../docs/early-v2-integration.json", import.meta.url), "utf8")).entries[0];
 const { note, results } = reporter();
 
 const meterSelect = (page) => page.locator("select").filter({ has: page.locator('option[value="7-4"]') });
@@ -53,14 +55,27 @@ const off = (state) => Object.keys(state).filter((k) => state[k] === "off").sort
     await page.close();
   }
 
-  // 2. Step 1 — one beat, nothing to protect.
+  // 2. A known old root bookmark intentionally opens the current full-bar
+  // activity. The explicit archive keeps the literal one-beat contract.
   {
-    const page = await ctx.newPage(); watch(page, "step1");
+    const page = await ctx.newPage(); watch(page, "current-step1");
     await page.goto(BASE + "/?" + PUBLISHED[0], { waitUntil: "networkidle" });
+    note("published Step 1 resolves to its pinned current activity", new URL(page.url()).search === CURRENT_FIRST.query);
+    note("current Step 1 discloses the updated activity", await page.locator('[aria-label="Updated assignment"]').count() === 1);
     await page.locator(".focus-toggle").click();
     const st = await meterState(page);
     const hint = (await page.locator(".level-control", { has: meterSelect(page) }).innerText()).replace(/\s+/g, " ");
-    note("published Step 1 (one beat): no meter is greyed out and no note is shown", off(st) === "" && !/Greyed-out/.test(hint), JSON.stringify(st));
+    note("current eight-bar Step 1 retains the capacity guard without an unlocked-meter hint", off(st) === "2-4" && !/Greyed-out/.test(hint), JSON.stringify(st));
+    note("current Step 1 uses full measures", await page.getByRole("radio", { name: /one measure/i }).isChecked());
+    note("current Step 1 pins its 4/4 meter and eight questions", await meterSelect(page).isDisabled() && await meterSelect(page).inputValue() === "4-4" && /Question 1 of 8/.test(await page.locator(".challenge-progress").innerText()));
+
+    await page.goto(BASE + "/archive?" + PUBLISHED[0], { waitUntil: "networkidle" });
+    note("archived Step 1 stays literal without migration", new URL(page.url()).pathname === "/archive" && await page.locator('[aria-label="Updated assignment"]').count() === 0);
+    await page.locator(".focus-toggle").click();
+    const original = await meterState(page);
+    const originalHint = (await page.locator(".level-control", { has: meterSelect(page) }).innerText()).replace(/\s+/g, " ");
+    note("archived one-beat Step 1 permits every meter without a guard note", off(original) === "" && !/Greyed-out/.test(originalHint), JSON.stringify(original));
+    note("archived Step 1 retains one beat and twelve questions", await page.getByRole("radio", { name: /one beat/i }).isChecked() && /Question 1 of 12/.test(await page.locator(".challenge-progress").innerText()));
     await page.close();
   }
 

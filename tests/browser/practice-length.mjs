@@ -13,6 +13,13 @@ try {
   await open();
   assert.equal(await choice(5).isChecked(), true);
   assert.equal(await choice(12).isEnabled(), true);
+  // One-beat practice deliberately allows repeated fragments; the unique-bar
+  // capacity limit starts only after switching to full measures.
+  assert.equal(await page.getByRole('radio', { name: /one beat/i }).isChecked(), true);
+  assert.equal(await choice(20).isEnabled(), true);
+  await page.getByRole('radio', { name: /one measure/i }).check();
+  assert.equal(await choice(5).isChecked(), true);
+  assert.equal(await choice(12).isEnabled(), true);
   assert.equal(await choice(20).isDisabled(), true);
   await choice(12).click();
   assert.match(await page.locator('#challenge-tab').innerText(), /12-question/);
@@ -50,6 +57,8 @@ try {
   await page.getByRole('button', { name: 'Reset practice setup', exact: true }).click();
   assert.equal(await choice(5).isChecked(), true);
   assert.equal(await page.getByLabel(/^Meter/).inputValue(), '4-4');
+  assert.equal(await page.getByRole('radio', { name: /one beat/i }).isChecked(), true);
+  assert.equal(await choice(20).isEnabled(), true);
   assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem('count-it-practice-defaults-v2'))).challengeLength, 5);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
