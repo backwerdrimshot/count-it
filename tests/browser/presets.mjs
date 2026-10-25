@@ -1,7 +1,9 @@
 /* The builder's step menu: each preset must open the same round as the link the shop site publishes for it.
    Run with `pnpm test:browser` (see README.md in this folder). */
+import { readFileSync } from "node:fs";
 import { launch, BASE, reporter, shot, publishedLinks } from "./harness.mjs";
 const PUBLISHED = publishedLinks("counting-rhythms");
+const CURRENT = JSON.parse(readFileSync(new URL("../../docs/early-v2-integration.json", import.meta.url), "utf8")).entries;
 const { note, results } = reporter();
 
 async function firstQuestion(page) {
@@ -35,13 +37,22 @@ async function firstQuestion(page) {
     await presetSelect.selectOption({ index: step });
     await builder.waitForTimeout(200);
     const link = await builder.locator(".builder-linkbox input").inputValue();
-    const problem = await builder.locator(".builder-problem").count();
+    // Warnings beside the name are advisory. Only the output's refusal is a
+    // blocker; the link and seeded-round equality below must still hold.
+    const problem = await builder.locator(".builder-output > .builder-problem").count();
     const summary = (await builder.locator(".builder-summary").innerText()).trim();
     await student.goto(link, { waitUntil: "networkidle" });
     const mine = await firstQuestion(student);
     await site.goto(BASE + "/?" + PUBLISHED[step - 1], { waitUntil: "networkidle" });
     const theirs = await firstQuestion(site);
     const same = JSON.stringify(mine) === JSON.stringify(theirs);
+    if (step <= 5) {
+      const expected = new URLSearchParams(CURRENT[step - 1].query);
+      const actual = new URL(link).searchParams;
+      const keys = ["seed", "scope", "meter", "n", "response"];
+      note(`Step ${step}: builder preserves the pinned current activity settings`, keys.every(key => actual.get(key) === expected.get(key)));
+      note(`Step ${step}: published root resolves to the pinned current activity`, new URL(site.url()).search === CURRENT[step - 1].query);
+    }
     note(`Step ${step}: builder link and the published link show the same first question`, problem === 0 && same, same ? `${mine.progress}; ${summary}` : `builder=${JSON.stringify(mine)} site=${JSON.stringify(theirs)}`);
     if (step === 10) {
       // The meter: pinned in the builder's link, open in the published one.
@@ -66,9 +77,21 @@ async function firstQuestion(page) {
   await builder.getByLabel(/^Pass mark/).fill("9");
   await builder.waitForTimeout(200);
   note("editing a field after a preset updates the link", /pass=9&/.test(await builder.locator(".builder-linkbox input").inputValue()));
-  note("the preset's note says the seed and meter are kept", /same questions as the published/.test(await builder.locator(".builder-preset-note").innerText()));
+  const presetNote = await builder.locator(".builder-preset-note").innerText();
+  note("the preset note preserves activity seed/settings and separates historical results", /keeps this activity[’']s own seed and settings/.test(presetNote) && /archived original scores are not converted/.test(presetNote));
+  note("the preset note states that a legacy open meter is pinned to 4/4", /meter is pinned to 4\/4/.test(presetNote));
   const cellLink = await builder.getByRole("link", { name: "About the sequence" }).getAttribute("href");
   note("the 'About the sequence' link points at the sequence page", /apps\.backwerdrhythmshop\.com\/sequences\/counting-rhythms\/$/.test(cellLink), cellLink);
+
+  // A warning must not be mistaken for refusal, and the refusal selector
+  // must still detect an actual blocked payload rather than hide it.
+  const nameInput = builder.getByLabel(/^Assignment name/);
+  await nameInput.fill("Ava Rodriguez");
+  note("an advisory name warning retains the generated link and Copy action", await builder.locator('.builder-form .builder-problem[role="alert"]').count() === 1 && await builder.locator(".builder-linkbox input").count() === 1 && await builder.getByRole("button", { name: "Copy link", exact: true }).isEnabled());
+  await nameInput.fill("ID 44");
+  note("an actual ID refusal is still detected and removes the generated link", await builder.locator(".builder-output > .builder-problem").count() === 1 && await builder.locator(".builder-linkbox input").count() === 0 && await builder.getByRole("button", { name: "Copy link", exact: true }).count() === 0);
+  await nameInput.fill("Band 2");
+  note("correcting a blocked name restores the generated link", await builder.locator(".builder-output > .builder-problem").count() === 0 && await builder.locator(".builder-linkbox input").count() === 1);
 
   // Phone
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

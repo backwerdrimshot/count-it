@@ -1,5 +1,6 @@
 "use client";
 
+import { checkIdentity, checkAssignmentIdentity, IDENTITY_HINT } from "../src/identity-check";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BUILDER_CELLS,
@@ -131,7 +132,15 @@ export default function AssignmentBuilder() {
   );
 
   /* Everything the teacher sees about the link comes from the app's own parser. */
-  const result = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
+  const evaluated = useMemo(() => evaluateBuilder(state, origin), [state, origin]);
+  /* Names-free check on the two teacher-typed fields that travel in the link.
+     Runs in this browser only; nothing is sent anywhere. */
+  const nameCheck = useMemo(() => checkIdentity(name), [name]);
+  const classCheck = useMemo(() => checkIdentity(classText), [classText]);
+  const blockedBy = [nameCheck, classCheck].find((check) => check.verdict === "block");
+  const result: typeof evaluated = blockedBy
+    ? ({ ok: false, problem: blockedBy.message } as typeof evaluated)
+    : evaluated;
 
   const heldNotesAllowed = scope === "measure";
 
@@ -225,8 +234,17 @@ export default function AssignmentBuilder() {
     setCells((current) => (checked ? [...current, id] : current.filter((existing) => existing !== id)));
   }
 
+  function allowLink(event?: React.MouseEvent<HTMLAnchorElement>) {
+    const check = result.ok ? checkAssignmentIdentity(result.link, name) : blockedBy;
+    if (!result.ok || check?.verdict === "block") {
+      event?.preventDefault();
+      setCopyMessage(check?.message || "This can’t be a link yet.");
+      return false;
+    }
+    return true;
+  }
   async function copyLink() {
-    if (!result.ok) return;
+    if (!result.ok || !allowLink()) return;
     window.clearTimeout(copyTimer.current);
     try {
       await navigator.clipboard.writeText(result.link);
@@ -234,6 +252,7 @@ export default function AssignmentBuilder() {
     } catch {
       /* Some school browsers refuse clipboard access from a page. The link is
          still on screen, so select it for the teacher and say what to press. */
+      if (!linkField.current || checkAssignmentIdentity(linkField.current.value).verdict === "block") return;
       linkField.current?.focus();
       linkField.current?.select();
       setCopyMessage("Your browser would not copy it for you. The link is selected — press Ctrl+C (or ⌘C).");
@@ -341,7 +360,8 @@ export default function AssignmentBuilder() {
                   placeholder="Step 3 — Pulse & pairs, no help"
                   onChange={(event) => setName(event.target.value)}
                 />
-                <small>Shown to students at the top and on their result card.</small>
+                <small>Shown to students at the top and on their result card. {IDENTITY_HINT}</small>
+                {nameCheck.verdict !== "ok" && <small className="builder-problem" role="alert">{nameCheck.message}</small>}
               </label>
             </fieldset>
 
@@ -530,8 +550,10 @@ export default function AssignmentBuilder() {
                   onChange={(event) => setClassText(event.target.value)} />
                 <small>
                   Students must type this code before they can turn in a result. They type it themselves, so it shows
-                  which class sent a result, not who the student is. It is not checked against any list.
+                  which class sent a result, not who the student is. It is not checked against any list. Use a class
+                  or period code, never a student name or ID.
                 </small>
+                {classCheck.verdict !== "ok" && <small className="builder-problem" role="alert">{classCheck.message}</small>}
               </label>
             </fieldset>
 
@@ -620,12 +642,13 @@ export default function AssignmentBuilder() {
                 </label>
                 <div className="builder-actions">
                   <button type="button" className="primary-button" onClick={copyLink}>Copy link</button>
-                  <a className="secondary-button" href={result.link} target={programOrigin ? undefined : '_blank'} rel="noopener noreferrer">
+                  <a className="secondary-button" href={result.link} onClick={allowLink} target={programOrigin ? undefined : '_blank'} rel="noopener noreferrer">
                     Try it as a student
                   </a>
                   <a
                     className="secondary-button"
                     href={classroomShareUrl(result.link, result.assignment.name || "Count It assignment")}
+                    onClick={allowLink}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

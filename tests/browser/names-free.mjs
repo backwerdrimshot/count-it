@@ -1,0 +1,95 @@
+import ts from "typescript";
+import {identityPolicyCases} from "../fixtures/identity-policy-cases.mjs";
+import {readFileSync} from "node:fs";
+import assert from 'node:assert/strict';
+import {launch,BASE} from './harness.mjs';
+const browser=await launch();
+const policy=JSON.parse(readFileSync(new URL('../fixtures/explicit-identifier-policy.json',import.meta.url),'utf8'));
+async function assertFeedbackContrast(locator){
+ const ratio=await locator.evaluate(el=>{
+  const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
+  const lum=s=>rgb(s).map(c=>{c/=255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((v,c,i)=>v+c*[.2126,.7152,.0722][i],0);
+  let surface=el;
+  while(surface.parentElement && getComputedStyle(surface).backgroundColor==='rgba(0, 0, 0, 0)')surface=surface.parentElement;
+  const a=lum(getComputedStyle(el).color),b=lum(getComputedStyle(surface).backgroundColor);
+  return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+ });
+ assert.ok(ratio>=4.5,'feedback text contrast '+ratio+' is below 4.5:1');
+}
+
+try {
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ await context.addInitScript(()=>{
+  window.outbound=[];window.copyFails=false;
+  Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{if(window.copyFails)throw Error('Synthetic failure');outbound.push(text);}}});
+ });
+ const page=await context.newPage();
+ // Compile the exact TypeScript helper without lowering its regex syntax.
+ // This blank-page probe adds no product global; actual bundled output is tested below.
+ const helperSource=ts.transpileModule(readFileSync(new URL('../../src/identity-check.ts',import.meta.url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ await page.addScriptTag({content:'{const exports={};'+helperSource+';window.identityPolicyHelper=exports;}'});
+ const matrixCases=identityPolicyCases(policy);
+ assert.equal(await page.evaluate(cases=>{
+  for(const [text,expected] of cases){const actual=identityPolicyHelper.checkIdentity(text).verdict;if(actual!==expected)throw Error(JSON.stringify({text,expected,actual}));}
+  return cases.length;
+ },matrixCases),matrixCases.length);
+ console.log('PASS browser helper matrix: '+matrixCases.length+' cases (3,226 prior controls plus compact-qualifier regressions)');
+ await page.goto(BASE+'/build');
+ const input=page.getByLabel(/^Assignment name/);
+ await input.fill('Snare 2');await page.getByRole('button',{name:'Copy link',exact:true}).click();
+ assert.equal(await page.evaluate(()=>outbound.length),1);
+ for(const marker of [...policy.block,...policy.unicodeBlock,'ID no.tation4','student ID no.tation4','IDno.1234','IDno._alpha4','ID no.𐐀4']) {
+  await input.fill(marker);
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+  assert.equal(await page.locator('.builder-linkbox input').count(),0);
+  for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
+ }
+ for(const label of ['student notation4','student notebook4','Class 1234_ABC','Class α1234','A1234_B','αID 1234','𐐀ID 1234','𝟙ID 1234','áID 1234','ID𐐀1234','𠀀ID 1234','IDno.tation4','student IDno.tation4','IDno.𐐀4','IDno.𝅧4']) {
+  await input.fill(label);
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),1);
+  assert.ok((await page.locator('.builder-linkbox input').inputValue()).includes(encodeURIComponent(label)));
+  await page.evaluate(()=>outbound=[]);await page.getByRole('button',{name:'Copy link',exact:true}).press('Enter');
+  assert.equal(await page.evaluate(()=>outbound.length),1);assert.ok((await page.evaluate(()=>outbound[0])).includes(encodeURIComponent(label)));
+ }
+ await input.fill('12345 call 555-123-4567');
+ await assertFeedbackContrast(page.locator('.builder-problem').first());
+ for(const label of ['Try it as a student','Post to Google Classroom'])assert.equal(await page.getByRole('link',{name:label,exact:true}).count(),0);
+ assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+ assert.equal(await page.locator('.builder-linkbox input').count(),0);
+ await input.fill('555-123-4567');await page.evaluate(()=>copyFails=true);
+ await page.getByRole('button',{name:'Copy link',exact:true}).press('Enter');
+ assert.equal(await page.locator('.builder-linkbox input').evaluate(el=>document.activeElement===el),true);
+ assert.match(await page.locator('.builder-copied').innerText(),/selected/);
+ assert.match(await page.locator('.builder-problem').first().innerText(),/phone number/);
+ await input.fill('Band 2');await page.evaluate(()=>copyFails=false);await page.getByRole('button',{name:'Copy link',exact:true}).click();
+ assert.equal(await page.evaluate(()=>outbound.length),2);
+ for(const key of ['a','class']) {
+  await page.goto(BASE+'/build?level=2&scope=beat&meter=4-4&sys=standard&guide=on&n=10&pass=8&seed=band&'+key+'='+encodeURIComponent(key==='class'?'12345-555-123-4567':'student number 1234'));
+  await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+ }
+ for(const text of ['ID 1234_ABC','ID α1234','ID １２３４_alpha','ID no.tation4']) {
+  await page.goto(BASE+'/build?a='+encodeURIComponent(text)+'&level=2&seed=band');
+  await page.waitForFunction(()=>document.body.textContent.includes('Remove the ID number'));
+  assert.equal(await page.getByRole('button',{name:'Copy link',exact:true}).count(),0);
+ }
+ for(const text of ['IDno.tation4','IDno.𐐀4']) {
+  await page.goto(BASE+'/build?a='+encodeURIComponent(text)+'&level=2&seed=band');
+  await page.getByRole('button',{name:'Copy link',exact:true}).press('Enter');
+  assert.ok((await page.evaluate(()=>outbound.at(-1))).includes(encodeURIComponent(text)));
+ }
+ await context.route('https://count-it.backwerdrhythmshop.com/**',async route=>{const url=new URL(route.request().url());const response=await route.fetch({url:BASE+url.pathname+url.search});await route.fulfill({response});});
+ await context.route('https://praxispercussion.com/names-free-fixture',route=>route.fulfill({contentType:'text/html',body:`<script>window.saved=[];addEventListener('message',e=>{if(e.data.type==='count-it.configuration.save'){saved.push(e.data);e.source.postMessage({type:'count-it.configuration.saved',version:1,requestId:e.data.requestId,ok:true},e.origin)}})</script><iframe title="Builder" src="https://count-it.backwerdrhythmshop.com/build?praxisContext=program&praxisReturnOrigin=https%3A%2F%2Fpraxispercussion.com&a=Band%202&level=2&seed=band"></iframe>`}));
+ await page.goto('https://praxispercussion.com/names-free-fixture');
+ const frame=page.frameLocator('iframe');
+ await frame.getByRole('button',{name:'Save to Program',exact:true}).click();
+ await page.waitForFunction(()=>saved.length===1);
+ const frameName=frame.getByLabel(/^Assignment name/);
+ await frameName.fill('ID A1234_B');
+ assert.equal(await frame.getByRole('button',{name:'Save to Program',exact:true}).count(),0);
+ assert.equal(await page.evaluate(()=>saved.length),1);
+ await frameName.fill('IDno.tation4');await frame.getByRole('button',{name:'Save to Program',exact:true}).press('Enter');
+ await page.waitForFunction(()=>saved.length===2);
+ await page.goto(BASE+'/build');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ console.log('PASS Count It Chromium: current/reopened name/class, Copy/Try/Classroom/Program gating, stale links, warning/focus/clipboard fallback/keyboard retry, narrow layout');
+} finally {await browser.close();}
