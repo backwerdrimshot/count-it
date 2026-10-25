@@ -160,3 +160,13 @@ describe("the catalog the app serves", () => {
     expect(document.entries).toHaveLength(16);
   });
 });
+
+describe("current launches", () => {
+  it("publish the pass mark the launched activity uses", () => {
+    for (const entry of CATALOG_ENTRIES) {
+      if (!entry.currentLaunch) continue;
+      const parsed = parseAssignment(entry.currentLaunch.query);
+      expect(parsed.ok && parsed.assignment.passing).toBe(entry.currentLaunch.passing);
+    }
+  });
+});

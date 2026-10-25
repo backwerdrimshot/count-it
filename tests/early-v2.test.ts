@@ -13,6 +13,7 @@ const payload = { schema: 'count-it.early-entrypoints.v2', minimumCapability: { 
 if (process.env.UPDATE_EARLY_JSON === '1') writeFileSync(handoffFile, JSON.stringify(payload, null, 2) + '\n');
 describe('early current entry points', () => {
     it('exports a reproducible app integration contract', () => expect(JSON.parse(readFileSync(handoffFile, 'utf8'))).toEqual(payload));
+    it('gives every current activity its own result identity', () => { const ids = evidence.map(e => `${e.resultIdentity?.seq}#${e.resultIdentity?.step}`); expect(new Set(ids).size).toBe(ids.length); });
     it('upgrades exact known marked and unmarked links; retains class and explicit standard identity', () => { for (const d of EARLY_UPGRADES) {
         expect(resolveEarlyLaunch(d.legacy.query)?.query).toBe(d.target.query);
         const p = new URLSearchParams(d.legacy.query);

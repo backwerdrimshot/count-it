@@ -59,7 +59,7 @@
       "legacyQuery": "?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
       "archive": "/archive?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
       "currentId": "counting-early-v2-combos-bars",
-      "currentQuery": "?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "currentQuery": "?seq=counting-early-v2-bars&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
       "purpose": "Supported application: eight different four-beat bars from these four sixteenth combinations, not twelve questions that repeat four one-beat prompts.",
       "preparation": "Teach the four combinations one beat at a time with the guide on, as in step 6. Full bars are a supported application sample, not a mastery test."
     },
@@ -68,7 +68,7 @@
       "legacyQuery": "?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
       "archive": "/archive?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
       "currentId": "counting-early-v2-silent-bars",
-      "currentQuery": "?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "currentQuery": "?seq=counting-early-v2-bars&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
       "purpose": "Supported application: twelve different four-beat bars built from the nine rest and note patterns, not twelve questions that repeat three of nine.",
       "preparation": "Teach the rest patterns one beat at a time with the guide off, as in step 7. Full bars are a supported application sample, not a mastery test."
     },
@@ -1339,7 +1339,7 @@
     },
     {
       "id": "counting-early-v2-combos-bars",
-      "query": "?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "query": "?seq=counting-early-v2-bars&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
       "settings": {
         "name": "Early v2: Sixteenth combos across a bar",
         "level": "level-2",
@@ -1364,9 +1364,9 @@
         "systemPinned": true,
         "levelIgnored": false
       },
-      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2-bars&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
       "resultIdentity": {
-        "seq": "counting-early-v2",
+        "seq": "counting-early-v2-bars",
         "step": 6
       },
       "attemptKey": "?a=Early%20v2%3A%20Sixteenth%20combos%20across%20a%20bar&scope=measure&meter=4-4&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&n=8&pass=6&seed=cr6-combos-bars-v2&sys=standard",
@@ -1673,7 +1673,7 @@
     },
     {
       "id": "counting-early-v2-silent-bars",
-      "query": "?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "query": "?seq=counting-early-v2-bars&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
       "settings": {
         "name": "Early v2: Silent rests across a bar",
         "level": "level-2",
@@ -1703,9 +1703,9 @@
         "systemPinned": true,
         "levelIgnored": false
       },
-      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+      "launch": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2-bars&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
       "resultIdentity": {
-        "seq": "counting-early-v2",
+        "seq": "counting-early-v2-bars",
         "step": 7
       },
       "attemptKey": "?a=Early%20v2%3A%20Silent%20rests%20across%20a%20bar&scope=measure&meter=4-4&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&fb=each&retry=free&n=12&pass=10&seed=cr7-silent-bars-v2&sys=standard",
