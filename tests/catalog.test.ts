@@ -10,6 +10,7 @@ import {
   getCatalogEntry,
 } from "../src/assignment/catalog";
 import { PRODUCTION_ORIGIN } from "../src/assignment/builder";
+import { EARLY_UPGRADES } from "../src/assignment/early-v2";
 import { ALL_PRESETS, getPreset } from "../src/assignment/presets";
 import { parseSequenceStep } from "../src/sequence-step";
 import { generateQuestions } from "../src/question";
@@ -97,7 +98,9 @@ describe("the assignment catalog", () => {
   });
 
   it("points each entry at the app that runs it", () => {
-    for (const entry of countIt) expect(entry.link).toBe(`${PRODUCTION_ORIGIN}${entry.sequence === "counting-rhythms" && entry.step <= 5 ? "/archive" : "/"}${entry.query}`);
+    /* A step with a current launch keeps its original link at the archive; every other entry runs at the app root. */
+    const archived = (entry: { sequence: string; step: number }) => entry.sequence === "counting-rhythms" && EARLY_UPGRADES.some((d) => d.step === entry.step);
+    for (const entry of countIt) expect(entry.link).toBe(`${PRODUCTION_ORIGIN}${archived(entry) ? "/archive" : "/"}${entry.query}`);
     for (const entry of eightTime) {
       expect(entry.link).toBe(`${EIGHT_TIME_ORIGIN}/${entry.query}`);
       expect(new URLSearchParams(entry.query).get("meter")).toBe("3-8");
@@ -155,5 +158,15 @@ describe("the catalog the app serves", () => {
     expect(document.schema).toBe("count-it.assignment-catalog.v1");
     expect(JSON.stringify(document)).not.toMatch(/20\d\d-\d\d-\d\d/);
     expect(document.entries).toHaveLength(16);
+  });
+});
+
+describe("current launches", () => {
+  it("publish the pass mark the launched activity uses", () => {
+    for (const entry of CATALOG_ENTRIES) {
+      if (!entry.currentLaunch) continue;
+      const parsed = parseAssignment(entry.currentLaunch.query);
+      expect(parsed.ok && parsed.assignment.passing).toBe(entry.currentLaunch.passing);
+    }
   });
 });

@@ -1,7 +1,7 @@
 {
   "schema": "count-it.assignment-catalog.v1",
   "launchResolutionVersion": 2,
-  "description": "Original settings and explicit archive links remain literal for historical replay. currentLaunch describes the recommended activity for the first five Counting Rhythms entry points. Exact old root URLs upgrade with a visible notice; /archive preserves their original rounds. All activities are free.",
+  "description": "Original settings and explicit archive links remain literal for historical replay. currentLaunch describes the recommended activity for Counting Rhythms steps 1 to 7. Exact old root URLs upgrade with a visible notice; /archive preserves their original rounds. All activities are free.",
   "sequences": [
     {
       "id": "counting-rhythms",
@@ -180,8 +180,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
-      "presetId": "counting-rhythms-6"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+      "presetId": "counting-rhythms-6",
+      "archiveLink": "/archive?seq=counting-rhythms&step=6&a=Step%206%3A%20Sixteenth%20Combos&scope=beat&cells=dotted-eighth-sixteenth,eighth-two,two-eighth,sixteenth-eighth-sixteenth&guide=on&n=12&pass=10&seed=cr6-combos",
+      "currentLaunch": {
+        "activityId": "counting-early-v2-combos-bars",
+        "title": "Sixteenth combos across a bar",
+        "name": "Early v2: Sixteenth combos across a bar",
+        "focus": "Supported application: eight different four-beat bars from these four sixteenth combinations, not twelve questions that repeat four one-beat prompts.",
+        "query": "?seq=counting-early-v2-bars&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2-bars&step=6&a=Early+v2%3A+Sixteenth+combos+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=dotted-eighth-sixteenth%2Ceighth-two%2Ctwo-eighth%2Csixteenth-eighth-sixteenth&guide=on&fb=each&retry=free&hints=off&n=8&pass=6&seed=cr6-combos-bars-v2",
+        "summary": "4 rhythms · one measure · Standard counting · guide visible · 8 questions · pass at 6",
+        "count": 8,
+        "passing": 6,
+        "preparation": "Teach the four combinations one beat at a time with the guide on, as in step 6. Full bars are a supported application sample, not a mastery test.",
+        "archivedSummary": "4 rhythms · one beat · guide visible · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-7",
@@ -196,8 +210,22 @@
       "count": 12,
       "passing": 10,
       "query": "?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
-      "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
-      "presetId": "counting-rhythms-7"
+      "link": "https://count-it.backwerdrhythmshop.com/archive?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+      "presetId": "counting-rhythms-7",
+      "archiveLink": "/archive?seq=counting-rhythms&step=7&a=Step%207%3A%20Silent%20Doesn't%20Mean%20Skip&scope=beat&cells=eighth-rest,rest-eighth,three-rest-note,rest-sixteenth-rest,alternating-rests,rest-two-rest,rest-three,two-rest,rest-two&guide=off&n=12&pass=10&seed=cr7-silent",
+      "currentLaunch": {
+        "activityId": "counting-early-v2-silent-bars",
+        "title": "Silent rests across a bar",
+        "name": "Early v2: Silent rests across a bar",
+        "focus": "Supported application: twelve different four-beat bars built from the nine rest and note patterns, not twelve questions that repeat three of nine.",
+        "query": "?seq=counting-early-v2-bars&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+        "link": "https://count-it.backwerdrhythmshop.com/?seq=counting-early-v2-bars&step=7&a=Early+v2%3A+Silent+rests+across+a+bar&sys=standard&meter=4-4&scope=measure&cells=eighth-rest%2Crest-eighth%2Cthree-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Crest-three%2Ctwo-rest%2Crest-two&guide=off&fb=each&retry=free&hints=off&n=12&pass=10&seed=cr7-silent-bars-v2",
+        "summary": "9 rhythms · one measure · Standard counting · guide hidden · 12 questions · pass at 10",
+        "count": 12,
+        "passing": 10,
+        "preparation": "Teach the rest patterns one beat at a time with the guide off, as in step 7. Full bars are a supported application sample, not a mastery test.",
+        "archivedSummary": "9 rhythms · one beat · guide hidden · 12 questions · pass at 10"
+      }
     },
     {
       "id": "counting-rhythms-8",

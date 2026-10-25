@@ -13,18 +13,18 @@ export interface CatalogEntry extends OriginalEntry {
         readonly link: string;
         readonly summary: string;
         readonly count: number;
-        readonly passing: null;
+        readonly passing: number | null;
         readonly preparation: string;
         readonly archivedSummary: string;
     };
     readonly archiveLink?: string;
 }
 export const CATALOG_ENTRIES: readonly CatalogEntry[] = ORIGINAL.map(old => { const update = old.app === 'count-it' ? EARLY_UPGRADES.find(d => d.legacy.id === old.id) : undefined; if (!update)
-    return old; const a = update.target.assignment; return { ...old, link: `https://count-it.backwerdrhythmshop.com${update.archiveLink}`, archiveLink: update.archiveLink, currentLaunch: { activityId: update.currentId, title: update.target.title, name: a.name!, focus: update.purpose, query: update.target.query, link: `https://count-it.backwerdrhythmshop.com/${update.target.query}`, summary: update.summary, count: a.count!, passing: null, preparation: update.preparation, archivedSummary: old.summary } }; });
+    return old; const a = update.target.assignment; return { ...old, link: `https://count-it.backwerdrhythmshop.com${update.archiveLink}`, archiveLink: update.archiveLink, currentLaunch: { activityId: update.currentId, title: update.target.title, name: a.name!, focus: update.purpose, query: update.target.query, link: `https://count-it.backwerdrhythmshop.com/${update.target.query}`, summary: update.summary, count: a.count!, passing: a.passing, preparation: update.preparation, archivedSummary: old.summary } }; });
 export function entriesForSequence(sequence: OriginalEntry['sequence']) { return CATALOG_ENTRIES.filter(e => e.sequence === sequence); }
 export function getCatalogEntry(id: string) { return CATALOG_ENTRIES.find(e => e.id === id); }
 export type CatalogDisplayEntry = Omit<CatalogEntry, 'passing'> & {
     passing: number | null;
 };
 export function currentCatalogEntry(entry: CatalogEntry): CatalogDisplayEntry { return entry.currentLaunch ? { ...entry, ...entry.currentLaunch } : entry; }
-export function catalogDocument() { return { schema: CATALOG_SCHEMA, launchResolutionVersion: 2, description: 'Original settings and explicit archive links remain literal for historical replay. currentLaunch describes the recommended activity for the first five Counting Rhythms entry points. Exact old root URLs upgrade with a visible notice; /archive preserves their original rounds. All activities are free.', sequences: CATALOG_SEQUENCES.map(s => ({ ...s })), entries: CATALOG_ENTRIES.map(e => ({ ...e })) }; }
+export function catalogDocument() { return { schema: CATALOG_SCHEMA, launchResolutionVersion: 2, description: 'Original settings and explicit archive links remain literal for historical replay. currentLaunch describes the recommended activity for Counting Rhythms steps 1 to 7. Exact old root URLs upgrade with a visible notice; /archive preserves their original rounds. All activities are free.', sequences: CATALOG_SEQUENCES.map(s => ({ ...s })), entries: CATALOG_ENTRIES.map(e => ({ ...e })) }; }
