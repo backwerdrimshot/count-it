@@ -3,7 +3,12 @@
 import { readFileSync } from "node:fs";
 import { launch, BASE, reporter, shot, publishedLinks } from "./harness.mjs";
 const PUBLISHED = publishedLinks("counting-rhythms");
-const CURRENT = JSON.parse(readFileSync(new URL("../../docs/early-v2-integration.json", import.meta.url), "utf8")).entries;
+const EARLY = JSON.parse(readFileSync(new URL("../../docs/early-v2-integration.json", import.meta.url), "utf8"));
+// Find each step's current entry by its legacy id, not by position: entries are not in step order.
+const currentFor = (step) => {
+  const map = EARLY.mapping.find((m) => m.legacyId === `counting-rhythms-${step}`);
+  return EARLY.entries.find((e) => e.id === map.currentId);
+};
 const { note, results } = reporter();
 
 async function firstQuestion(page) {
@@ -47,11 +52,11 @@ async function firstQuestion(page) {
     const theirs = await firstQuestion(site);
     const same = JSON.stringify(mine) === JSON.stringify(theirs);
     if (step <= 5) {
-      const expected = new URLSearchParams(CURRENT[step - 1].query);
+      const expected = new URLSearchParams(currentFor(step).query);
       const actual = new URL(link).searchParams;
       const keys = ["seed", "scope", "meter", "n", "response"];
       note(`Step ${step}: builder preserves the pinned current activity settings`, keys.every(key => actual.get(key) === expected.get(key)));
-      note(`Step ${step}: published root resolves to the pinned current activity`, new URL(site.url()).search === CURRENT[step - 1].query);
+      note(`Step ${step}: published root resolves to the pinned current activity`, new URL(site.url()).search === currentFor(step).query);
     }
     note(`Step ${step}: builder link and the published link show the same first question`, problem === 0 && same, same ? `${mine.progress}; ${summary}` : `builder=${JSON.stringify(mine)} site=${JSON.stringify(theirs)}`);
     if (step === 10) {
