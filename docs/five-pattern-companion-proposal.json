@@ -1,0 +1,26 @@
+{
+  "status": "owner-review-required; not registered",
+  "proposedId": "five-pattern-bars-reduced-v1",
+  "query": "?a=Proposed+five-pattern+reduced-support+bars&scope=measure&cells=three-rest-note%2Crest-sixteenth-rest%2Calternating-rests%2Crest-two-rest%2Csixteenths&guide=off&n=8&seed=cr-early-v2-sixteenth-bars&sys=standard&meter=4-4&fb=end&retry=off&hints=off",
+  "comparison": "same selected bars and seed as counting-early-v2-6; familiar recognition under reduced support",
+  "ownerChoices": [
+    "Approve permanent standalone identity; no implied step 7",
+    "Approve guide off, feedback end, retry off, hints off and same selected familiar bars"
+  ],
+  "retainedSupports": {
+    "barReadingInstruction": "Early bar-reading instruction remains visible, including number e & a at every beat, silent beat-start guidance, and | separating nonempty groups of starts.",
+    "settingsPatternLabels": [
+      "Only a",
+      "Only e",
+      "e and a",
+      "e and &",
+      "All four"
+    ],
+    "answerChoices": "Four multiple-choice answers remain visible.",
+    "scope": "General instruction and named pool labels remain help; they do not reveal the exact bar answer."
+  },
+  "modelExposure": {
+    "duringAssignment": "Practice models locked and playback absent while the round is unfinished.",
+    "afterCompletion": "All eight result models expose notation, chosen and correct counts, verdicts and explanations. Practice and its playback controls unlock after completion; using them adds exposure."
+  }
+}
