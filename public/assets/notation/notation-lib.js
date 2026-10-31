@@ -3,7 +3,7 @@
  * 68 music-notation glyph outlines from the Backwerd notation SVG
  * set (praxis-platform data/notation-svg/), extracted from Bravura (SMuFL
  * reference font), © Steinberg Media Technologies GmbH, SIL OFL 1.1 with
- * Reserved Font Name "Bravura" — licence: LICENSE-bravura.txt in that
+ * Reserved Font Name "Bravura" — license: LICENSE-bravura.txt in that
  * directory. Path data derived from the font, not a redistribution of it.
  *
  * Conventions: font units, 250 per staff space; path coordinates are y-UP
