@@ -2707,7 +2707,8 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 }
 
 .about-build,
-.about-copyright { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.about-copyright,
+.workspace-dialog .forms-note { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
 .about-links { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0; }
 .about-links a,
 .workspace-dialog p a { min-height: 44px; display: inline-flex; align-items: center; color: var(--ink); font-weight: 700; text-underline-offset: 3px; }
@@ -2734,6 +2735,7 @@ body[data-praxis-program=true] .site-header, body[data-praxis-program=true] .mob
 .site-footer a:hover { color: var(--ink); }
 .site-footer a.foot-ico { min-width: 44px; justify-content: center; line-height: 0; }
 .site-footer .foot-legal span { font-size: inherit; }
+.site-footer .foot-note { flex-basis: 100%; margin: 0; }
 @media print { .site-footer, .workspace-actions { display: none; } }
 
 /* Settings: one bar below 1700px; from 1700px the same panel is a 340px column beside the

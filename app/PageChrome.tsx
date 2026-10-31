@@ -2,7 +2,7 @@ import SupportLink from "./SupportLink";
 import WorkspaceInfo, { WorkspaceActions } from "./WorkspaceInfo";
 import { SOCIAL_LINKS, SocialGlyph } from "./BrandFooterBits";
 import { COUNT_IT_BUILD } from "../src/capabilities";
-import { emailHref } from "../src/support-links";
+import { emailHref, FORMS_NOTE, FORMS_NOTE_FOOTER } from "../src/support-links";
 
 /* The header and footer the secondary pages (/build, /assignments, /notation, /class-summary) share. They
  * match the practice screen: the same Help, Feedback and About dialogs, the same footer order.
@@ -47,6 +47,7 @@ export function PageHeader({ page }: { page: PageName }) {
         </>}
         feedback={<>
           <p><SupportLink kind="support">Report a problem</SupportLink> · <SupportLink kind="feedback">Request a feature</SupportLink></p>
+          <p className="forms-note">{FORMS_NOTE}</p>
           <p><a href={emailHref("support")}>Email support</a> · <a href={emailHref("feedback")}>Email feedback</a></p>
         </>}
       >
@@ -93,6 +94,7 @@ export function PageFooter({ page }: { page: PageName }) {
         )}
         <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
       </nav>
+      <p className="foot-note">{FORMS_NOTE_FOOTER}</p>
       <div className="foot-legal">
         <span>© 2026 Backwerd Rimshot, LLC. All rights reserved.</span>
         <span className="build-stamp">Build {COUNT_IT_BUILD}</span>
