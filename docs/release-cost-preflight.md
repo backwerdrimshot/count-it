@@ -1,6 +1,6 @@
 # Count It coordinated release — bounded cost and dependency preflight
 
-> **Historical (2026-10-31).** This preflight was written when a merge to `main` deployed automatically. GitHub Actions no longer runs for this account and the deploy workflow it describes has been deleted; deploys are now by hand with `pnpm release`. See the README's Deployment section.
+> **Historical (2026-10-31).** This preflight was written when a merge to `main` deployed automatically. GitHub Actions no longer runs for this account and the deploy workflow it describes has been deleted; a merge to `main` now publishes through Cloudflare Workers Builds when the gate passes, and `pnpm release` is the hand fallback. See the README's Deployment section.
 
 This is a fresh estimate for Count It only. It reuses none of website PR503's completed $0.70 ceiling or Eight Time's separate approval. No new hosted workflow, remote update, PR or deployment was triggered during this preflight. The root owner is consolidating one explicit cost approval before publication.
 
