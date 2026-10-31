@@ -12,6 +12,12 @@ export const APP_NAME = "Count It";
 
 export type RequestKind = "support" | "feedback";
 
+/** Who the two forms are for, shown beside the links to them (the shop's privacy policy). */
+export const FORMS_NOTE = "The forms are for teachers and adults. Students, please tell your teacher instead.";
+/** The same notice for the footer, where the forms sit among other links. */
+export const FORMS_NOTE_FOOTER =
+  "The problem and feature forms are for teachers and adults. Students, please tell your teacher instead.";
+
 export interface RequestForm {
   /** The form's viewer address, as Google gives it. */
   base: string;

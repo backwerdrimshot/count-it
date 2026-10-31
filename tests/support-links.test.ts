@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   APP_NAME,
   FALLBACK_MAILTO,
+  FORMS_NOTE,
+  FORMS_NOTE_FOOTER,
   SHOP_EMAIL,
   SHOP_FORMS,
   emailHref,
@@ -34,6 +36,16 @@ describe("the shop's request forms", () => {
     for (const kind of ["support", "feedback"] as RequestKind[]) {
       expect(SHOP_FORMS[kind]!.base).toMatch(FORM_VIEWER);
     }
+  });
+});
+
+// The shop's privacy policy says the two forms are for teachers and adults only.
+describe("the notice beside the forms", () => {
+  it("tells students to tell their teacher instead", () => {
+    expect(FORMS_NOTE).toBe("The forms are for teachers and adults. Students, please tell your teacher instead.");
+    expect(FORMS_NOTE_FOOTER).toBe(
+      "The problem and feature forms are for teachers and adults. Students, please tell your teacher instead.",
+    );
   });
 });
 

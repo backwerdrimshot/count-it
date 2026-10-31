@@ -17,7 +17,7 @@ import RhythmNotation from "./RhythmNotation";
 import SupportLink from "./SupportLink";
 import { ChevronIcon } from "./icons";
 import { SOCIAL_LINKS, SocialGlyph } from "./BrandFooterBits";
-import { emailHref } from "../src/support-links";
+import { emailHref, FORMS_NOTE, FORMS_NOTE_FOOTER } from "../src/support-links";
 import {
   ALL_RHYTHM_CELLS,
   LEVELS,
@@ -2076,6 +2076,7 @@ export default function CountItApp({archiveOriginal=false}:{archiveOriginal?:boo
         </>}
         feedback={<>
           <p><SupportLink kind="support">Report a problem</SupportLink> · <SupportLink kind="feedback">Request a feature</SupportLink></p>
+          <p className="forms-note">{FORMS_NOTE}</p>
           <p><a href={emailHref("support")}>Email support</a> · <a href={emailHref("feedback")}>Email feedback</a></p>
         </>}
       >
@@ -2106,6 +2107,7 @@ export default function CountItApp({archiveOriginal=false}:{archiveOriginal?:boo
           <a className="foot-btn" href="/notation" title="The clef, barlines, time signature, beams and rests, with live examples">Notation</a>
           <a className="foot-btn" href="https://apps.backwerdrhythmshop.com/sequences/counting-rhythms/" title="Counting Rhythms — a free, ordered set of ready-to-assign practice links">Teaching sequence</a>
         </nav>
+        <p className="foot-note">{FORMS_NOTE_FOOTER}</p>
         <div className="foot-legal">
           <span>© 2026 Backwerd Rimshot, LLC. All rights reserved.</span>
           <BuildStamp />

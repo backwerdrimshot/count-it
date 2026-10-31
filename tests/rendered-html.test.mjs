@@ -191,6 +191,7 @@ test("the footer carries the social marks, the two forms, the guide and the copy
     at = found;
   }
   assert.match(footer.slice(at), /Build \d{4}-\d{2}-\d{2}/, "the build stamp follows the copyright");
+  assert.ok(footer.includes("The problem and feature forms are for teachers and adults. Students, please tell your teacher instead."), "the footer says who the forms are for");
 
   const marks = footer.match(/<a class="foot-ico"[\s\S]*?<\/a>/g) ?? [];
   assert.equal(marks.length, 3, "three social marks");
@@ -218,6 +219,7 @@ test("Feedback has the two forms and two email links; Help has the guide and no 
   assert.ok(feedback, "the Feedback dialog is server-rendered");
   assert.match(feedback, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg\/viewform"[^>]*>Report a problem</);
   assert.match(feedback, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSfP29vqlwt3UX1rbguiLEsR7t5ONZbEpuWoix0_7aDF2eMXDg\/viewform"[^>]*>Request a feature</);
+  assert.ok(feedback.includes("The forms are for teachers and adults. Students, please tell your teacher instead."), "Feedback says who the forms are for");
   assert.match(feedback, /href="mailto:support@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20problem%20report">Email support</);
   assert.match(feedback, /href="mailto:feedback@backwerdrhythmshop\.com\?subject=Count%20It%20%E2%80%94%20feature%20request">Email feedback</);
 
@@ -237,6 +239,7 @@ test("/build, /assignments and /notation carry the same header nav and footer fo
     const footer = html.match(/<footer class="site-footer"[\s\S]*?<\/footer>/)?.[0] ?? "";
     assert.match(footer, /href="https:\/\/docs\.google\.com\/forms\/d\/e\/1FAIpQLSeZeT_J2QIag3TsO-NxrCNPxVBxSIz_mHzKgZWuZQ-i_UmcCg\/viewform"[^>]*>Report a problem</, `${path} footer has the problem form`);
     assert.doesNotMatch(footer, /mailto:/, `${path} footer shows only the two forms`);
+    assert.ok(footer.includes("The problem and feature forms are for teachers and adults. Students, please tell your teacher instead."), `${path} footer says who the forms are for`);
   }
 });
 
