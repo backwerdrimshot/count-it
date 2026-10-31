@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-/* Publish main by hand, with the same gate the deploy workflow had.
+/* Publish main by hand (the fallback), with the same gate the deploy workflow had.
  *
  *     pnpm release
  *
  * WHY THIS EXISTS. On 2026-09-30 the account's GitHub Actions minutes ran out,
  * and they are not coming back. No GitHub workflow starts for this account any
- * more, so a merge publishes nothing and a pull request shows no checks.
+ * more, so a pull request shows no checks. Since 2026-10-31 a merge to main
+ * publishes through Cloudflare Workers Builds instead (the README's Deployment
+ * section records the settings); this script is the hand fallback.
  * `.github/workflows/workers.yml` used to deploy a green merge; this script
  * carries its guarantees, in the order it applied them:
  *
