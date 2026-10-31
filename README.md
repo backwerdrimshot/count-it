@@ -358,15 +358,30 @@ The public build is at `count-it.backwerdrhythmshop.com`, and as of
 audit, which runs on GitHub Actions where that domain is reachable and reported
 `now shipped` for this app.
 
-**Deploys are by hand, and a merge alone publishes nothing.** GitHub Actions does
-not run for this account: its minutes ran out on 2026-09-30 and are not coming
-back. No workflow starts, so a pull request shows no checks and a merge to `main`
-deploys nothing. `.github/workflows/ci.yml` and `readme-standard.yml` are still in
-the repository but cannot run; run `pnpm check` yourself before merging. The old
-automatic deploy, `.github/workflows/workers.yml`, has been deleted.
+**A merge to `main` publishes automatically through Cloudflare Workers Builds, and
+only if the test gate passes.** GitHub Actions does not run for this account: its
+minutes ran out on 2026-09-30 and are not coming back. No workflow starts, so a pull
+request shows no checks and the Cloudflare build is the only automatic step. Keep
+repair PRs in draft until review, because merging deploys them.
+`.github/workflows/ci.yml` and `readme-standard.yml` are still in the repository but
+cannot run. The old automatic deploy, `.github/workflows/workers.yml`, has been
+deleted.
 
-**`pnpm release` is the release path** (`scripts/release.mjs`). Run it from a clean
-checkout that is exactly `origin/main`, with `CLOUDFLARE_API_TOKEN` and
+**How a merge publishes.** The `count-it` Worker is connected to this repository in
+**Workers Builds** (set up 2026-10-31): production branch **`main`**, non-production
+branch builds **off**, root `/`, build command `pnpm check` (the gate, so a red suite
+fails the build and publishes nothing), and deploy command
+`pnpm exec wrangler deploy --config dist/server/wrangler.json --name count-it`, with
+wrangler at the version the lockfile pins. Those settings live in the Cloudflare
+dashboard, not in this repository, so this paragraph is their record: change both
+together. Builds and deployments are listed under the Worker in the dashboard. The
+Cloudflare build installs dependencies with Cloudflare's own Node and pnpm, which the
+old workflows pinned (Node 22), so if a build fails at install the fix is a
+`NODE_VERSION` build variable in the dashboard.
+
+**`pnpm release` is the hand-release fallback**, for example when a Cloudflare build
+is failing and the owner approves a release (`scripts/release.mjs`). Run it from a
+clean checkout that is exactly `origin/main`, with `CLOUDFLARE_API_TOKEN` and
 `CLOUDFLARE_ACCOUNT_ID` set in the environment or after a `wrangler login`; nothing
 is read from the repository. It does four things in order and stops at the first
 that fails:
@@ -389,10 +404,13 @@ that fails:
    reported as shipped. The shop site's **Link audit** also fetches the live origin
    independently.
 
-A merge that is never followed by `pnpm release` is the failure this section exists
-to prevent: this app spent roughly 2026-07-27 to 2026-08-01 with four merged
-releases that never reached users, because nothing in the repo published and
-nothing said so.
+**Run `pnpm check` yourself before merging.** The Cloudflare build runs it again after
+the merge, and a red suite publishes nothing, but a failed build after a merge is too
+late to be a review. A merge that publishes nothing because its build failed is the
+quiet failure to watch for: this app spent roughly 2026-07-27 to 2026-08-01 with four
+merged releases that never reached users, because nothing said so. After a merge,
+check the build in the dashboard, or the shop site's **Link audit**, rather than
+assuming.
 
 To check that a build would deploy without publishing it, run `pnpm build` and then
 `pnpm exec wrangler deploy --dry-run --config dist/server/wrangler.json --name
@@ -416,7 +434,8 @@ count-it`, which needs no credentials.
   added on 2026-09-05, deployed after a green **Validate** run on `main` and was
   deleted when deploys moved by hand. Both are in git history.
 - **The `deploy` and `deploy:dry-run` package scripts are gone** (they ran `wrangler
-  deploy` directly, a second deploy path). `pnpm release` is the one way to publish.
+  deploy` directly, a second deploy path). `pnpm release` is the hand-release fallback, and a merge to `main` publishes through
+  Workers Builds.
 - **`vite.config.ts`** builds a Wrangler config inline, but that is
   `localBindingConfig` — dev bindings only, not a deploy config.
 
