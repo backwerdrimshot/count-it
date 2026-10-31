@@ -358,28 +358,45 @@ The public build is at `count-it.backwerdrhythmshop.com`, and as of
 audit, which runs on GitHub Actions where that domain is reachable and reported
 `now shipped` for this app.
 
-**Publishing lives in this repository, and a merge ships once CI is green.**
-`.github/workflows/workers.yml` runs on a successful **Validate** run against
-`main`, re-runs `pnpm check`, and deploys the commit CI validated — not whatever
-`main` has become by the time it starts.
+**Deploys are by hand, and a merge alone publishes nothing.** GitHub Actions does
+not run for this account: its minutes ran out on 2026-09-30 and are not coming
+back. No workflow starts, so a pull request shows no checks and a merge to `main`
+deploys nothing. `.github/workflows/ci.yml` and `readme-standard.yml` are still in
+the repository but cannot run; run `pnpm check` yourself before merging. The old
+automatic deploy, `.github/workflows/workers.yml`, has been deleted.
 
-This section used to say the opposite: "There is no deploy workflow here and none
-is wanted", because the Workers Git integration was configured dashboard-side and
-was not visible from git. That arrangement deployed correctly, and it had one
-consequence worth remembering now that it is gone — **you could not tell from
-this repo whether a merge published.** You can now: read the workflow run. The
-site repo's **Link audit** workflow still fetches the live origin independently,
-which is the stronger check of the two.
+**`pnpm release` is the release path** (`scripts/release.mjs`). Run it from a clean
+checkout that is exactly `origin/main`, with `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` set in the environment or after a `wrangler login`; nothing
+is read from the repository. It does four things in order and stops at the first
+that fails:
 
-This app spent roughly 2026-07-27 to 2026-08-01 with four merged releases that
-never reached users, because nothing in the repo published and nothing said so.
-That is the failure mode this section exists to prevent.
+1. **Guard.** It fetches `origin/main` and refuses if the tree has anything
+   uncommitted, or if `HEAD` is not exactly that commit (ahead, behind or
+   diverged). There is no override.
+2. **Gate.** `pnpm check`: the unit tests, then the build and the rendered-HTML
+   tests. `tests/beginner-v1.test.ts` runs 100 seeds in one test and can hit
+   vitest's 5 s timeout on a slow machine; it passes on a rerun. The script does
+   not retry it, so run `pnpm release` again.
+3. **Deploy.** `pnpm exec wrangler deploy --config dist/server/wrangler.json
+   --name count-it`. `vinext build` writes `dist/server/wrangler.json`, so there is
+   no hand-maintained `wrangler.jsonc` to drift from it, and `--name` pins the
+   Worker this deploys to.
+4. **Live check.** It polls the live origin, up to 12 times ten seconds apart, until
+   `/praxis-capabilities.json` reports the `COUNT_IT_BUILD` in `src/capabilities.ts`
+   and the page footer shows that build. It exits non-zero if two minutes pass
+   without a match, so a deploy that uploaded but is not being served is not
+   reported as shipped. The shop site's **Link audit** also fetches the live origin
+   independently.
 
-`package.json` carried `deploy` and `deploy:dry-run` scripts that ran `wrangler
-deploy` directly — unused, and in direct contradiction of "none is wanted"
-above. Removed rather than documented: a second, working deploy path is exactly
-what created the confusion this section describes, whether or not anyone ever
-ran it.
+A merge that is never followed by `pnpm release` is the failure this section exists
+to prevent: this app spent roughly 2026-07-27 to 2026-08-01 with four merged
+releases that never reached users, because nothing in the repo published and
+nothing said so.
+
+To check that a build would deploy without publishing it, run `pnpm build` and then
+`pnpm exec wrangler deploy --dry-run --config dist/server/wrangler.json --name
+count-it`, which needs no credentials.
 
 ### History, so the dead ends stay dead
 
@@ -391,19 +408,17 @@ ran it.
   tells that Stick Lab still leaks through the same proxy.
 - **`CNAME` is gone.** It was a GitHub Pages leftover; `pages-build-deployment`
   last ran 2026-07-21 and Pages is not the origin.
-- **`.github/workflows/workers.yml` is gone.** It was a manual-only
-  (`workflow_dispatch`) path that required a `cloudflare-workers-production`
-  environment holding `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Those
-  secrets were never added and the workflow **never ran once** in 31 runs of
-  this repo's history, so it published nothing and could not have. It is in git
-  history if the API-token route is ever wanted again.
+- **There have been two `workers.yml` files; neither is here now.** The first was a
+  manual-only (`workflow_dispatch`) path that required a
+  `cloudflare-workers-production` environment holding `CLOUDFLARE_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID`. Those secrets were never added and the workflow ran zero
+  times in 31 runs of this repo's history, so it published nothing. The second,
+  added on 2026-09-05, deployed after a green **Validate** run on `main` and was
+  deleted when deploys moved by hand. Both are in git history.
+- **The `deploy` and `deploy:dry-run` package scripts are gone** (they ran `wrangler
+  deploy` directly, a second deploy path). `pnpm release` is the one way to publish.
 - **`vite.config.ts`** builds a Wrangler config inline, but that is
   `localBindingConfig` — dev bindings only, not a deploy config.
-
-`vinext build` emits a complete deploy config at `dist/server/wrangler.json`:
-worker name, compatibility flags, entry point, assets directory. There is no
-hand-maintained `wrangler.jsonc` to drift from it. `pnpm deploy:dry-run` runs
-the whole thing locally without credentials.
 
 > **Size headroom is thin, and the number moves.** Measured with
 > `wrangler deploy --dry-run --config dist/server/wrangler.json` at `2026-08-22`:

@@ -13,7 +13,8 @@
     "check": "pnpm test && pnpm run test:render",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test:render": "pnpm run build && node --test tests/rendered-html.test.mjs",
-    "test:browser": "node tests/browser/run.mjs"
+    "test:browser": "node tests/browser/run.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "next": "16.2.6",
